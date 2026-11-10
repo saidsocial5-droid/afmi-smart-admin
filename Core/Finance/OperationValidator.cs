@@ -26,15 +26,7 @@ namespace AFMI_Gestion_projet.Finance
                 Add("ACCOUNT_CLOSED", $"Compte clôturé le {closed:dd/MM/yyyy}.");
             if (account.IsDeleted) Add("ACCOUNT_DELETED", "Compte supprimé.");
 
-            switch (op.Nature)
-            {
-                case OperationNature.Income when op.Direction != OperationDirection.Credit:
-                    Add("NATURE_DIRECTION", "Une recette est un crédit sur le compte.");
-                    break;
-                case OperationNature.Expense when op.Direction != OperationDirection.Debit:
-                    Add("NATURE_DIRECTION", "Une dépense est un débit sur le compte.");
-                    break;
-            }
+            // Une recette au débit (restitution) ou une dépense au crédit (avoir) est admise : elle vient en diminution.
 
             if (op.Nature == OperationNature.InternalTransfer)
             {

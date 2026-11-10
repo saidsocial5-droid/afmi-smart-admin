@@ -22,6 +22,9 @@ namespace AFMI_Gestion_projet.Data
         public DbSet<OperationAttachment> OperationAttachments { get; set; } = null!;
         public DbSet<CategorizationRule> CategorizationRules { get; set; } = null!;
         public DbSet<AppSetting> AppSettings { get; set; } = null!;
+        public DbSet<BankStatement> BankStatements { get; set; } = null!;
+        public DbSet<StatementLine> StatementLines { get; set; } = null!;
+        public DbSet<ReconciliationMatch> ReconciliationMatches { get; set; } = null!;
         public DbSet<AuditEntry> AuditEntries { get; set; } = null!;
 
         private static void ConfigureFinance(ModelBuilder b)
@@ -84,7 +87,18 @@ namespace AFMI_Gestion_projet.Data
                     new Category { Id = 2, Kind = CategoryKind.Income, Code = "COTIS", Label = "Cotisations" },
                     new Category { Id = 3, Kind = CategoryKind.Income, Code = "DONS", Label = "Dons" },
                     new Category { Id = 4, Kind = CategoryKind.Income, Code = "PREST", Label = "Prestations" },
-                    new Category { Id = 5, Kind = CategoryKind.Income, Code = "PFIN", Label = "Produits financiers" });
+                    new Category { Id = 5, Kind = CategoryKind.Income, Code = "PFIN", Label = "Produits financiers" },
+                    // Natures de dépenses génériques (modifiables), sans correspondance comptable imposée :
+                    // le rattachement au plan de comptes se fera avec le référentiel de l'expert-comptable.
+                    new Category { Id = 6, Kind = CategoryKind.Expense, Code = "PERS", Label = "Personnel (salaires et charges)" },
+                    new Category { Id = 7, Kind = CategoryKind.Expense, Code = "ACH", Label = "Achats et fournitures" },
+                    new Category { Id = 8, Kind = CategoryKind.Expense, Code = "HONO", Label = "Prestations et honoraires" },
+                    new Category { Id = 9, Kind = CategoryKind.Expense, Code = "DEPL", Label = "Déplacements et missions" },
+                    new Category { Id = 10, Kind = CategoryKind.Expense, Code = "LOC", Label = "Loyers et charges locatives" },
+                    new Category { Id = 11, Kind = CategoryKind.Expense, Code = "COM", Label = "Communication et publications" },
+                    new Category { Id = 12, Kind = CategoryKind.Expense, Code = "FBQ", Label = "Frais bancaires" },
+                    new Category { Id = 13, Kind = CategoryKind.Expense, Code = "EQP", Label = "Équipements" },
+                    new Category { Id = 14, Kind = CategoryKind.Expense, Code = "AUTD", Label = "Autres dépenses" });
             });
 
             b.Entity<FundingAgreement>(e =>
@@ -145,6 +159,30 @@ namespace AFMI_Gestion_projet.Data
             b.Entity<CategorizationRule>(e =>
             {
                 e.HasOne(x => x.Category).WithMany().HasForeignKey(x => x.CategoryId).OnDelete(DeleteBehavior.Restrict);
+            });
+
+            b.Entity<BankStatement>(e =>
+            {
+                e.HasOne(x => x.BankAccount).WithMany().HasForeignKey(x => x.BankAccountId).OnDelete(DeleteBehavior.Restrict);
+                e.HasOne(x => x.SourceFile).WithMany().HasForeignKey(x => x.SourceFileId).OnDelete(DeleteBehavior.Restrict);
+                e.HasIndex(x => new { x.BankAccountId, x.PeriodStart });
+                e.ToTable(t => t.HasCheckConstraint("CK_BankStatements_Period", "PeriodEnd >= PeriodStart"));
+            });
+
+            b.Entity<StatementLine>(e =>
+            {
+                e.HasOne(x => x.BankStatement).WithMany(s => s.Lines).HasForeignKey(x => x.BankStatementId).OnDelete(DeleteBehavior.Restrict);
+                e.Ignore(x => x.SignedAmountMinor);
+                e.ToTable(t => t.HasCheckConstraint("CK_StatementLines_Amounts",
+                    "DebitMinor >= 0 AND CreditMinor >= 0 AND (DebitMinor = 0 OR CreditMinor = 0) AND DebitMinor + CreditMinor > 0"));
+            });
+
+            b.Entity<ReconciliationMatch>(e =>
+            {
+                e.HasOne(x => x.StatementLine).WithOne(l => l.Match).HasForeignKey<ReconciliationMatch>(x => x.StatementLineId).OnDelete(DeleteBehavior.Restrict);
+                e.HasOne(x => x.Operation).WithMany().HasForeignKey(x => x.OperationId).OnDelete(DeleteBehavior.Restrict);
+                e.HasIndex(x => x.StatementLineId).IsUnique();
+                e.HasIndex(x => x.OperationId).IsUnique();
             });
 
             b.Entity<AuditEntry>(e =>

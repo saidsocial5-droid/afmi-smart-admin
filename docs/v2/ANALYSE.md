@@ -4,13 +4,16 @@
 
 **Statut : validé le 10/11/2026.** Les recommandations des décisions D1 à D5 et des questions Q1, Q2, Q6 à Q9,
 Q11, Q12 et Q14 sont retenues. Les questions Q3, Q4, Q5, Q10 et Q13 attendent des documents ou des réponses
-de l'AFMI. Avancement : **Lot 1 livré** (voir [CHANGELOG](../../CHANGELOG.md) et [ARCHITECTURE](ARCHITECTURE.md)).
+de l'AFMI. Avancement : **Lots 1 et 2 livrés** (voir [CHANGELOG](../../CHANGELOG.md) et [ARCHITECTURE](ARCHITECTURE.md)).
 
 Écarts entre ce plan et sa réalisation, à ce stade :
 
-- **D1 :** les tables `projects` et `financial_transactions` de Smart Office ne sont pas encore fusionnées. Elles
-  le seront au Lot 2, avec un rattachement des anciennes transactions à un compte choisi par l'utilisateur. Les
-  tables techniques du backend (agents, chaînes, paie) restent dans sa propre base.
+- **D1 :** les tables `projects` et `financial_transactions` de Smart Office sont reprises **à la demande**
+  (Trésorerie → « Reprendre Smart Office 1.x »), en brouillons, sur un compte choisi par l'utilisateur. Les tables
+  techniques du backend (agents, chaînes, paie) restent dans sa propre base.
+- **Lot 2 :** les écrans Banque et Trésorerie sont en **WPF** et non en React, contrairement à la note de la section 7.
+  Ils appellent directement les règles de `Core/Finance`, ce qui évite de les réécrire en Python. Le React reste
+  prévu pour l'éditeur et l'écran de validation des relevés scannés.
 - **D1 :** le mode WAL n'est pas activé, car incompatible avec les copies de fichier du Desktop (export,
   sauvegarde).
 - **D1 :** les champs hérités (`BudgetGlobal`, `CostEntry`…) restent en `double`, mais en clair. Les flux réels

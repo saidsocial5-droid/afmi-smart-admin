@@ -40,12 +40,17 @@ namespace AFMI_Gestion_projet.Finance
 
         public long GetConsolidatedBalanceMadMinor(DateOnly date) => GetBalances(date).Sum(b => b.BalanceMadMinor);
 
-        /// <summary>Recettes et dépenses validées de la période, en MAD. Les virements internes en sont exclus.</summary>
+        /// <summary>
+        /// Recettes et dépenses validées de la période, en MAD, nettes des contre-passations
+        /// (restitutions de recettes, avoirs sur dépenses). Les virements internes en sont exclus.
+        /// </summary>
         public IncomeExpenseTotals GetIncomeAndExpenses(DateOnly from, DateOnly to)
         {
             var period = db.Operations.Where(o => o.Status == OperationStatus.Validated && o.OperationDate >= from && o.OperationDate <= to);
-            long income = period.Where(o => o.Nature == OperationNature.Income).Sum(o => o.AmountMadMinor);
-            long expense = period.Where(o => o.Nature == OperationNature.Expense).Sum(o => o.AmountMadMinor);
+            long income = period.Where(o => o.Nature == OperationNature.Income)
+                .Sum(o => o.Direction == OperationDirection.Credit ? o.AmountMadMinor : -o.AmountMadMinor);
+            long expense = period.Where(o => o.Nature == OperationNature.Expense)
+                .Sum(o => o.Direction == OperationDirection.Debit ? o.AmountMadMinor : -o.AmountMadMinor);
             return new IncomeExpenseTotals(income, expense);
         }
 

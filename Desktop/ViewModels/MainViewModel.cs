@@ -35,6 +35,7 @@ namespace AFMI_Gestion_projet.ViewModels
         public AiAssistantViewModel AiAssistantVM { get; }
         public FundersViewModel FundersVM { get; }
         public SmartOfficeViewModel SmartOfficeVM { get; }
+        public Treasury.TreasuryViewModel TreasuryVM { get; }
 
         public ICommand NavigateCommand { get; }
         public ICommand OpenSmtpConfigCommand { get; }
@@ -63,6 +64,7 @@ namespace AFMI_Gestion_projet.ViewModels
             AiAssistantVM = new AiAssistantViewModel(this);
             FundersVM = new FundersViewModel(this);
             SmartOfficeVM = new SmartOfficeViewModel();
+            TreasuryVM = new Treasury.TreasuryViewModel();
 
             // Set Initial View
             CurrentViewModel = DashboardVM;
@@ -108,6 +110,11 @@ namespace AFMI_Gestion_projet.ViewModels
                     CurrentViewModel = FundersVM;
                     ActiveViewName = "Bailleurs de Fonds";
                     FundersVM.LoadFunders();
+                    break;
+                case "treasury":
+                    CurrentViewModel = TreasuryVM;
+                    ActiveViewName = "Trésorerie — comptes, opérations, rapprochement, prévisions";
+                    TreasuryVM.Refresh();
                     break;
                 case "smart_office":
                     CurrentViewModel = SmartOfficeVM;

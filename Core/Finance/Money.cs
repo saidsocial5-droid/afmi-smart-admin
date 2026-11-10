@@ -15,6 +15,9 @@ namespace AFMI_Gestion_projet.Finance
         public static string Format(long minor, string currency = DefaultCurrency) =>
             FromMinor(minor).ToString("N2", French) + " " + currency;
 
+        /// <summary>Lit un montant saisi (« 1 234,56 », « 1234.56 », « -12,5 ») en centimes.</summary>
+        public static bool TryParse(string? text, out long minor) => StatementCsvImporter.TryAmount(text ?? string.Empty, out minor);
+
         public static string NormalizeCurrency(string? code)
         {
             string c = (code ?? string.Empty).Trim().ToUpperInvariant();

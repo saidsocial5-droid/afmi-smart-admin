@@ -21,7 +21,11 @@ namespace AFMI_Gestion_projet.Models.Finance
     /// <summary>Sens du mouvement sur le compte : Debit = sortie, Credit = entrée.</summary>
     public enum OperationDirection { Debit, Credit }
 
-    /// <summary>Un virement interne compte dans les soldes mais jamais dans les recettes ni les dépenses.</summary>
+    /// <summary>
+    /// Un virement interne compte dans les soldes mais jamais dans les recettes ni les dépenses.
+    /// Une recette au débit (restitution à un bailleur) vient en diminution des recettes ; une dépense au crédit
+    /// (avoir, remboursement) en diminution des dépenses.
+    /// </summary>
     public enum OperationNature { Income, Expense, InternalTransfer }
 
     public enum OperationStatus { Draft, Validated }
@@ -29,4 +33,11 @@ namespace AFMI_Gestion_projet.Models.Finance
     public enum RuleMatchType { Contains, Regex }
 
     public enum RuleSource { Manual, Learned }
+
+    /// <summary>Origine d'un relevé : saisie, fichier CSV/Excel de la banque, ou lecture d'un scan (Lot 3).</summary>
+    public enum StatementSource { Manual, Csv, Ocr }
+
+    public enum StatementStatus { Draft, Validated }
+
+    public enum MatchMode { Auto, Manual }
 }

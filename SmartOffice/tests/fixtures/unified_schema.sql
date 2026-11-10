@@ -762,5 +762,106 @@ CREATE TRIGGER TR_AuditEntries_NoDelete BEFORE DELETE ON AuditEntries
 INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
 VALUES ('20261110221414_FinanceFoundation', '9.0.8');
 
+ALTER TABLE "BankAccounts" ADD "LowBalanceThresholdMinor" INTEGER NULL;
+
+CREATE TABLE "BankStatements" (
+    "Id" INTEGER NOT NULL CONSTRAINT "PK_BankStatements" PRIMARY KEY AUTOINCREMENT,
+    "BankAccountId" INTEGER NOT NULL,
+    "PeriodStart" TEXT NOT NULL,
+    "PeriodEnd" TEXT NOT NULL,
+    "OpeningBalanceMinor" INTEGER NOT NULL,
+    "ClosingBalanceMinor" INTEGER NOT NULL,
+    "Source" TEXT NOT NULL,
+    "SourceFileId" INTEGER NULL,
+    "Template" TEXT NOT NULL,
+    "Status" TEXT NOT NULL,
+    "ImportedAtUtc" TEXT NOT NULL,
+    "Notes" TEXT NOT NULL,
+    "IsDeleted" INTEGER NOT NULL DEFAULT 0,
+    "DeletedAtUtc" TEXT NULL,
+    CONSTRAINT "CK_BankStatements_Period" CHECK (PeriodEnd >= PeriodStart),
+    CONSTRAINT "FK_BankStatements_BankAccounts_BankAccountId" FOREIGN KEY ("BankAccountId") REFERENCES "BankAccounts" ("Id") ON DELETE RESTRICT,
+    CONSTRAINT "FK_BankStatements_StoredFiles_SourceFileId" FOREIGN KEY ("SourceFileId") REFERENCES "StoredFiles" ("Id") ON DELETE RESTRICT
+);
+
+CREATE TABLE "StatementLines" (
+    "Id" INTEGER NOT NULL CONSTRAINT "PK_StatementLines" PRIMARY KEY AUTOINCREMENT,
+    "BankStatementId" INTEGER NOT NULL,
+    "OperationDate" TEXT NOT NULL,
+    "ValueDate" TEXT NULL,
+    "Label" TEXT NOT NULL,
+    "Reference" TEXT NOT NULL,
+    "DebitMinor" INTEGER NOT NULL,
+    "CreditMinor" INTEGER NOT NULL,
+    "ConfidenceJson" TEXT NOT NULL,
+    "SuggestedCategoryId" INTEGER NULL,
+    "SuggestedProjectId" INTEGER NULL,
+    "SuggestedBudgetLineId" INTEGER NULL,
+    CONSTRAINT "CK_StatementLines_Amounts" CHECK (DebitMinor >= 0 AND CreditMinor >= 0 AND (DebitMinor = 0 OR CreditMinor = 0) AND DebitMinor + CreditMinor > 0),
+    CONSTRAINT "FK_StatementLines_BankStatements_BankStatementId" FOREIGN KEY ("BankStatementId") REFERENCES "BankStatements" ("Id") ON DELETE RESTRICT
+);
+
+CREATE TABLE "ReconciliationMatches" (
+    "Id" INTEGER NOT NULL CONSTRAINT "PK_ReconciliationMatches" PRIMARY KEY AUTOINCREMENT,
+    "StatementLineId" INTEGER NOT NULL,
+    "OperationId" INTEGER NOT NULL,
+    "Mode" TEXT NOT NULL,
+    "Score" REAL NOT NULL,
+    "MatchedAtUtc" TEXT NOT NULL,
+    "MatchedBy" TEXT NOT NULL,
+    CONSTRAINT "FK_ReconciliationMatches_Operations_OperationId" FOREIGN KEY ("OperationId") REFERENCES "Operations" ("Id") ON DELETE RESTRICT,
+    CONSTRAINT "FK_ReconciliationMatches_StatementLines_StatementLineId" FOREIGN KEY ("StatementLineId") REFERENCES "StatementLines" ("Id") ON DELETE RESTRICT
+);
+
+INSERT INTO "Categories" ("Id", "Code", "IsActive", "Kind", "Label", "LedgerAccountId", "ParentId")
+VALUES (6, 'PERS', 1, 'Expense', 'Personnel (salaires et charges)', NULL, NULL);
+SELECT changes();
+
+INSERT INTO "Categories" ("Id", "Code", "IsActive", "Kind", "Label", "LedgerAccountId", "ParentId")
+VALUES (7, 'ACH', 1, 'Expense', 'Achats et fournitures', NULL, NULL);
+SELECT changes();
+
+INSERT INTO "Categories" ("Id", "Code", "IsActive", "Kind", "Label", "LedgerAccountId", "ParentId")
+VALUES (8, 'HONO', 1, 'Expense', 'Prestations et honoraires', NULL, NULL);
+SELECT changes();
+
+INSERT INTO "Categories" ("Id", "Code", "IsActive", "Kind", "Label", "LedgerAccountId", "ParentId")
+VALUES (9, 'DEPL', 1, 'Expense', 'Déplacements et missions', NULL, NULL);
+SELECT changes();
+
+INSERT INTO "Categories" ("Id", "Code", "IsActive", "Kind", "Label", "LedgerAccountId", "ParentId")
+VALUES (10, 'LOC', 1, 'Expense', 'Loyers et charges locatives', NULL, NULL);
+SELECT changes();
+
+INSERT INTO "Categories" ("Id", "Code", "IsActive", "Kind", "Label", "LedgerAccountId", "ParentId")
+VALUES (11, 'COM', 1, 'Expense', 'Communication et publications', NULL, NULL);
+SELECT changes();
+
+INSERT INTO "Categories" ("Id", "Code", "IsActive", "Kind", "Label", "LedgerAccountId", "ParentId")
+VALUES (12, 'FBQ', 1, 'Expense', 'Frais bancaires', NULL, NULL);
+SELECT changes();
+
+INSERT INTO "Categories" ("Id", "Code", "IsActive", "Kind", "Label", "LedgerAccountId", "ParentId")
+VALUES (13, 'EQP', 1, 'Expense', 'Équipements', NULL, NULL);
+SELECT changes();
+
+INSERT INTO "Categories" ("Id", "Code", "IsActive", "Kind", "Label", "LedgerAccountId", "ParentId")
+VALUES (14, 'AUTD', 1, 'Expense', 'Autres dépenses', NULL, NULL);
+SELECT changes();
+
+
+CREATE INDEX "IX_BankStatements_BankAccountId_PeriodStart" ON "BankStatements" ("BankAccountId", "PeriodStart");
+
+CREATE INDEX "IX_BankStatements_SourceFileId" ON "BankStatements" ("SourceFileId");
+
+CREATE UNIQUE INDEX "IX_ReconciliationMatches_OperationId" ON "ReconciliationMatches" ("OperationId");
+
+CREATE UNIQUE INDEX "IX_ReconciliationMatches_StatementLineId" ON "ReconciliationMatches" ("StatementLineId");
+
+CREATE INDEX "IX_StatementLines_BankStatementId" ON "StatementLines" ("BankStatementId");
+
+INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+VALUES ('20261110222259_BankingAndReconciliation', '9.0.8');
+
 COMMIT;
 

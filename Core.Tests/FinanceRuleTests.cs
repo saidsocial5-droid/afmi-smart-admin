@@ -114,9 +114,10 @@ public class FinanceRuleTests
         op.Currency = "EUR";
         Assert.Contains("CURRENCY", Codes(op));
 
+        // Avoir sur dépense : dépense au crédit, admise (vient en diminution des dépenses).
         op = Expense(1000, new OperationAllocation { BudgetLineId = 20, AmountMinor = 1000 });
         op.Direction = OperationDirection.Credit;
-        Assert.Contains("NATURE_DIRECTION", Codes(op));
+        Assert.Empty(Codes(op));
 
         op = Expense(0);
         Assert.Contains("AMOUNT", Codes(op, forValidation: false));

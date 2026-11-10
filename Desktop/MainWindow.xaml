@@ -6,6 +6,7 @@
         xmlns:local="clr-namespace:AFMI_Gestion_projet"
         xmlns:viewmodels="clr-namespace:AFMI_Gestion_projet.ViewModels"
         xmlns:views="clr-namespace:AFMI_Gestion_projet.Views"
+        xmlns:treasury="clr-namespace:AFMI_Gestion_projet.ViewModels.Treasury"
         xmlns:System="clr-namespace:System;assembly=mscorlib"
         mc:Ignorable="d"
         Title="AFMI Smart Admin - Gestion de Projets, Agents IA &amp; Reporting"
@@ -34,6 +35,9 @@
         </DataTemplate>
         <DataTemplate DataType="{x:Type viewmodels:FundersViewModel}">
             <views:FundersView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type treasury:TreasuryViewModel}">
+            <views:TreasuryView />
         </DataTemplate>
         <DataTemplate DataType="{x:Type viewmodels:SmartOfficeViewModel}">
             <views:SmartOfficeView />
@@ -109,6 +113,12 @@
                             CommandParameter="templates" 
                             Style="{StaticResource SidebarButtonStyle}"/>
                             
+                    <Button Content="🏦   Trésorerie"
+                            Command="{Binding NavigateCommand}"
+                            CommandParameter="treasury"
+                            ToolTip="Comptes bancaires et caisse, opérations, virements, rapprochement, prévisions"
+                            Style="{StaticResource SidebarButtonStyle}"/>
+
                     <Button Content="🏢   Bailleurs de Fonds" 
                             Command="{Binding NavigateCommand}" 
                             CommandParameter="funders" 

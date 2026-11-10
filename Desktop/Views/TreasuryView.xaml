@@ -1,0 +1,622 @@
+<UserControl x:Class="AFMI_Gestion_projet.Views.TreasuryView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:vm="clr-namespace:AFMI_Gestion_projet.ViewModels.Treasury"
+             mc:Ignorable="d" d:DesignHeight="700" d:DesignWidth="1000"
+             d:DataContext="{d:DesignInstance Type=vm:TreasuryViewModel}">
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+        <Style x:Key="Card" TargetType="Border">
+            <Setter Property="Background" Value="White"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Padding" Value="14"/>
+            <Setter Property="Margin" Value="0,0,0,10"/>
+            <Setter Property="BorderBrush" Value="#E5E7EB"/>
+            <Setter Property="BorderThickness" Value="1"/>
+        </Style>
+        <Style x:Key="FieldLabel" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="#6B7280"/>
+            <Setter Property="Margin" Value="0,6,0,2"/>
+        </Style>
+        <Style x:Key="SectionTitle" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="15"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="#111827"/>
+            <Setter Property="Margin" Value="0,0,0,8"/>
+        </Style>
+        <Style x:Key="Action" TargetType="Button">
+            <Setter Property="Padding" Value="12,6"/>
+            <Setter Property="Margin" Value="0,0,8,0"/>
+            <Setter Property="Background" Value="#2B579A"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+        <Style x:Key="SecondaryAction" TargetType="Button" BasedOn="{StaticResource Action}">
+            <Setter Property="Background" Value="#E5E7EB"/>
+            <Setter Property="Foreground" Value="#111827"/>
+        </Style>
+        <Style TargetType="DataGrid">
+            <Setter Property="AutoGenerateColumns" Value="False"/>
+            <Setter Property="IsReadOnly" Value="True"/>
+            <Setter Property="HeadersVisibility" Value="Column"/>
+            <Setter Property="SelectionMode" Value="Single"/>
+            <Setter Property="GridLinesVisibility" Value="Horizontal"/>
+            <Setter Property="HorizontalGridLinesBrush" Value="#EEEEEE"/>
+            <Setter Property="AlternatingRowBackground" Value="#F9FAFB"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Background" Value="White"/>
+        </Style>
+        <Style TargetType="TextBox">
+            <Setter Property="Padding" Value="5,4"/>
+        </Style>
+    </UserControl.Resources>
+
+    <Grid Margin="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- En-tête : compte courant, solde consolidé, messages -->
+        <Grid Grid.Row="0" Margin="0,0,0,8">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <StackPanel>
+                <TextBlock Text="{Binding ConsolidatedText}" FontSize="16" FontWeight="SemiBold" Foreground="#111827"/>
+                <TextBlock Foreground="#6B7280">
+                    <Run Text="Compte sélectionné : "/><Run Text="{Binding SelectedAccount.Title, Mode=OneWay, FallbackValue='aucun'}" FontWeight="SemiBold"/>
+                    <Run Text=" — solde "/><Run Text="{Binding SelectedAccount.BalanceText, Mode=OneWay, FallbackValue=''}"/>
+                </TextBlock>
+            </StackPanel>
+            <Button Grid.Column="1" Content="↻ Actualiser" Command="{Binding RefreshCommand}" Style="{StaticResource SecondaryAction}" VerticalAlignment="Center"/>
+        </Grid>
+        <StackPanel Grid.Row="1">
+            <TextBlock Text="{Binding ErrorMessage}" Foreground="#A80000" TextWrapping="Wrap" FontWeight="SemiBold" Margin="0,0,0,4"/>
+            <TextBlock Text="{Binding StatusMessage}" Foreground="#107C41" TextWrapping="Wrap" Margin="0,0,0,4"/>
+        </StackPanel>
+
+        <TabControl Grid.Row="2">
+
+            <!-- ============ COMPTES ============ -->
+            <TabItem Header="  Comptes  ">
+                <Grid Margin="8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="3*"/>
+                        <ColumnDefinition Width="12"/>
+                        <ColumnDefinition Width="2*"/>
+                    </Grid.ColumnDefinitions>
+                    <DockPanel>
+                        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,0,0,8">
+                            <Button Content="+ Nouveau compte" Command="{Binding NewAccountCommand}" Style="{StaticResource Action}"/>
+                            <Button Content="Modifier" Command="{Binding EditSelectedAccountCommand}" Style="{StaticResource SecondaryAction}"/>
+                            <Button Content="Reprendre Smart Office 1.x…" Command="{Binding ImportLegacySmartOfficeCommand}" Style="{StaticResource SecondaryAction}"
+                                    ToolTip="Reprend les anciennes transactions de Smart Office en brouillons sur le compte sélectionné"/>
+                        </StackPanel>
+                        <Border DockPanel.Dock="Bottom" Style="{StaticResource Card}" Margin="0,8,0,0">
+                            <StackPanel>
+                                <TextBlock Text="Projets financés par ce compte" Style="{StaticResource SectionTitle}"/>
+                                <DataGrid ItemsSource="{Binding Links}" SelectedItem="{Binding SelectedLink}" Height="110">
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="Projet" Binding="{Binding ProjectName}" Width="*"/>
+                                        <DataGridTextColumn Header="Période" Binding="{Binding Period}" Width="170"/>
+                                        <DataGridTextColumn Header="Clé" Binding="{Binding KeyText}" Width="90"/>
+                                    </DataGrid.Columns>
+                                </DataGrid>
+                                <WrapPanel Margin="0,8,0,0">
+                                    <ComboBox ItemsSource="{Binding ProjectOptions}" SelectedItem="{Binding LinkProject}" DisplayMemberPath="Label" Width="200" Margin="0,0,6,4"/>
+                                    <DatePicker SelectedDate="{Binding LinkFrom}" Width="115" Margin="0,0,6,4" ToolTip="Début de validité"/>
+                                    <DatePicker SelectedDate="{Binding LinkTo}" Width="115" Margin="0,0,6,4" ToolTip="Fin de validité (vide = sans fin)"/>
+                                    <ComboBox ItemsSource="{Binding Source={x:Static vm:TreasuryViewModel.AllocationModeOptions}}" SelectedItem="{Binding LinkMode}" DisplayMemberPath="Label" Width="110" Margin="0,0,6,4"/>
+                                    <TextBox Text="{Binding LinkValue, UpdateSourceTrigger=PropertyChanged}" Width="80" Margin="0,0,6,4" ToolTip="Pourcentage ou montant de la clé"/>
+                                    <Button Content="Lier" Command="{Binding AddLinkCommand}" Style="{StaticResource Action}" Margin="0,0,6,4"/>
+                                    <Button Content="Retirer" Command="{Binding DeleteLinkCommand}" Style="{StaticResource SecondaryAction}" Margin="0,0,0,4"/>
+                                </WrapPanel>
+                            </StackPanel>
+                        </Border>
+                        <DataGrid ItemsSource="{Binding Accounts}" SelectedItem="{Binding SelectedAccount}">
+                            <DataGrid.RowStyle>
+                                <Style TargetType="DataGridRow">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsLow}" Value="True">
+                                            <Setter Property="Foreground" Value="#A80000"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </DataGrid.RowStyle>
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Intitulé" Binding="{Binding Title}" Width="*"/>
+                                <DataGridTextColumn Header="Type" Binding="{Binding KindText}" Width="70"/>
+                                <DataGridTextColumn Header="Usage" Binding="{Binding PurposeText}" Width="110"/>
+                                <DataGridTextColumn Header="Banque" Binding="{Binding Bank}" Width="120"/>
+                                <DataGridTextColumn Header="RIB" Binding="{Binding RibText}" Width="190"/>
+                                <DataGridTextColumn Header="Solde du jour" Binding="{Binding BalanceText}" Width="130"/>
+                                <DataGridTextColumn Header="Statut" Binding="{Binding StatusText}" Width="120"/>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </DockPanel>
+
+                    <ScrollViewer Grid.Column="2" VerticalScrollBarVisibility="Auto">
+                        <StackPanel>
+                            <Border Style="{StaticResource Card}" Visibility="{Binding IsEditingAccount, Converter={StaticResource BoolToVis}}">
+                                <StackPanel>
+                                    <TextBlock Text="Compte" Style="{StaticResource SectionTitle}"/>
+                                    <TextBlock Text="Intitulé" Style="{StaticResource FieldLabel}"/>
+                                    <TextBox Text="{Binding EditTitle, UpdateSourceTrigger=PropertyChanged}"/>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition/>
+                                            <ColumnDefinition Width="8"/>
+                                            <ColumnDefinition/>
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel>
+                                            <TextBlock Text="Type" Style="{StaticResource FieldLabel}"/>
+                                            <ComboBox ItemsSource="{Binding Source={x:Static vm:TreasuryViewModel.KindOptions}}" SelectedItem="{Binding EditKind}" DisplayMemberPath="Label"/>
+                                        </StackPanel>
+                                        <StackPanel Grid.Column="2">
+                                            <TextBlock Text="Usage" Style="{StaticResource FieldLabel}"/>
+                                            <ComboBox ItemsSource="{Binding Source={x:Static vm:TreasuryViewModel.PurposeOptions}}" SelectedItem="{Binding EditPurpose}" DisplayMemberPath="Label"/>
+                                        </StackPanel>
+                                    </Grid>
+                                    <TextBlock Text="Banque / agence" Style="{StaticResource FieldLabel}"/>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition/>
+                                            <ColumnDefinition Width="8"/>
+                                            <ColumnDefinition/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBox Text="{Binding EditBankName, UpdateSourceTrigger=PropertyChanged}"/>
+                                        <TextBox Grid.Column="2" Text="{Binding EditBranch, UpdateSourceTrigger=PropertyChanged}"/>
+                                    </Grid>
+                                    <TextBlock Text="RIB (24 chiffres, clé contrôlée)" Style="{StaticResource FieldLabel}"/>
+                                    <TextBox Text="{Binding EditRib, UpdateSourceTrigger=PropertyChanged}" FontFamily="Consolas"/>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="70"/>
+                                            <ColumnDefinition Width="8"/>
+                                            <ColumnDefinition/>
+                                            <ColumnDefinition Width="8"/>
+                                            <ColumnDefinition/>
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel>
+                                            <TextBlock Text="Devise" Style="{StaticResource FieldLabel}"/>
+                                            <TextBox Text="{Binding EditCurrency, UpdateSourceTrigger=PropertyChanged}"/>
+                                        </StackPanel>
+                                        <StackPanel Grid.Column="2">
+                                            <TextBlock Text="Solde d'ouverture" Style="{StaticResource FieldLabel}"/>
+                                            <TextBox Text="{Binding EditOpeningBalance, UpdateSourceTrigger=PropertyChanged}"/>
+                                        </StackPanel>
+                                        <StackPanel Grid.Column="4">
+                                            <TextBlock Text="Date d'ouverture" Style="{StaticResource FieldLabel}"/>
+                                            <DatePicker SelectedDate="{Binding EditOpeningDate}"/>
+                                        </StackPanel>
+                                    </Grid>
+                                    <TextBlock Text="Seuil d'alerte « solde bas » (vide = aucun)" Style="{StaticResource FieldLabel}"/>
+                                    <TextBox Text="{Binding EditThreshold, UpdateSourceTrigger=PropertyChanged}"/>
+                                    <TextBlock Text="Notes" Style="{StaticResource FieldLabel}"/>
+                                    <TextBox Text="{Binding EditNotes, UpdateSourceTrigger=PropertyChanged}" Height="50" TextWrapping="Wrap" AcceptsReturn="True"/>
+                                    <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
+                                        <Button Content="Enregistrer" Command="{Binding SaveAccountCommand}" Style="{StaticResource Action}"/>
+                                        <Button Content="Annuler" Command="{Binding CancelAccountCommand}" Style="{StaticResource SecondaryAction}"/>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+                            <Border Style="{StaticResource Card}">
+                                <StackPanel>
+                                    <TextBlock Text="Clôturer le compte sélectionné" Style="{StaticResource SectionTitle}"/>
+                                    <TextBlock Text="Possible seulement si le solde est nul à la date de clôture (virez-le d'abord)." TextWrapping="Wrap" Foreground="#6B7280"/>
+                                    <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                                        <DatePicker SelectedDate="{Binding ClosingDate}" Width="130" Margin="0,0,8,0"/>
+                                        <Button Content="Clôturer" Command="{Binding CloseSelectedAccountCommand}" Style="{StaticResource SecondaryAction}"/>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </ScrollViewer>
+                </Grid>
+            </TabItem>
+
+            <!-- ============ OPÉRATIONS & VIREMENTS ============ -->
+            <TabItem Header="  Opérations et virements  ">
+                <Grid Margin="8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="3*"/>
+                        <ColumnDefinition Width="12"/>
+                        <ColumnDefinition Width="2*"/>
+                    </Grid.ColumnDefinitions>
+                    <DockPanel>
+                        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,0,0,8">
+                            <TextBlock Text="Compte :" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                            <ComboBox ItemsSource="{Binding Accounts}" SelectedItem="{Binding SelectedAccount}" DisplayMemberPath="Title" Width="240" Margin="0,0,12,0"/>
+                            <Button Content="Valider le brouillon" Command="{Binding ValidateSelectedCommand}" Style="{StaticResource Action}"/>
+                            <Button Content="Supprimer" Command="{Binding DeleteSelectedOperationCommand}" Style="{StaticResource SecondaryAction}"/>
+                        </StackPanel>
+                        <DataGrid ItemsSource="{Binding Operations}" SelectedItem="{Binding SelectedOperation}">
+                            <DataGrid.RowStyle>
+                                <Style TargetType="DataGridRow">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsDraft}" Value="True">
+                                            <Setter Property="FontStyle" Value="Italic"/>
+                                            <Setter Property="Foreground" Value="#6B7280"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </DataGrid.RowStyle>
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Date" Binding="{Binding Date}" Width="85"/>
+                                <DataGridTextColumn Header="Libellé" Binding="{Binding Label}" Width="*"/>
+                                <DataGridTextColumn Header="Nature" Binding="{Binding NatureText}" Width="130"/>
+                                <DataGridTextColumn Header="Débit" Binding="{Binding DebitText}" Width="110"/>
+                                <DataGridTextColumn Header="Crédit" Binding="{Binding CreditText}" Width="110"/>
+                                <DataGridTextColumn Header="Imputation" Binding="{Binding AllocationText}" Width="110"/>
+                                <DataGridTextColumn Header="Statut" Binding="{Binding StatusText}" Width="75"/>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </DockPanel>
+
+                    <ScrollViewer Grid.Column="2" VerticalScrollBarVisibility="Auto">
+                        <StackPanel>
+                            <Border Style="{StaticResource Card}">
+                                <StackPanel>
+                                    <TextBlock Text="Nouvelle recette ou dépense" Style="{StaticResource SectionTitle}"/>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition/>
+                                            <ColumnDefinition Width="8"/>
+                                            <ColumnDefinition/>
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel>
+                                            <TextBlock Text="Nature" Style="{StaticResource FieldLabel}"/>
+                                            <ComboBox ItemsSource="{Binding Source={x:Static vm:TreasuryViewModel.NatureOptions}}" SelectedItem="{Binding OpNature}" DisplayMemberPath="Label"/>
+                                        </StackPanel>
+                                        <StackPanel Grid.Column="2">
+                                            <TextBlock Text="Date" Style="{StaticResource FieldLabel}"/>
+                                            <DatePicker SelectedDate="{Binding OpDate}"/>
+                                        </StackPanel>
+                                    </Grid>
+                                    <CheckBox Content="Contre-passation (restitution de recette / avoir sur dépense)" IsChecked="{Binding OpIsContra}" Margin="0,6,0,0"/>
+                                    <TextBlock Text="Libellé" Style="{StaticResource FieldLabel}"/>
+                                    <TextBox Text="{Binding OpLabel, UpdateSourceTrigger=PropertyChanged}"/>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition/>
+                                            <ColumnDefinition Width="8"/>
+                                            <ColumnDefinition/>
+                                            <ColumnDefinition Width="8"/>
+                                            <ColumnDefinition/>
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel>
+                                            <TextBlock Text="Montant" Style="{StaticResource FieldLabel}"/>
+                                            <TextBox Text="{Binding OpAmount, UpdateSourceTrigger=PropertyChanged}"/>
+                                        </StackPanel>
+                                        <StackPanel Grid.Column="2">
+                                            <TextBlock Text="Référence" Style="{StaticResource FieldLabel}"/>
+                                            <TextBox Text="{Binding OpReference, UpdateSourceTrigger=PropertyChanged}"/>
+                                        </StackPanel>
+                                        <StackPanel Grid.Column="4">
+                                            <TextBlock Text="Tiers" Style="{StaticResource FieldLabel}"/>
+                                            <TextBox Text="{Binding OpThirdParty, UpdateSourceTrigger=PropertyChanged}"/>
+                                        </StackPanel>
+                                    </Grid>
+                                    <DockPanel Margin="0,6,0,2">
+                                        <Button DockPanel.Dock="Right" Content="Proposer" Command="{Binding SuggestProjectCommand}" Style="{StaticResource SecondaryAction}" Margin="0"
+                                                ToolTip="D'après les projets liés au compte"/>
+                                        <TextBlock Text="Imputation : projet ou fonctionnement" Foreground="#6B7280" VerticalAlignment="Center"/>
+                                    </DockPanel>
+                                    <ComboBox ItemsSource="{Binding ProjectOptions}" SelectedItem="{Binding OpProject}" DisplayMemberPath="Label"/>
+                                    <TextBlock Text="Ligne budgétaire" Style="{StaticResource FieldLabel}"/>
+                                    <ComboBox ItemsSource="{Binding OpBudgetLineOptions}" SelectedItem="{Binding OpBudgetLine}" DisplayMemberPath="Label"/>
+                                    <TextBlock Text="Catégorie" Style="{StaticResource FieldLabel}"/>
+                                    <ComboBox ItemsSource="{Binding OpCategoryOptions}" SelectedItem="{Binding OpCategory}" DisplayMemberPath="Label"/>
+                                    <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
+                                        <Button Content="Enregistrer et valider" Command="{Binding SaveAndValidateCommand}" Style="{StaticResource Action}"/>
+                                        <Button Content="Brouillon" Command="{Binding SaveDraftCommand}" Style="{StaticResource SecondaryAction}"/>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+                            <Border Style="{StaticResource Card}">
+                                <StackPanel>
+                                    <TextBlock Text="Virement interne" Style="{StaticResource SectionTitle}"/>
+                                    <TextBlock Text="Ne compte ni en recette ni en dépense." Foreground="#6B7280"/>
+                                    <TextBlock Text="Du compte" Style="{StaticResource FieldLabel}"/>
+                                    <ComboBox ItemsSource="{Binding AccountOptions}" SelectedItem="{Binding TransferFrom}" DisplayMemberPath="Label"/>
+                                    <TextBlock Text="Vers le compte" Style="{StaticResource FieldLabel}"/>
+                                    <ComboBox ItemsSource="{Binding AccountOptions}" SelectedItem="{Binding TransferTo}" DisplayMemberPath="Label"/>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition/>
+                                            <ColumnDefinition Width="8"/>
+                                            <ColumnDefinition/>
+                                            <ColumnDefinition Width="8"/>
+                                            <ColumnDefinition/>
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel>
+                                            <TextBlock Text="Date" Style="{StaticResource FieldLabel}"/>
+                                            <DatePicker SelectedDate="{Binding TransferDate}"/>
+                                        </StackPanel>
+                                        <StackPanel Grid.Column="2">
+                                            <TextBlock Text="Montant" Style="{StaticResource FieldLabel}"/>
+                                            <TextBox Text="{Binding TransferAmount, UpdateSourceTrigger=PropertyChanged}"/>
+                                        </StackPanel>
+                                        <StackPanel Grid.Column="4">
+                                            <TextBlock Text="Reçu (autre devise)" Style="{StaticResource FieldLabel}"/>
+                                            <TextBox Text="{Binding TransferReceived, UpdateSourceTrigger=PropertyChanged}"/>
+                                        </StackPanel>
+                                    </Grid>
+                                    <TextBlock Text="Libellé" Style="{StaticResource FieldLabel}"/>
+                                    <TextBox Text="{Binding TransferLabel, UpdateSourceTrigger=PropertyChanged}"/>
+                                    <Button Content="Enregistrer le virement" Command="{Binding ExecuteTransferCommand}" Style="{StaticResource Action}" HorizontalAlignment="Left" Margin="0,12,0,0"/>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </ScrollViewer>
+                </Grid>
+            </TabItem>
+
+            <!-- ============ BUDGET & CONVENTIONS ============ -->
+            <TabItem Header="  Budget et conventions  ">
+                <Grid Margin="8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition/>
+                        <ColumnDefinition Width="12"/>
+                        <ColumnDefinition/>
+                    </Grid.ColumnDefinitions>
+                    <DockPanel>
+                        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,0,0,8">
+                            <TextBlock Text="Projet :" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                            <ComboBox ItemsSource="{Binding ProjectOptions}" SelectedItem="{Binding BudgetProject}" DisplayMemberPath="Label" Width="300"/>
+                        </StackPanel>
+                        <Border DockPanel.Dock="Bottom" Style="{StaticResource Card}" Margin="0,8,0,0">
+                            <StackPanel>
+                                <TextBlock Text="Nouvelle ligne budgétaire" Style="{StaticResource SectionTitle}"/>
+                                <WrapPanel>
+                                    <TextBox Text="{Binding LineCode, UpdateSourceTrigger=PropertyChanged}" Width="60" Margin="0,0,6,4" ToolTip="Code de la rubrique (nomenclature du bailleur)"/>
+                                    <TextBox Text="{Binding LineLabel, UpdateSourceTrigger=PropertyChanged}" Width="200" Margin="0,0,6,4" ToolTip="Libellé"/>
+                                    <ComboBox ItemsSource="{Binding ExpenseCategoryOptions}" SelectedItem="{Binding LineCategory}" DisplayMemberPath="Label" Width="200" Margin="0,0,6,4"/>
+                                    <TextBox Text="{Binding LinePlanned, UpdateSourceTrigger=PropertyChanged}" Width="100" Margin="0,0,6,4" ToolTip="Montant prévu"/>
+                                    <TextBox Text="{Binding LineCurrency, UpdateSourceTrigger=PropertyChanged}" Width="45" Margin="0,0,6,4" ToolTip="Devise"/>
+                                    <Button Content="Ajouter" Command="{Binding AddBudgetLineCommand}" Style="{StaticResource Action}" Margin="0,0,6,4"/>
+                                    <Button Content="Supprimer la ligne" Command="{Binding DeleteBudgetLineCommand}" Style="{StaticResource SecondaryAction}" Margin="0,0,0,4"/>
+                                </WrapPanel>
+                                <TextBlock Text="La ligne est rattachée à la convention sélectionnée à droite, s'il y en a une." Foreground="#6B7280"/>
+                            </StackPanel>
+                        </Border>
+                        <DataGrid ItemsSource="{Binding BudgetLines}" SelectedItem="{Binding SelectedBudgetLine}">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Code" Binding="{Binding Code}" Width="60"/>
+                                <DataGridTextColumn Header="Ligne" Binding="{Binding Label}" Width="*"/>
+                                <DataGridTextColumn Header="Catégorie" Binding="{Binding CategoryText}" Width="130"/>
+                                <DataGridTextColumn Header="Prévu" Binding="{Binding PlannedText}" Width="110"/>
+                                <DataGridTextColumn Header="Réalisé (MAD)" Binding="{Binding RealizedText}" Width="110"/>
+                                <DataGridTextColumn Header="Taux" Binding="{Binding RateText}" Width="60"/>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </DockPanel>
+
+                    <ScrollViewer Grid.Column="2" VerticalScrollBarVisibility="Auto">
+                        <StackPanel>
+                            <Border Style="{StaticResource Card}">
+                                <StackPanel>
+                                    <TextBlock Text="Conventions de financement du projet" Style="{StaticResource SectionTitle}"/>
+                                    <ComboBox ItemsSource="{Binding Agreements}" SelectedItem="{Binding SelectedAgreement}" DisplayMemberPath="Label"/>
+                                    <TextBlock Text="Nouvelle convention : bailleur, référence, montant, devise, taux contractuel (facultatif), dates" Style="{StaticResource FieldLabel}" TextWrapping="Wrap"/>
+                                    <WrapPanel>
+                                        <ComboBox ItemsSource="{Binding FunderOptions}" SelectedItem="{Binding AgreementFunder}" DisplayMemberPath="Label" Width="170" Margin="0,0,6,4"/>
+                                        <TextBox Text="{Binding AgreementReference, UpdateSourceTrigger=PropertyChanged}" Width="110" Margin="0,0,6,4" ToolTip="Référence"/>
+                                        <TextBox Text="{Binding AgreementAmount, UpdateSourceTrigger=PropertyChanged}" Width="100" Margin="0,0,6,4" ToolTip="Montant"/>
+                                        <TextBox Text="{Binding AgreementCurrency, UpdateSourceTrigger=PropertyChanged}" Width="45" Margin="0,0,6,4" ToolTip="Devise"/>
+                                        <TextBox Text="{Binding AgreementRate, UpdateSourceTrigger=PropertyChanged}" Width="70" Margin="0,0,6,4" ToolTip="Taux contractuel en MAD (vide = taux daté)"/>
+                                        <DatePicker SelectedDate="{Binding AgreementStart}" Width="115" Margin="0,0,6,4" ToolTip="Début"/>
+                                        <DatePicker SelectedDate="{Binding AgreementEnd}" Width="115" Margin="0,0,6,4" ToolTip="Fin"/>
+                                        <Button Content="Ajouter" Command="{Binding AddAgreementCommand}" Style="{StaticResource Action}" Margin="0,0,0,4"/>
+                                    </WrapPanel>
+                                </StackPanel>
+                            </Border>
+                            <Border Style="{StaticResource Card}">
+                                <StackPanel>
+                                    <TextBlock Text="Échéancier de la convention" Style="{StaticResource SectionTitle}"/>
+                                    <DataGrid ItemsSource="{Binding Tranches}" SelectedItem="{Binding SelectedTranche}" Height="130">
+                                        <DataGrid.Columns>
+                                            <DataGridTextColumn Header="Tranche" Binding="{Binding Label}" Width="*"/>
+                                            <DataGridTextColumn Header="Prévue le" Binding="{Binding Expected}" Width="85"/>
+                                            <DataGridTextColumn Header="Montant" Binding="{Binding AmountText}" Width="110"/>
+                                            <DataGridTextColumn Header="Statut" Binding="{Binding StatusText}" Width="150"/>
+                                        </DataGrid.Columns>
+                                    </DataGrid>
+                                    <WrapPanel Margin="0,8,0,0">
+                                        <TextBox Text="{Binding TrancheLabel, UpdateSourceTrigger=PropertyChanged}" Width="120" Margin="0,0,6,4" ToolTip="Libellé de la tranche"/>
+                                        <DatePicker SelectedDate="{Binding TrancheDate}" Width="115" Margin="0,0,6,4"/>
+                                        <TextBox Text="{Binding TrancheAmount, UpdateSourceTrigger=PropertyChanged}" Width="100" Margin="0,0,6,4" ToolTip="Montant (devise de la convention)"/>
+                                        <Button Content="Ajouter" Command="{Binding AddTrancheCommand}" Style="{StaticResource Action}" Margin="0,0,0,4"/>
+                                    </WrapPanel>
+                                    <TextBlock Text="Encaissement de la tranche sélectionnée par la recette :" Style="{StaticResource FieldLabel}"/>
+                                    <DockPanel>
+                                        <Button DockPanel.Dock="Right" Content="Marquer encaissée" Command="{Binding MarkTrancheReceivedCommand}" Style="{StaticResource SecondaryAction}" Margin="6,0,0,0"/>
+                                        <ComboBox ItemsSource="{Binding IncomeOperationOptions}" SelectedItem="{Binding TrancheOperation}" DisplayMemberPath="Label"/>
+                                    </DockPanel>
+                                </StackPanel>
+                            </Border>
+                            <Border Style="{StaticResource Card}">
+                                <StackPanel>
+                                    <TextBlock Text="Taux de change (1 unité = x MAD)" Style="{StaticResource SectionTitle}"/>
+                                    <WrapPanel>
+                                        <TextBox Text="{Binding RateCurrency, UpdateSourceTrigger=PropertyChanged}" Width="50" Margin="0,0,6,4"/>
+                                        <DatePicker SelectedDate="{Binding RateDate}" Width="115" Margin="0,0,6,4"/>
+                                        <TextBox Text="{Binding RateValue, UpdateSourceTrigger=PropertyChanged}" Width="80" Margin="0,0,6,4"/>
+                                        <Button Content="Enregistrer" Command="{Binding AddRateCommand}" Style="{StaticResource Action}" Margin="0,0,0,4"/>
+                                    </WrapPanel>
+                                    <TextBlock Text="{Binding RatesText}" Foreground="#6B7280" TextWrapping="Wrap"/>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </ScrollViewer>
+                </Grid>
+            </TabItem>
+
+            <!-- ============ RAPPROCHEMENT ============ -->
+            <TabItem Header="  Rapprochement bancaire  ">
+                <Grid Margin="8">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    <WrapPanel Margin="0,0,0,8">
+                        <TextBlock Text="Compte :" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                        <ComboBox ItemsSource="{Binding Accounts}" SelectedItem="{Binding SelectedAccount}" DisplayMemberPath="Title" Width="200" Margin="0,0,12,0"/>
+                        <TextBlock Text="Relevé :" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                        <ComboBox ItemsSource="{Binding Statements}" SelectedItem="{Binding SelectedStatement}" Width="300" Margin="0,0,12,0">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock>
+                                        <Run Text="{Binding Period, Mode=OneWay}"/><Run Text=" — "/><Run Text="{Binding SourceText, Mode=OneWay}"/>
+                                        <Run Text=" — "/><Run Text="{Binding ClosingText, Mode=OneWay}"/><Run Text=" — "/><Run Text="{Binding StatusText, Mode=OneWay}"/>
+                                    </TextBlock>
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+                        <Button Content="Valider le relevé" Command="{Binding ValidateStatementCommand}" Style="{StaticResource SecondaryAction}"/>
+                    </WrapPanel>
+                    <Border Grid.Row="1" Style="{StaticResource Card}">
+                        <WrapPanel>
+                            <TextBlock Text="Importer un relevé CSV de la banque — solde initial :" VerticalAlignment="Center" Margin="0,0,6,4"/>
+                            <TextBox Text="{Binding ImportOpening, UpdateSourceTrigger=PropertyChanged}" Width="100" Margin="0,0,6,4"/>
+                            <TextBlock Text="solde final :" VerticalAlignment="Center" Margin="0,0,6,4"/>
+                            <TextBox Text="{Binding ImportClosing, UpdateSourceTrigger=PropertyChanged}" Width="100" Margin="0,0,6,4"/>
+                            <Button Content="Choisir le fichier…" Command="{Binding ImportCsvStatementCommand}" Style="{StaticResource Action}" Margin="0,0,24,4"/>
+                            <TextBlock Text="Tolérance (jours) :" VerticalAlignment="Center" Margin="0,0,6,4"/>
+                            <TextBox Text="{Binding ToleranceDays, UpdateSourceTrigger=PropertyChanged}" Width="40" Margin="0,0,6,4"/>
+                            <Button Content="Rapprochement automatique" Command="{Binding AutoMatchCommand}" Style="{StaticResource Action}" Margin="0,0,0,4"/>
+                        </WrapPanel>
+                    </Border>
+                    <Grid Grid.Row="2">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="3*"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="2*"/>
+                        </Grid.ColumnDefinitions>
+                        <DockPanel>
+                            <TextBlock DockPanel.Dock="Top" Text="Lignes du relevé" Style="{StaticResource SectionTitle}"/>
+                            <DataGrid ItemsSource="{Binding StatementLines}" SelectedItem="{Binding SelectedStatementLine}">
+                                <DataGrid.RowStyle>
+                                    <Style TargetType="DataGridRow">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsMatched}" Value="False">
+                                                <Setter Property="Background" Value="#FFF7ED"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </DataGrid.RowStyle>
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="Date" Binding="{Binding Date}" Width="80"/>
+                                    <DataGridTextColumn Header="Libellé banque" Binding="{Binding Label}" Width="*"/>
+                                    <DataGridTextColumn Header="Débit" Binding="{Binding DebitText}" Width="100"/>
+                                    <DataGridTextColumn Header="Crédit" Binding="{Binding CreditText}" Width="100"/>
+                                    <DataGridTextColumn Header="Rapprochement" Binding="{Binding MatchText}" Width="200"/>
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </DockPanel>
+                        <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="8,0">
+                            <Button Content="⇄ Rapprocher" Command="{Binding ManualMatchCommand}" Style="{StaticResource Action}" Margin="0,0,0,8"
+                                    ToolTip="Rapproche la ligne de relevé et l'opération sélectionnées (montants égaux)"/>
+                            <Button Content="Annuler" Command="{Binding UnmatchCommand}" Style="{StaticResource SecondaryAction}" Margin="0"
+                                    ToolTip="Annule le rapprochement de la ligne sélectionnée"/>
+                        </StackPanel>
+                        <DockPanel Grid.Column="2">
+                            <TextBlock DockPanel.Dock="Top" Text="Opérations non rapprochées" Style="{StaticResource SectionTitle}"/>
+                            <DataGrid ItemsSource="{Binding UnmatchedOperations}" SelectedItem="{Binding SelectedUnmatchedOperation}">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="Date" Binding="{Binding Date}" Width="80"/>
+                                    <DataGridTextColumn Header="Libellé" Binding="{Binding Label}" Width="*"/>
+                                    <DataGridTextColumn Header="Débit" Binding="{Binding DebitText}" Width="95"/>
+                                    <DataGridTextColumn Header="Crédit" Binding="{Binding CreditText}" Width="95"/>
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </DockPanel>
+                    </Grid>
+                    <Border Grid.Row="3" Style="{StaticResource Card}" Margin="0,10,0,0">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition/>
+                                <ColumnDefinition/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="{Binding StatementCheckText}" TextWrapping="Wrap" Margin="0,0,12,0"/>
+                            <TextBlock Grid.Column="1" Text="{Binding ReconciliationSummary}" TextWrapping="Wrap" FontWeight="SemiBold" Margin="0,0,12,0"/>
+                            <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                                <Button Content="État de rapprochement (PDF)" Command="{Binding ExportReconciliationCommand}" CommandParameter="pdf" Style="{StaticResource Action}" Margin="0,0,0,6"/>
+                                <Button Content="Export CSV" Command="{Binding ExportReconciliationCommand}" CommandParameter="csv" Style="{StaticResource SecondaryAction}" Margin="0"/>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+                </Grid>
+            </TabItem>
+
+            <!-- ============ PRÉVISIONS & ALERTES ============ -->
+            <TabItem Header="  Prévisions et alertes  ">
+                <Grid Margin="8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="3*"/>
+                        <ColumnDefinition Width="12"/>
+                        <ColumnDefinition Width="2*"/>
+                    </Grid.ColumnDefinitions>
+                    <DockPanel>
+                        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,0,0,8">
+                            <TextBlock Text="Horizon :" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                            <ComboBox ItemsSource="{Binding Source={x:Static vm:TreasuryViewModel.HorizonOptions}}" SelectedItem="{Binding Horizon}" DisplayMemberPath="Label" Width="100" Margin="0,0,12,0"/>
+                            <Button Content="↻ Recalculer" Command="{Binding RefreshForecastCommand}" Style="{StaticResource SecondaryAction}"/>
+                        </StackPanel>
+                        <TextBlock DockPanel.Dock="Top" Text="{Binding ForecastSummary}" FontWeight="SemiBold" Margin="0,0,0,8" TextWrapping="Wrap"/>
+                        <ItemsControl DockPanel.Dock="Bottom" ItemsSource="{Binding ForecastNotes}" Margin="0,8,0,0">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding}" Foreground="#6B7280" TextWrapping="Wrap" Margin="0,0,0,2"/>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        <DataGrid ItemsSource="{Binding ForecastMonths}">
+                            <DataGrid.RowStyle>
+                                <Style TargetType="DataGridRow">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsNegative}" Value="True">
+                                            <Setter Property="Foreground" Value="#A80000"/>
+                                            <Setter Property="FontWeight" Value="SemiBold"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </DataGrid.RowStyle>
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Mois" Binding="{Binding Label}" Width="*"/>
+                                <DataGridTextColumn Header="Début de mois" Binding="{Binding Opening}" Width="130"/>
+                                <DataGridTextColumn Header="Encaissements attendus" Binding="{Binding Inflow}" Width="150"/>
+                                <DataGridTextColumn Header="Décaissements prévus" Binding="{Binding Outflow}" Width="150"/>
+                                <DataGridTextColumn Header="Fin de mois" Binding="{Binding Closing}" Width="130"/>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </DockPanel>
+                    <Border Grid.Column="2" Style="{StaticResource Card}">
+                        <DockPanel>
+                            <TextBlock DockPanel.Dock="Top" Text="Alertes" Style="{StaticResource SectionTitle}"/>
+                            <ListBox ItemsSource="{Binding Alerts}" BorderThickness="0" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <DockPanel Margin="0,3">
+                                            <TextBlock DockPanel.Dock="Left" Text="{Binding Icon}" Margin="0,0,6,0"/>
+                                            <TextBlock Text="{Binding Message}" TextWrapping="Wrap"/>
+                                        </DockPanel>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+                        </DockPanel>
+                    </Border>
+                </Grid>
+            </TabItem>
+        </TabControl>
+    </Grid>
+</UserControl>

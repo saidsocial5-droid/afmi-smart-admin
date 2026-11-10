@@ -381,6 +381,9 @@ namespace AFMI_Gestion_projet.Data.Migrations
                         .HasMaxLength(30)
                         .HasColumnType("TEXT");
 
+                    b.Property<long?>("LowBalanceThresholdMinor")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("Notes")
                         .IsRequired()
                         .HasColumnType("TEXT");
@@ -417,6 +420,72 @@ namespace AFMI_Gestion_projet.Data.Migrations
                         .HasFilter("Rib IS NOT NULL AND IsDeleted = 0");
 
                     b.ToTable("BankAccounts");
+                });
+
+            modelBuilder.Entity("AFMI_Gestion_projet.Models.Finance.BankStatement", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("BankAccountId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<long>("ClosingBalanceMinor")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("DeletedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("ImportedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(false);
+
+                    b.Property<string>("Notes")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("OpeningBalanceMinor")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateOnly>("PeriodEnd")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateOnly>("PeriodStart")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Source")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("SourceFileId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Template")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SourceFileId");
+
+                    b.HasIndex("BankAccountId", "PeriodStart");
+
+                    b.ToTable("BankStatements", t =>
+                        {
+                            t.HasCheckConstraint("CK_BankStatements_Period", "PeriodEnd >= PeriodStart");
+                        });
                 });
 
             modelBuilder.Entity("AFMI_Gestion_projet.Models.Finance.BudgetLine", b =>
@@ -609,6 +678,78 @@ namespace AFMI_Gestion_projet.Data.Migrations
                             IsActive = true,
                             Kind = "Income",
                             Label = "Produits financiers"
+                        },
+                        new
+                        {
+                            Id = 6,
+                            Code = "PERS",
+                            IsActive = true,
+                            Kind = "Expense",
+                            Label = "Personnel (salaires et charges)"
+                        },
+                        new
+                        {
+                            Id = 7,
+                            Code = "ACH",
+                            IsActive = true,
+                            Kind = "Expense",
+                            Label = "Achats et fournitures"
+                        },
+                        new
+                        {
+                            Id = 8,
+                            Code = "HONO",
+                            IsActive = true,
+                            Kind = "Expense",
+                            Label = "Prestations et honoraires"
+                        },
+                        new
+                        {
+                            Id = 9,
+                            Code = "DEPL",
+                            IsActive = true,
+                            Kind = "Expense",
+                            Label = "Déplacements et missions"
+                        },
+                        new
+                        {
+                            Id = 10,
+                            Code = "LOC",
+                            IsActive = true,
+                            Kind = "Expense",
+                            Label = "Loyers et charges locatives"
+                        },
+                        new
+                        {
+                            Id = 11,
+                            Code = "COM",
+                            IsActive = true,
+                            Kind = "Expense",
+                            Label = "Communication et publications"
+                        },
+                        new
+                        {
+                            Id = 12,
+                            Code = "FBQ",
+                            IsActive = true,
+                            Kind = "Expense",
+                            Label = "Frais bancaires"
+                        },
+                        new
+                        {
+                            Id = 13,
+                            Code = "EQP",
+                            IsActive = true,
+                            Kind = "Expense",
+                            Label = "Équipements"
+                        },
+                        new
+                        {
+                            Id = 14,
+                            Code = "AUTD",
+                            IsActive = true,
+                            Kind = "Expense",
+                            Label = "Autres dépenses"
                         });
                 });
 
@@ -987,6 +1128,99 @@ namespace AFMI_Gestion_projet.Data.Migrations
                     b.HasIndex("StoredFileId");
 
                     b.ToTable("OperationAttachments");
+                });
+
+            modelBuilder.Entity("AFMI_Gestion_projet.Models.Finance.ReconciliationMatch", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("MatchedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("MatchedBy")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Mode")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("OperationId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<double>("Score")
+                        .HasColumnType("REAL");
+
+                    b.Property<int>("StatementLineId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OperationId")
+                        .IsUnique();
+
+                    b.HasIndex("StatementLineId")
+                        .IsUnique();
+
+                    b.ToTable("ReconciliationMatches");
+                });
+
+            modelBuilder.Entity("AFMI_Gestion_projet.Models.Finance.StatementLine", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("BankStatementId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("ConfidenceJson")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("CreditMinor")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<long>("DebitMinor")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Label")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateOnly>("OperationDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Reference")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("SuggestedBudgetLineId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("SuggestedCategoryId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("SuggestedProjectId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateOnly?>("ValueDate")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BankStatementId");
+
+                    b.ToTable("StatementLines", t =>
+                        {
+                            t.HasCheckConstraint("CK_StatementLines_Amounts", "DebitMinor >= 0 AND CreditMinor >= 0 AND (DebitMinor = 0 OR CreditMinor = 0) AND DebitMinor + CreditMinor > 0");
+                        });
                 });
 
             modelBuilder.Entity("AFMI_Gestion_projet.Models.Finance.StoredFile", b =>
@@ -1603,6 +1837,24 @@ namespace AFMI_Gestion_projet.Data.Migrations
                     b.Navigation("Project");
                 });
 
+            modelBuilder.Entity("AFMI_Gestion_projet.Models.Finance.BankStatement", b =>
+                {
+                    b.HasOne("AFMI_Gestion_projet.Models.Finance.BankAccount", "BankAccount")
+                        .WithMany()
+                        .HasForeignKey("BankAccountId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("AFMI_Gestion_projet.Models.Finance.StoredFile", "SourceFile")
+                        .WithMany()
+                        .HasForeignKey("SourceFileId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("BankAccount");
+
+                    b.Navigation("SourceFile");
+                });
+
             modelBuilder.Entity("AFMI_Gestion_projet.Models.Finance.BudgetLine", b =>
                 {
                     b.HasOne("AFMI_Gestion_projet.Models.Finance.Category", "Category")
@@ -1776,6 +2028,36 @@ namespace AFMI_Gestion_projet.Data.Migrations
                     b.Navigation("StoredFile");
                 });
 
+            modelBuilder.Entity("AFMI_Gestion_projet.Models.Finance.ReconciliationMatch", b =>
+                {
+                    b.HasOne("AFMI_Gestion_projet.Models.Finance.Operation", "Operation")
+                        .WithMany()
+                        .HasForeignKey("OperationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("AFMI_Gestion_projet.Models.Finance.StatementLine", "StatementLine")
+                        .WithOne("Match")
+                        .HasForeignKey("AFMI_Gestion_projet.Models.Finance.ReconciliationMatch", "StatementLineId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Operation");
+
+                    b.Navigation("StatementLine");
+                });
+
+            modelBuilder.Entity("AFMI_Gestion_projet.Models.Finance.StatementLine", b =>
+                {
+                    b.HasOne("AFMI_Gestion_projet.Models.Finance.BankStatement", "BankStatement")
+                        .WithMany("Lines")
+                        .HasForeignKey("BankStatementId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("BankStatement");
+                });
+
             modelBuilder.Entity("AFMI_Gestion_projet.Models.Indicator", b =>
                 {
                     b.HasOne("AFMI_Gestion_projet.Models.Project", "Project")
@@ -1877,6 +2159,11 @@ namespace AFMI_Gestion_projet.Data.Migrations
                     b.Navigation("ProjectLinks");
                 });
 
+            modelBuilder.Entity("AFMI_Gestion_projet.Models.Finance.BankStatement", b =>
+                {
+                    b.Navigation("Lines");
+                });
+
             modelBuilder.Entity("AFMI_Gestion_projet.Models.Finance.FundingAgreement", b =>
                 {
                     b.Navigation("Tranches");
@@ -1887,6 +2174,11 @@ namespace AFMI_Gestion_projet.Data.Migrations
                     b.Navigation("Allocations");
 
                     b.Navigation("Attachments");
+                });
+
+            modelBuilder.Entity("AFMI_Gestion_projet.Models.Finance.StatementLine", b =>
+                {
+                    b.Navigation("Match");
                 });
 
             modelBuilder.Entity("AFMI_Gestion_projet.Models.Funder", b =>

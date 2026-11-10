@@ -39,6 +39,8 @@ namespace AFMI_Gestion_projet.Models.Finance
         public DateOnly OpeningDate { get; set; }
         public AccountStatus Status { get; set; } = AccountStatus.Active;
         public DateOnly? ClosedDate { get; set; }
+        /// <summary>Alerte « solde bas » sous ce montant (null = pas d'alerte).</summary>
+        public long? LowBalanceThresholdMinor { get; set; }
         public string Notes { get; set; } = string.Empty;
         public bool IsDeleted { get; set; }
         public DateTime? DeletedAtUtc { get; set; }
@@ -245,5 +247,65 @@ namespace AFMI_Gestion_projet.Models.Finance
         public int Priority { get; set; } = 100;
         public int HitCount { get; set; }
         public bool IsActive { get; set; } = true;
+    }
+
+    /// <summary>Relevé de compte (saisi, importé d'un fichier de la banque, ou lu sur un scan au Lot 3).</summary>
+    public class BankStatement : ISoftDeletable
+    {
+        public int Id { get; set; }
+        public int BankAccountId { get; set; }
+        public BankAccount? BankAccount { get; set; }
+        public DateOnly PeriodStart { get; set; }
+        public DateOnly PeriodEnd { get; set; }
+        public long OpeningBalanceMinor { get; set; }
+        public long ClosingBalanceMinor { get; set; }
+        public StatementSource Source { get; set; } = StatementSource.Manual;
+        public int? SourceFileId { get; set; }
+        public StoredFile? SourceFile { get; set; }
+        [MaxLength(100)] public string Template { get; set; } = string.Empty;
+        public StatementStatus Status { get; set; } = StatementStatus.Draft;
+        public DateTime ImportedAtUtc { get; set; } = DateTime.UtcNow;
+        public string Notes { get; set; } = string.Empty;
+        public bool IsDeleted { get; set; }
+        public DateTime? DeletedAtUtc { get; set; }
+
+        public ICollection<StatementLine> Lines { get; set; } = new List<StatementLine>();
+    }
+
+    /// <summary>Ligne de relevé, telle que la banque l'a passée.</summary>
+    public class StatementLine
+    {
+        public int Id { get; set; }
+        public int BankStatementId { get; set; }
+        public BankStatement? BankStatement { get; set; }
+        public DateOnly OperationDate { get; set; }
+        public DateOnly? ValueDate { get; set; }
+        [MaxLength(500)] public string Label { get; set; } = string.Empty;
+        [MaxLength(100)] public string Reference { get; set; } = string.Empty;
+        public long DebitMinor { get; set; }
+        public long CreditMinor { get; set; }
+        /// <summary>Confiance de l'extraction par champ (Lot 3), JSON.</summary>
+        public string ConfidenceJson { get; set; } = "{}";
+        public int? SuggestedCategoryId { get; set; }
+        public int? SuggestedProjectId { get; set; }
+        public int? SuggestedBudgetLineId { get; set; }
+
+        public ReconciliationMatch? Match { get; set; }
+
+        public long SignedAmountMinor => CreditMinor - DebitMinor;
+    }
+
+    /// <summary>Rapprochement d'une ligne de relevé avec une opération (un pour un).</summary>
+    public class ReconciliationMatch
+    {
+        public int Id { get; set; }
+        public int StatementLineId { get; set; }
+        public StatementLine? StatementLine { get; set; }
+        public int OperationId { get; set; }
+        public Operation? Operation { get; set; }
+        public MatchMode Mode { get; set; }
+        public double Score { get; set; }
+        public DateTime MatchedAtUtc { get; set; } = DateTime.UtcNow;
+        [MaxLength(100)] public string MatchedBy { get; set; } = string.Empty;
     }
 }

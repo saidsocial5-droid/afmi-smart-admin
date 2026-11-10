@@ -1,6 +1,6 @@
 # AFMI Smart Admin 2.0 — Architecture
 
-*Mis à jour à la fin de chaque lot. État actuel : **Lot 1 (fondations)**.*
+*Mis à jour à la fin de chaque lot. État actuel : **Lot 2 (banque et trésorerie)**.*
 
 ## 1. Vue d'ensemble
 
@@ -42,6 +42,7 @@ flowchart LR
 | `LegacyAmountsInClear` | Colonnes de montants hérités passées de TEXT (chiffré) à REAL. |
 | `DecryptLegacyAmounts` | Migration de données : déchiffrement des montants hérités par la fonction SQL `afmi_legacy_amount`, enregistrée par `DatabaseMigrator`. |
 | `FinanceFoundation` | Tables financières, paramètres, journal d'audit et ses déclencheurs. Ajoute la suppression logique (`IsDeleted`) aux projets et aux dépenses. |
+| `BankingAndReconciliation` | Relevés (`BankStatements`), lignes (`StatementLines`), rapprochements (`ReconciliationMatches`, un pour un, index uniques), seuil « solde bas », catégories de dépenses génériques. |
 
 **Démarrage** (`DatabaseMigrator.EnsureUpToDate`, exécuté une fois par processus et par base) :
 
@@ -128,6 +129,29 @@ erDiagram
   - le format est commun aux deux langages (`SharedTestCases/audit_hash.json`) ;
   - le backend écrit ses entrées avec `unified_db.append_audit`.
 - **Ancien journal :** l'ancien `AuditLog` (par projet) est conservé en lecture.
+
+### 2.5 Trésorerie et rapprochement (Lot 2)
+
+| Service (`Core/Finance`) | Rôle |
+|---|---|
+| `AccountService` | Comptes : contrôle du RIB, clôture si solde nul. Liaisons avec contrôle des chevauchements et du total ≤ 100 %. Proposition d'imputation à partir des liaisons. |
+| `ReconciliationService` | Contrôles d'un relevé (soldes, doublon, continuité). Rapprochement automatique : montant signé égal, ± N jours, score 60 % date + 40 % libellé, cas ambigus exclus. Rapprochement manuel. État de rapprochement. |
+| `TreasuryForecastService` | Prévision mensuelle en MAD (tranches attendues, reste à consommer des lignes budgétaires) et réalisé par ligne budgétaire (quote-part MAD de chaque ventilation, nette des avoirs). |
+| `TreasuryAlertService` | Alertes : solde négatif ou bas, inactivité, écart de rapprochement, virement orphelin, tranche en retard, brouillons. |
+| `StatementCsvImporter` | Lecture des exports CSV bancaires (détection du séparateur et des colonnes, formats FR et ISO). |
+| `LegacySmartOfficeImporter` | Reprise idempotente de `afmi_smartoffice.db`, lue en lecture seule, en brouillons. |
+
+**Formule de l'état de rapprochement :**
+
+- solde bancaire rectifié = solde du relevé + opérations comptabilisées non passées en banque − mouvements
+  bancaires non comptabilisés ;
+- écart inexpliqué = solde comptable à la fin du relevé − solde bancaire rectifié ;
+- les opérations antérieures au premier relevé importé sont réputées déjà prises en compte dans son solde initial.
+
+**Écran WPF** (`Desktop/Views/TreasuryView.xaml`, `Desktop/ViewModels/Treasury/`) : cinq onglets (Comptes, Opérations
+et virements, Budget et conventions, Rapprochement bancaire, Prévisions et alertes). Le ViewModel ne contient aucune
+règle financière : chaque action appelle un service de `Core` et affiche son refus éventuel. L'état de rapprochement
+est exporté par `Desktop/Services/ReconciliationExportService.cs` (QuestPDF et CSV).
 
 ## 3. Sécurité et confidentialité
 

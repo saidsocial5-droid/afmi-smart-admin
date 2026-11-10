@@ -1,5 +1,77 @@
 # Journal des modifications
 
+## [2.0.0 — Lot 2 : Banque et trésorerie] — 10/11/2026
+
+Nouveau menu **🏦 Trésorerie** dans l'application de bureau. Toutes les règles de calcul sont dans `Core/Finance`
+et testées (76 tests .NET) ; l'écran ne fait qu'appeler ces services.
+
+### Décisions prises (points à valider du Lot 1, tranchés par délégation)
+| Point | Décision |
+|---|---|
+| Remboursements et avoirs | Pas de nouvelle nature : une **recette au débit** (restitution à un bailleur) et une **dépense au crédit** (avoir, remboursement fournisseur) sont admises et viennent **en diminution** des recettes ou des dépenses. Case « Contre-passation » dans la saisie. |
+| Arrondi des conversions | Conservé : au centime, arrondi commercial (0,5 au-dessus), sur la contre-valeur de chaque opération. |
+| Clé RIB | Reste un avertissement tant qu'elle n'est pas confirmée sur de vrais RIB. |
+| Natures de dépenses | 9 catégories génériques, modifiables, sans rattachement comptable imposé : personnel, achats, prestations et honoraires, déplacements, loyers, communication, frais bancaires, équipements, autres. |
+| Reprise de Smart Office 1.x | Bouton dédié : transactions reprises en **brouillons** sur un compte choisi, projets manquants recréés, aucune duplication en cas de relance. |
+
+### Ajouté
+- **Comptes :**
+  - création et modification, avec contrôle du RIB ;
+  - typologie : fonctionnement, dédié projet, dépôt ;
+  - seuil d'alerte « solde bas » ;
+  - clôture, refusée si le solde n'est pas nul ;
+  - solde du jour et solde consolidé en MAD.
+- **Liaisons comptes ↔ projets :**
+  - période de validité ;
+  - clé de répartition en % ou en montant, refusée au-delà de 100 % et pour un même projet sur une période qui
+    chevauche ;
+  - proposition automatique du projet à la saisie d'une opération.
+- **Opérations :** recette, dépense ou contre-passation, avec imputation (projet ou fonctionnement, ligne budgétaire,
+  catégorie). Une opération est soit un brouillon, soit validée, et sa suppression est logique. Une opération
+  rapprochée ne peut pas être supprimée.
+- **Virements internes :** même devise, ou devises différentes avec le montant reçu. Ils sont exclus des recettes et
+  des dépenses.
+- **Budget et conventions :**
+  - lignes budgétaires par projet ou pour le fonctionnement, avec le réalisé en MAD et le taux d'exécution ;
+  - conventions par bailleur (taux contractuel facultatif) et échéanciers de tranches ;
+  - rattachement d'une tranche à la recette qui l'encaisse ;
+  - saisie des taux de change datés.
+- **Rapprochement bancaire :**
+  - import d'un relevé CSV de la banque : séparateur et colonnes détectés, formats français et ISO, débit/crédit ou
+    montant signé, encodages UTF-8 et Windows-1252 ;
+  - contrôles : solde initial + mouvements = solde final, relevé déjà importé, continuité avec le relevé précédent,
+    relevé manquant ;
+  - rapprochement automatique (même montant, date à ± N jours, libellé approchant). Un cas ambigu n'est **jamais**
+    rapproché automatiquement ;
+  - rapprochement manuel, et son annulation ;
+  - **état de rapprochement** : solde bancaire rectifié, solde comptable, écart inexpliqué. Export PDF et CSV
+    (Excel), nom de fichier `AFMI_EtatRapprochement_<compte>_<date>`.
+- **Prévision de trésorerie** sur 3, 6 ou 12 mois, mois par mois, en MAD :
+  - encaissements : tranches non reçues (une tranche en retard est comptée le premier mois) ;
+  - décaissements : reste à consommer des lignes budgétaires, réparti uniformément jusqu'à la fin du projet ou de
+    l'exercice ;
+  - point bas et hypothèses affichés.
+- **Alertes :** solde négatif ou bas, compte projet sans mouvement depuis 90 jours, écart de rapprochement, lignes non
+  rapprochées, virement orphelin, tranche en retard, brouillons à valider.
+- **Migration `BankingAndReconciliation` :** relevés, lignes, rapprochements, seuil d'alerte et catégories de
+  dépenses. Elle est sauvegardée et réversible comme les précédentes.
+
+### Points à valider
+1. **Ventilation multiple à l'écran.** Le moteur sait répartir une opération sur plusieurs projets (clés de
+   répartition), mais la saisie à l'écran ne propose qu'une imputation par opération. Pour l'instant, il faut
+   saisir une opération par projet. Je propose la saisie multi-lignes au Lot 5, avec la répartition des frais de
+   fonctionnement.
+2. **Hypothèse de prévision :** reste à consommer étalé uniformément jusqu'à la fin du projet. Si vos plans de
+   décaissement sont plus précis (par trimestre, par activité), on pourra les saisir plus tard.
+3. **Rapprochement un pour un :** une remise de plusieurs chèques en une seule ligne bancaire n'est pas encore gérée.
+4. **Paramètres par défaut :** tolérance de date de 3 jours, compte projet « inactif » après 90 jours. Ils seront
+   modifiables au Lot 7.
+5. **Import CSV :** les soldes initial et final sont à saisir, car les exports bancaires ne les contiennent souvent
+   pas. Au Lot 3, ils seront lus sur le relevé PDF ou scanné.
+6. **Écran non vérifié visuellement.** Il compile, et toutes ses liaisons de données correspondent à une propriété
+   existante (vérifié par un script), mais je ne peux pas lancer WPF dans mon environnement. **Merci de l'essayer
+   sous Windows** et de me signaler tout problème d'affichage ou de saisie.
+
 ## [2.0.0 — Lot 1 : Fondations] — 10/11/2026
 
 Base de la version 2.0 : socle de données financières, migrations, journal d'audit et sécurité.
