@@ -1,0 +1,124 @@
+{
+  "_comment": "Règles de paie marocaines datées. Le moteur choisit la version dont la période couvre le mois de paie (ou la version forcée). Les seuils IR sont annuels ; le moteur annualise la base mensuelle. À faire valider par l'expert-comptable à chaque loi de finances.",
+  "common": {
+    "monthly_legal_hours": 191,
+    "overtime_rates": { "h25": 0.25, "h50": 0.50, "h100": 1.00 },
+    "seniority_brackets": [
+      { "min_years": 25, "rate": 0.25 },
+      { "min_years": 20, "rate": 0.20 },
+      { "min_years": 12, "rate": 0.15 },
+      { "min_years": 5, "rate": 0.10 },
+      { "min_years": 2, "rate": 0.05 }
+    ],
+    "seniority_legal_ref": "Code du travail, art. 350",
+    "social": {
+      "cnss_ceiling_monthly": 6000.0,
+      "employee": { "cnss_prestations": 0.0448, "amo": 0.0226 },
+      "employer": {
+        "cnss_prestations": 0.0898,
+        "allocations_familiales": 0.0640,
+        "taxe_formation_professionnelle": 0.0160,
+        "amo": 0.0411
+      },
+      "legal_ref": "CNSS : prestations sociales (plafonnées à 6 000 DH/mois), allocations familiales, TFP et AMO (sur salaire réel)"
+    },
+    "deadlines": {
+      "ir_monthly": "Versement de l'IR retenu à la source avant la fin du mois suivant celui du paiement des salaires (CGI art. 174 / SIMPL-IR)",
+      "cnss_monthly": "Déclaration des salaires (BDS) et paiement CNSS via Damancom : avant le 10 du mois suivant (à confirmer auprès de la CNSS)",
+      "etat_9421_annual": "Déclaration des traitements et salaires (état 9421) avant le 1er mars de l'année suivante (CGI art. 79)"
+    },
+    "portals": {
+      "dgi_simpl": "https://www.tax.gov.ma",
+      "cnss_damancom": "https://www.damancom.ma"
+    }
+  },
+  "versions": [
+    {
+      "id": "LF2017",
+      "label": "Loi de finances 2017 (barème IR 2010, frais professionnels 20 %)",
+      "valid_from": "2017-01",
+      "valid_to": "2022-12",
+      "ir_brackets": [
+        { "upto": 30000, "rate": 0.00, "deduction": 0 },
+        { "upto": 50000, "rate": 0.10, "deduction": 3000 },
+        { "upto": 60000, "rate": 0.20, "deduction": 8000 },
+        { "upto": 80000, "rate": 0.30, "deduction": 14000 },
+        { "upto": 180000, "rate": 0.34, "deduction": 17200 },
+        { "upto": null, "rate": 0.38, "deduction": 24400 }
+      ],
+      "professional_expenses": [
+        { "max_gross_annual": null, "rate": 0.20 }
+      ],
+      "professional_expenses_cap_annual": 30000,
+      "family_reduction_per_person_annual": 360,
+      "family_max_persons": 6,
+      "legal_ref": "CGI art. 59 (frais professionnels 20 %, plafond 30 000 DH), art. 73 (barème), art. 74 (360 DH/personne, 6 personnes)"
+    },
+    {
+      "id": "LF2023",
+      "label": "Loi de finances 2023 (frais professionnels 35 % / 25 %)",
+      "valid_from": "2023-01",
+      "valid_to": "2024-12",
+      "ir_brackets": [
+        { "upto": 30000, "rate": 0.00, "deduction": 0 },
+        { "upto": 50000, "rate": 0.10, "deduction": 3000 },
+        { "upto": 60000, "rate": 0.20, "deduction": 8000 },
+        { "upto": 80000, "rate": 0.30, "deduction": 14000 },
+        { "upto": 180000, "rate": 0.34, "deduction": 17200 },
+        { "upto": null, "rate": 0.38, "deduction": 24400 }
+      ],
+      "professional_expenses": [
+        { "max_gross_annual": 78000, "rate": 0.35 },
+        { "max_gross_annual": null, "rate": 0.25 }
+      ],
+      "professional_expenses_cap_annual": 35000,
+      "family_reduction_per_person_annual": 360,
+      "family_max_persons": 6,
+      "legal_ref": "LF 2023 : CGI art. 59-I (35 % si revenu brut imposable ≤ 78 000 DH, sinon 25 %, plafond 35 000 DH)"
+    },
+    {
+      "id": "LF2025",
+      "label": "Loi de finances 2025 (nouveau barème IR, 500 DH par charge de famille)",
+      "valid_from": "2025-01",
+      "valid_to": "2025-12",
+      "ir_brackets": [
+        { "upto": 40000, "rate": 0.00, "deduction": 0 },
+        { "upto": 60000, "rate": 0.10, "deduction": 4000 },
+        { "upto": 80000, "rate": 0.20, "deduction": 10000 },
+        { "upto": 100000, "rate": 0.30, "deduction": 18000 },
+        { "upto": 180000, "rate": 0.34, "deduction": 22000 },
+        { "upto": null, "rate": 0.37, "deduction": 27400 }
+      ],
+      "professional_expenses": [
+        { "max_gross_annual": 78000, "rate": 0.35 },
+        { "max_gross_annual": null, "rate": 0.25 }
+      ],
+      "professional_expenses_cap_annual": 35000,
+      "family_reduction_per_person_annual": 500,
+      "family_max_persons": 6,
+      "legal_ref": "LF 2025 (loi n° 60-24) : CGI art. 73 (nouveau barème), art. 74 (500 DH/personne, plafond 3 000 DH)"
+    },
+    {
+      "id": "LF2026",
+      "label": "Loi de finances 2026 (600 DH par charge de famille)",
+      "valid_from": "2026-01",
+      "valid_to": null,
+      "ir_brackets": [
+        { "upto": 40000, "rate": 0.00, "deduction": 0 },
+        { "upto": 60000, "rate": 0.10, "deduction": 4000 },
+        { "upto": 80000, "rate": 0.20, "deduction": 10000 },
+        { "upto": 100000, "rate": 0.30, "deduction": 18000 },
+        { "upto": 180000, "rate": 0.34, "deduction": 22000 },
+        { "upto": null, "rate": 0.37, "deduction": 27400 }
+      ],
+      "professional_expenses": [
+        { "max_gross_annual": 78000, "rate": 0.35 },
+        { "max_gross_annual": null, "rate": 0.25 }
+      ],
+      "professional_expenses_cap_annual": 35000,
+      "family_reduction_per_person_annual": 600,
+      "family_max_persons": 6,
+      "legal_ref": "LF 2026 (loi n° 50-25) : CGI art. 74-I (600 DH/personne, plafond 3 600 DH)"
+    }
+  ]
+}

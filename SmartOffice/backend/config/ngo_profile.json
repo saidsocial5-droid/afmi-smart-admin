@@ -1,0 +1,85 @@
+{
+  "organization": {
+    "name_ar": "جمعية الغابة النموذجية إفران",
+    "name_fr": "Association Forêt Modèle d'Ifrane",
+    "acronym": "AFMI",
+    "legal_status": "Association à but non lucratif régie par le Dahir n° 1-58-376 du 15 novembre 1958",
+    "creation_year": 2010,
+    "headquarters": "Centre Ville, BP 84, Azrou 53100, Province d'Ifrane, Région Fès-Meknès, Maroc",
+    "email": "contact@foretmodele-ifrane.ma",
+    "phone": "+212 5 35 56 12 40",
+    "rib_banque": "022 330 0001234567890123 45",
+    "banque_nom": "Banque Populaire de Fès-Meknès - Agence Azrou",
+    "ice": "001894235000088",
+    "identifiant_fiscal": "40291845",
+    "languages": [
+      "Arabic",
+      "French",
+      "English"
+    ]
+  },
+  "mission": "Promouvoir la gestion durable des écosystèmes forestiers et pastoraux du Moyen Atlas marocain, préserver la biodiversité remarquable (Cèdre de l'Atlas, Macaque de Barbarie), stimuler la transition énergétique, l'éducation environnementale, et soutenir le développement socio-économique et éco-touristique équitable des communautés territoriales.",
+  "strategic_axes": [
+    "حماية النظم الإيكولوجية الغابوية ورصد التنوع البيولوجي في الأطلس المتوسط (Conservation des écosystèmes forestiers & biodiversité)",
+    "استعادة المراعي والتدبير الرعوي التقليدي نظام أكدال (Restauration des parcours & pratiques d'Agdal)",
+    "مراقبة جودة المياه السطحية وتثمين الموارد المائية (Suivi de la qualité des eaux & valorisation des ressources hydriques)",
+    "السياحة الإيكولوجية والبنية التحتية المستدامة (Écotourisme, sentiers de la nature & gîtes durables)",
+    "تقوية القدرات والتمكين المؤسساتي والمحلي (Renforcement des capacités, gouvernance & formations)",
+    "التربية البيئية والمواطنة الإيكولوجية وتوعية الناشئة (Éducation environnementale, éco-écoles & clubs verts)",
+    "الطاقات المتجددة والنجاعة الطاقية والتكنولوجيات النظيفة (Énergies renouvelables, solaire rural & efficacité énergétique)",
+    "التنمية المستدامة والاقتصاد الدائري والمقاولات الخضراء (Développement durable, économie circulaire & entrepreneuriat vert)",
+    "التكيف مع التغيرات المناخية وتدبير المواقع ذات الأهمية البيولوجية (Adaptation climatique, résilience & gestion des SIBE)",
+    "التمكين السوسيو-اقتصادي للشباب القروي والنساء بتماحضيت وأزرو وإفران (Autonomisation socio-économique des femmes et jeunes)"
+  ],
+  "target_donors": [
+    "Programme de Microfinancements du FEM (GEF SGP / PNUD Maroc)",
+    "COMDEKS / Satoyama Initiative",
+    "Agence Nationale des Eaux et Forêts (ANEF Maroc)",
+    "Initiative Nationale pour le Développement Humain (INDH - Province d'Ifrane)",
+    "Ministère de la Transition Énergétique et du Développement Durable (MTEDD)",
+    "Conseil Régional Fès-Meknès & Collectivités Territoriales",
+    "Fondation Mohammed VI pour la Protection de l'Environnement (FM6E)",
+    "Agence Marocaine pour l'Efficacité Énergétique (AMEE)",
+    "MASEN (Moroccan Agency for Sustainable Energy)",
+    "Agence du Bassin Hydraulique de Sebou (ABHS)",
+    "Portail Marocain des Marchés Publics (marchespublics.gov.ma)",
+    "Union Européenne au Maroc (EuropeAid, Green Deal Maroc, Erasmus+)",
+    "Agence Française de Développement (AFD) & Fonds Français pour l'Environnement Mondial (FFEM)",
+    "Coopération Allemande au Développement (GIZ Maroc / KfW)",
+    "Fonds PISCCA & Ambassade de France au Maroc",
+    "USAID Morocco & US Middle East Regional Cooperation (MERC)",
+    "Coopération Espagnole (AECID) & Coopération Suisse (DDC)",
+    "Fonds Canadien d'Initiatives Locales (FCIL)",
+    "Programme d'Aide aux Projets Locaux Kusanone (Ambassade du Japon)",
+    "Critical Ecosystem Partnership Fund (CEPF Méditerranée)",
+    "Union Internationale pour la Conservation de la Nature (UICN Méditerranée)",
+    "Fonds Mondial pour la Nature (WWF Maroc / WWF Méditerranée)",
+    "Banque Mondiale & Banque Africaine de Développement (BAD)",
+    "Fondations Privées Internationales (Fondation Mava, Fondation Prince Albert II de Monaco)"
+  ],
+  "partners": [
+    "Parc National d'Ifrane (PNOI)",
+    "GREPOM / BirdLife Maroc",
+    "Coopératives Locales (Coopérative Féminine de Timahdite, Coopérative Apicole d'Azrou, Coopératives Pastorales)",
+    "Université Al Akhawayn (AUI - Ifrane)",
+    "Université Sidi Mohamed Ben Abdellah (USMBA - Fès)",
+    "Institut National de la Recherche Agronomique (INRA)",
+    "Direction Régionale de l'Agriculture Fès-Meknès",
+    "Réseau International des Forêts Modèles (RIFM)"
+  ],
+  "budget_rules": {
+    "currency": "MAD",
+    "currency_symbol": "DH",
+    "vat_standard_rate": 0.20,
+    "vat_reduced_rates": [0.10, 0.14, 0.07],
+    "overhead_limit_percentage": 0.07,
+    "eligible_costs": [
+      "Équipements éco-techniques et matériel solaire",
+      "Formations, ateliers et renforcement des capacités",
+      "Sensibilisation scolaire et éducation environnementale",
+      "Aménagements éco-touristiques et sentiers botaniques",
+      "Missions de terrain et indemnités associatives",
+      "Audits externes et expertise technique spécialisée"
+    ]
+  }
+}

@@ -1,0 +1,107 @@
+<UserControl x:Class="AFMI_Gestion_projet.Views.DashboardView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" 
+             d:DesignHeight="700" d:DesignWidth="900">
+    <Border Background="{StaticResource BgLightBrush}" Padding="20">
+        <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Page Header -->
+        <TextBlock Text="Tableau de Bord Personnel" FontSize="22" FontWeight="Bold" Foreground="{StaticResource TextDarkBrush}" Margin="0,0,0,20"/>
+
+        <!-- KPI Cards Grid -->
+        <UniformGrid Grid.Row="1" Columns="4" Margin="0,0,0,20">
+            <!-- Card 1: Total Projects -->
+            <Border Style="{StaticResource CardStyle}" Margin="0,0,10,0">
+                <StackPanel>
+                    <TextBlock Text="TOTAL PROJETS" FontSize="11" FontWeight="Bold" Foreground="{StaticResource TextMutedBrush}"/>
+                    <TextBlock Text="{Binding TotalProjectsCount}" FontSize="28" FontWeight="Bold" Foreground="{StaticResource PrimaryBrush}" Margin="0,10,0,0"/>
+                </StackPanel>
+            </Border>
+
+            <!-- Card 2: Active Projects -->
+            <Border Style="{StaticResource CardStyle}" Margin="10,0,10,0">
+                <StackPanel>
+                    <TextBlock Text="PROJETS EN COURS" FontSize="11" FontWeight="Bold" Foreground="{StaticResource TextMutedBrush}"/>
+                    <TextBlock Text="{Binding ActiveProjectsCount}" FontSize="28" FontWeight="Bold" Foreground="{StaticResource InfoBrush}" Margin="0,10,0,0"/>
+                </StackPanel>
+            </Border>
+
+            <!-- Card 3: Portfolio Budget -->
+            <Border Style="{StaticResource CardStyle}" Margin="10,0,10,0">
+                <StackPanel>
+                    <TextBlock Text="BUDGET TOTAL PORTEFEUILLE" FontSize="11" FontWeight="Bold" Foreground="{StaticResource TextMutedBrush}"/>
+                    <TextBlock Text="{Binding TotalPortfolioBudget, StringFormat={}{0:N0} €}" FontSize="24" FontWeight="Bold" Foreground="{StaticResource TextDarkBrush}" Margin="0,14,0,0"/>
+                </StackPanel>
+            </Border>
+
+            <!-- Card 4: Average Progress -->
+            <Border Style="{StaticResource CardStyle}" Margin="10,0,0,0">
+                <StackPanel>
+                    <TextBlock Text="PROGRESSION MOYENNE" FontSize="11" FontWeight="Bold" Foreground="{StaticResource TextMutedBrush}"/>
+                    <TextBlock Text="{Binding AveragePortfolioProgress, StringFormat={}{0:F1} %}" FontSize="28" FontWeight="Bold" Foreground="{StaticResource SuccessBrush}" Margin="0,10,0,0"/>
+                </StackPanel>
+            </Border>
+        </UniformGrid>
+
+        <!-- Details Grid -->
+        <Grid Grid.Row="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="3*"/>
+                <ColumnDefinition Width="2*"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Late Tasks Column -->
+            <Border Style="{StaticResource CardStyle}" Margin="0,0,10,0" Grid.Column="0">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    
+                    <TextBlock Text="Tâches en Retard (Dates Échues)" FontSize="16" FontWeight="Bold" Foreground="{StaticResource DangerBrush}" Margin="0,0,0,15"/>
+
+                    <DataGrid Grid.Row="1" ItemsSource="{Binding AssignedLateTasks}" AutoGenerateColumns="False" IsReadOnly="True" HeadersVisibility="Column">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Projet" Binding="{Binding Project.Name}" Width="1.2*"/>
+                            <DataGridTextColumn Header="Tâche" Binding="{Binding Name}" Width="1.5*"/>
+                            <DataGridTextColumn Header="Responsable" Binding="{Binding Assignee}" Width="1*"/>
+                            <DataGridTextColumn Header="Échéance" Binding="{Binding TargetEndDate, StringFormat={}{0:dd/MM/yyyy}}" Width="1*"/>
+                            <DataGridTextColumn Header="Avancement" Binding="{Binding ProgressPercentage, StringFormat={}{0}%}" Width="0.8*"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
+            </Border>
+
+            <!-- Budget Alerts Column -->
+            <Border Style="{StaticResource CardStyle}" Margin="10,0,0,0" Grid.Column="1">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <TextBlock Text="Alertes Dépassement Budget" FontSize="16" FontWeight="Bold" Foreground="{StaticResource WarningBrush}" Margin="0,0,0,15"/>
+
+                    <ListBox Grid.Row="1" ItemsSource="{Binding BudgetAlerts}" BorderThickness="0" Background="Transparent" AlternationCount="2">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <Border BorderBrush="{StaticResource BorderLightBrush}" BorderThickness="0,0,0,1" Padding="8,10">
+                                    <TextBlock Text="{Binding}" TextWrapping="Wrap" Foreground="{StaticResource TextDarkBrush}" FontSize="12.5"/>
+                                </Border>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </Grid>
+            </Border>
+        </Grid>
+    </Grid>
+    </Border>
+</UserControl>

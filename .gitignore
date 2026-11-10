@@ -1,0 +1,27 @@
+# Build outputs
+build/
+bin/
+obj/
+publish/
+.vs/
+*.user
+
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Node / React
+node_modules/
+SmartOffice/frontend/dist/
+
+# Local data: databases, uploads, exports, official schemas (never committed)
+SmartOffice/backend/data/
+*.db
+*.sqlite
+*.log
+
+# Secrets
+.env
+*.pfx
+*.key

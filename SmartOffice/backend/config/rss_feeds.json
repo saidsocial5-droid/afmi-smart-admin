@@ -1,0 +1,74 @@
+[
+  {
+    "id": "feed_gef",
+    "name": "GEF (Global Environment Facility)",
+    "name_ar": "مرفق البيئة العالمية (GEF / SGP)",
+    "url": "https://www.thegef.org/rss",
+    "category": "international",
+    "focus": "Biodiversité, changement climatique, forêts et gestion durable des terres",
+    "is_active": true
+  },
+  {
+    "id": "feed_undp",
+    "name": "PNUD Maroc & Monde (UNDP News & Grants)",
+    "name_ar": "برنامج الأمم المتحدة الإنمائي (PNUD)",
+    "url": "https://www.undp.org/news/rss",
+    "category": "international",
+    "focus": "Développement durable, transition écologique, jeunesse rurale et autonomisation",
+    "is_active": true
+  },
+  {
+    "id": "feed_eu_press",
+    "name": "Union Européenne - Appels & Climat (DG INTPA / Green Deal)",
+    "name_ar": "المفوضية الأوروبية - الصفقات والمنح الخضراء",
+    "url": "https://ec.europa.eu/commission/presscorner/api/rss?language=fr",
+    "category": "international",
+    "focus": "Green Deal Maroc, conservation des écosystèmes, société civile",
+    "is_active": true
+  },
+  {
+    "id": "feed_worldbank",
+    "name": "Banque Mondiale (Projets Environnement & Résilience)",
+    "name_ar": "البنك الدولي (مشاريع البيئة والمناخ)",
+    "url": "https://www.worldbank.org/en/news/rss",
+    "category": "international",
+    "focus": "Gestion intégrée des ressources en eau, développement territorial",
+    "is_active": true
+  },
+  {
+    "id": "feed_afd",
+    "name": "AFD - Agence Française de Développement",
+    "name_ar": "الوكالة الفرنسية للتنمية (AFD / FFEM)",
+    "url": "https://www.afd.fr/fr/rss.xml",
+    "category": "bilateral",
+    "focus": "Fonds PISCCA, préservation de la biodiversité, forêts du Moyen Atlas",
+    "is_active": true
+  },
+  {
+    "id": "feed_iucn",
+    "name": "IUCN / UICN Méditerranée (Conservation de la Nature)",
+    "name_ar": "الاتحاد الدولي لصون الطبيعة (UICN)",
+    "url": "https://www.iucn.org/rss.xml",
+    "category": "international",
+    "focus": "Aires protégées, parcs nationaux, espèces menacées et SIBE",
+    "is_active": true
+  },
+  {
+    "id": "feed_fao",
+    "name": "FAO (Organisation des Nations Unies pour l'Alimentation et l'Agriculture)",
+    "name_ar": "منظمة الفاو (الغابات والتنمية القروية)",
+    "url": "https://www.fao.org/news/rss-feed/fr/",
+    "category": "international",
+    "focus": "Forêts modèles, sylvo-pastoralisme, gestion de l'eau et pastoralisme Agdal",
+    "is_active": true
+  },
+  {
+    "id": "feed_cepf",
+    "name": "Critical Ecosystem Partnership Fund (CEPF Med)",
+    "name_ar": "صندوق شراكة الأنظمة البيئية الحرجة (CEPF)",
+    "url": "https://www.cepf.net/rss.xml",
+    "category": "international",
+    "focus": "Points chauds de biodiversité du Bassin Méditerranéen et Moyen Atlas",
+    "is_active": true
+  }
+]

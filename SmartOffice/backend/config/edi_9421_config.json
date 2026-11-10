@@ -1,0 +1,35 @@
+{
+  "_comment": "Paramètres EDI de l'état 9421 (Simpl-IR, déclaration des traitements et salaires). Structure XML : cahier des charges EDI DTS de la DGI (v2.0, janvier 2015). Les codes ci-dessous doivent être recopiés de l'« Annexe 2 – Codification Référentiel » correspondant à l'année déclarée, disponible sur Simpl-IR. Laisser une valeur vide bloque l'export plutôt que d'envoyer un code inventé.",
+  "spec_version": "DTS v2.0 (DGI, janvier 2015)",
+  "employer": {
+    "identifiant_fiscal": "",
+    "raison_sociale": "",
+    "commune_code": "",
+    "adresse": "",
+    "numero_cnss": "",
+    "numero_rc": "",
+    "identifiant_tp": "",
+    "numero_telephone": "",
+    "numero_fax": "",
+    "email": ""
+  },
+  "codes": {
+    "ref_taux_permanent": "",
+    "situation_familiale": {
+      "celibataire": "",
+      "marie": "M",
+      "divorce": "",
+      "veuf": ""
+    },
+    "moyen_paiement": {
+      "especes": "ES",
+      "cheque": "",
+      "virement": "",
+      "teleservice": ""
+    }
+  },
+  "options": {
+    "days_per_month": 26,
+    "include_empty_lists": true
+  }
+}

@@ -1,0 +1,253 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using Xunit;
+using Microsoft.EntityFrameworkCore;
+using AFMI_Gestion_projet.Models;
+using AFMI_Gestion_projet.Services;
+using AFMI_Gestion_projet.ViewModels;
+
+[assembly: CollectionBehavior(DisableTestParallelization = true)]
+
+namespace AFMI_Gestion_projet.Tests
+{
+    public class EvmTests
+    {
+        [Fact]
+        public void TestEvmCalculations()
+        {
+            // 1. Arrange
+            var project = new Project
+            {
+                Id = 1,
+                Name = "Test Project",
+                BudgetGlobal = 100000,
+                TargetStartDate = DateTime.Today.AddDays(-10),
+                TargetEndDate = DateTime.Today.AddDays(10)
+            };
+
+            var t1 = new ProjectTask
+            {
+                Id = 1,
+                ProjectId = 1,
+                Name = "Task 1",
+                Budget = 40000,
+                Cost = 35000,
+                ProgressPercentage = 75, // EV = 30000
+                TargetStartDate = DateTime.Today.AddDays(-10),
+                TargetEndDate = DateTime.Today.AddDays(10)
+            };
+
+            var t2 = new ProjectTask
+            {
+                Id = 2,
+                ProjectId = 1,
+                Name = "Task 2",
+                Budget = 60000,
+                Cost = 15000,
+                ProgressPercentage = 50, // EV = 30000
+                TargetStartDate = DateTime.Today.AddDays(-10),
+                TargetEndDate = DateTime.Today.AddDays(10)
+            };
+
+            project.Tasks = new List<ProjectTask> { t1, t2 };
+
+            var service = new EvmService();
+
+            // 2. Act
+            var metrics = service.CalculateMetrics(project);
+
+            // 3. Assert
+            // BAC = 100,000 (specified in project)
+            // EV = 30,000 (t1) + 30,000 (t2) = 60,000
+            // AC = 35,000 (t1) + 15,000 (t2) = 50,000
+            // CPI = EV / AC = 60,000 / 50,000 = 1.2
+            // CV = EV - AC = 10,000
+            // EAC = BAC / CPI = 100,000 / 1.2 = 83,333.33
+            
+            Assert.Equal(100000, metrics.BAC);
+            Assert.Equal(60000, metrics.EV);
+            Assert.Equal(50000, metrics.AC);
+            Assert.Equal(1.2, metrics.CPI, 2);
+            Assert.Equal(10000, metrics.CV);
+            Assert.Equal(83333.33, metrics.EAC, 2);
+        }
+
+        [Fact]
+        public void TestPerformance500Projects()
+        {
+            // 1. Arrange - Setup in-memory SQLite database context
+            var options = new Microsoft.EntityFrameworkCore.DbContextOptionsBuilder<AFMI_Gestion_projet.Data.AppDbContext>()
+                .UseSqlite("Data Source=perf_test_database.db")
+                .Options;
+
+            using (var context = new AFMI_Gestion_projet.Data.AppDbContext())
+            {
+                // Ensure fresh DB file for testing
+                context.Database.EnsureDeleted();
+                context.Database.EnsureCreated();
+
+                // 2. Act - Insert 500 projects in a single transaction for speed
+                var rand = new Random();
+                var projects = new List<Project>();
+                for (int i = 1; i <= 500; i++)
+                {
+                    projects.Add(new Project
+                    {
+                        Name = $"Projet Test Performance {i}",
+                        Code = $"PERF-{1000 + i}",
+                        Manager = "Directeur de test",
+                        Client = "Client test",
+                        BudgetGlobal = 50000 + (rand.Next(10) * 10000),
+                        Status = i % 2 == 0 ? "Exécution" : "Planification",
+                        Priority = "Moyenne",
+                        TargetStartDate = DateTime.Today.AddDays(-rand.Next(30)),
+                        TargetEndDate = DateTime.Today.AddDays(30 + rand.Next(60))
+                    });
+                }
+
+                var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+                
+                context.Projects.AddRange(projects);
+                context.SaveChanges();
+
+                stopwatch.Stop();
+                long insertTimeMs = stopwatch.ElapsedMilliseconds;
+                System.Diagnostics.Debug.WriteLine($"Inserted 500 projects in {insertTimeMs}ms");
+
+                // 3. Act - Measure Portfolio Grid Loading Time (loading all projects with task counting)
+                stopwatch.Restart();
+                
+                var loadedProjects = context.Projects.ToList();
+                foreach (var p in loadedProjects)
+                {
+                    context.Entry(p).Collection(proj => proj.Tasks).Load();
+                }
+
+                stopwatch.Stop();
+                long loadTimeMs = stopwatch.ElapsedMilliseconds;
+
+                // 4. Assert load time is under 2000 milliseconds (2 seconds)
+                Assert.True(loadTimeMs < 2000, $"Load time was too slow: {loadTimeMs}ms (must be < 2000ms)");
+
+                // 5. Act - Measure PDF Generation Time for a project
+                var targetProject = loadedProjects.First();
+                // Add a few dummy tasks to have a realistic report
+                targetProject.Tasks.Add(new ProjectTask { Name = "Tâche A", Budget = 10000, ProgressPercentage = 100, Status = "Terminé" });
+                targetProject.Tasks.Add(new ProjectTask { Name = "Tâche B", Budget = 20000, ProgressPercentage = 50, Status = "En cours" });
+                context.SaveChanges();
+
+                var reportService = new ReportGeneratorService();
+                string testPdfPath = "performance_report_test.pdf";
+
+                stopwatch.Restart();
+                reportService.GenerateProgressReportPdf(targetProject, testPdfPath);
+                stopwatch.Stop();
+                long pdfTimeMs = stopwatch.ElapsedMilliseconds;
+
+                // Cleanup
+                if (File.Exists(testPdfPath))
+                {
+                    File.Delete(testPdfPath);
+                }
+                context.Database.EnsureDeleted();
+
+                // 6. Assert report generation is under 5000 milliseconds (5 seconds)
+                Assert.True(pdfTimeMs < 5000, $"PDF generation was too slow: {pdfTimeMs}ms (must be < 5000ms)");
+            }
+        }
+
+        [Fact]
+        public void TestDatabaseEncryption()
+        {
+            using (var context = new AFMI_Gestion_projet.Data.AppDbContext())
+            {
+                // Ensure schema is created
+                context.Database.EnsureCreated();
+
+                // Create a test project
+                var testProject = new Project
+                {
+                    Name = "Secret Project",
+                    Code = "SEC-007",
+                    BudgetGlobal = 999999
+                };
+                context.Projects.Add(testProject);
+                context.SaveChanges();
+            }
+
+            // Verify using raw SQLite connection that the budget value is stored encrypted
+            string folder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "AFMIGestionProjet");
+            string dbPath = Path.Combine(folder, "database.db");
+            using (var connection = new Microsoft.Data.Sqlite.SqliteConnection($"Data Source={dbPath}"))
+            {
+                connection.Open();
+                using (var command = connection.CreateCommand())
+                {
+                    command.CommandText = "SELECT BudgetGlobal FROM Projects WHERE Code = 'SEC-007' LIMIT 1";
+                    var result = command.ExecuteScalar()?.ToString();
+                    
+                    Assert.NotNull(result);
+                    // The raw database value must not contain the plain text budget number "999999"
+                    Assert.DoesNotContain("999999", result);
+                    
+                    // Decrypt the raw database value to verify it can be read back
+                    string decrypted = EncryptionService.Decrypt(result);
+                    Assert.Equal("999999", decrypted);
+                }
+            }
+
+            // Cleanup test project
+            using (var context = new AFMI_Gestion_projet.Data.AppDbContext())
+            {
+                var secretProject = System.Linq.Enumerable.FirstOrDefault(context.Projects, p => p.Code == "SEC-007");
+                if (secretProject != null)
+                {
+                    context.Projects.Remove(secretProject);
+                    context.SaveChanges();
+                }
+            }
+        }
+
+        [Fact]
+        public void TestWordAndExcelReportExporters()
+        {
+            var project = new Project
+            {
+                Name = "Test Export Project",
+                Code = "EXP-101",
+                Manager = "John Doe",
+                Client = "Client ACME"
+            };
+
+            var vm = new ProjectDetailViewModel(new MainViewModel(), 0);
+            vm.Project = project;
+
+            // 1. Test Word Export
+            string testDocPath = Path.Combine(Path.GetTempPath(), "test_report_doc.doc");
+            if (File.Exists(testDocPath)) File.Delete(testDocPath);
+
+            vm.ExportToWordHtml(testDocPath, "TITRE TEST", "Contenu de test pour la synthèse.");
+
+            Assert.True(File.Exists(testDocPath), "Word file was not created.");
+            string docContent = File.ReadAllText(testDocPath);
+            Assert.Contains("TITRE TEST", docContent);
+            Assert.Contains("Contenu de test pour la synthèse.", docContent);
+
+            // 2. Test Excel Export
+            string testXlsPath = Path.Combine(Path.GetTempPath(), "test_report_xls.xls");
+            if (File.Exists(testXlsPath)) File.Delete(testXlsPath);
+
+            vm.ExportToExcelTsv(testXlsPath);
+
+            Assert.True(File.Exists(testXlsPath), "Excel file was not created.");
+            string xlsContent = File.ReadAllText(testXlsPath);
+            Assert.Contains("RAPPORT FINANCIER & ANALYSE EVM", xlsContent);
+            Assert.Contains("EXP-101", xlsContent);
+
+            // Cleanup
+            if (File.Exists(testDocPath)) File.Delete(testDocPath);
+            if (File.Exists(testXlsPath)) File.Delete(testXlsPath);
+        }
+    }
+}
