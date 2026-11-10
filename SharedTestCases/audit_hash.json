@@ -1,0 +1,16 @@
+{
+  "description": "Empreinte d'une entrée du journal d'audit : SHA-256 des champs joints par U+001F, horodatage yyyy-MM-ddTHH:mm:ss.fffffff (UTC).",
+  "cases": [
+    {
+      "previousHash": "5f1c0e2b9a7d4c3e8f6a1b2c3d4e5f60718293a4b5c6d7e8f9a0b1c2d3e4f5a6",
+      "timestampUtc": "2026-11-10T12:34:56.1234560",
+      "user": "secretariat",
+      "machine": "POSTE-AFMI",
+      "entityType": "Operation",
+      "entityId": "42",
+      "action": "Création",
+      "changesJson": "{\"AmountMinor\":{\"new\":\"150000\"},\"Label\":{\"new\":\"Subvention tranche 1 — reçu\"}}",
+      "expectedHash": "b2d1a7a95875a45e67660f32ddc13c13e87daa78dbc23f2cae89483c869c36d9"
+    }
+  ]
+}

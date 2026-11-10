@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace AFMI_Gestion_projet.Models
 {
-    public class Project
+    public class Project : ISoftDeletable
     {
         public int Id { get; set; }
         public string Name { get; set; } = string.Empty;
@@ -25,6 +25,8 @@ namespace AFMI_Gestion_projet.Models
         public string Status { get; set; } = "Initiation"; // Initiation, Planification, Exécution, Clôture, Archivé
         public string Priority { get; set; } = "Moyenne"; // Basse, Moyenne, Haute, Critique
         public double BudgetGlobal { get; set; }
+        /// <summary>Devise de référence du projet (MAD par défaut).</summary>
+        public string Currency { get; set; } = "MAD";
         
         public int? ParentProjectId { get; set; }
         public Project? ParentProject { get; set; }
@@ -42,5 +44,8 @@ namespace AFMI_Gestion_projet.Models
         public ICollection<ProjectDocument> Documents { get; set; } = new List<ProjectDocument>();
         public ICollection<Indicator> Indicators { get; set; } = new List<Indicator>();
         public ProjectBaseline? Baseline { get; set; }
+
+        public bool IsDeleted { get; set; }
+        public DateTime? DeletedAtUtc { get; set; }
     }
 }

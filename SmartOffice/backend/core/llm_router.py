@@ -2,6 +2,8 @@ import os
 import json
 import base64
 import httpx
+
+from backend.core import privacy
 from typing import Optional, List, Dict, Any, Tuple
 from backend.config.settings import settings
 
@@ -97,15 +99,25 @@ class LLMRouter:
         # 1. Google Gemini Attempt (no key configured = go straight to the local engine)
         if target_provider == "gemini":
             target_provider = "ollama"
-            if self.gemini_key:
-                model = model_name or self.gemini_model
-                try:
-                    text = await self._call_gemini(
-                        prompt, system_prompt, model, temperature, images_b64, response_json
-                    )
-                    return text, f"gemini:{model}"
-                except Exception as e:
-                    print(f"[LLMRouter] Gemini failed: {e}. Falling back to Ollama or Heuristic.")
+            # Local-first : aucun envoi externe tant que l'utilisateur ne l'a pas autorisé (paramètres).
+            if self.gemini_key and privacy.external_ai_allowed():
+                mask = privacy.mask_enabled()
+                if mask and images_b64:
+                    # Une image (relevé, facture) ne peut pas être masquée : elle reste sur le poste.
+                    print("[LLMRouter] Masquage actif : image non envoyée à l'IA externe, moteur local utilisé.")
+                else:
+                    ext_prompt, ext_system = prompt, system_prompt
+                    if mask:
+                        ext_prompt, _ = privacy.mask_sensitive(prompt)
+                        ext_system, _ = privacy.mask_sensitive(system_prompt)
+                    model = model_name or self.gemini_model
+                    try:
+                        text = await self._call_gemini(
+                            ext_prompt, ext_system, model, temperature, images_b64, response_json
+                        )
+                        return text, f"gemini:{model}"
+                    except Exception as e:
+                        print(f"[LLMRouter] Gemini failed: {e}. Falling back to Ollama or Heuristic.")
 
         # 2. Ollama Local Engine Attempt (the agent's model name is a Gemini id when we fell back)
         if target_provider == "ollama":

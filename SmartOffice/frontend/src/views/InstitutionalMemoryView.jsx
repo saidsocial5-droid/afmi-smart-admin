@@ -36,6 +36,22 @@ export default function InstitutionalMemoryView({ onConfigUpdated }) {
     ollama_model: "llama3.1"
   });
 
+  // Confidentialité : IA externe désactivée par défaut, masquage des données sensibles avant tout envoi.
+  const [privacy, setPrivacy] = useState(null);
+  const [privacyError, setPrivacyError] = useState("");
+
+  const updatePrivacy = (patch) => {
+    setPrivacyError("");
+    apiFetch('/api/settings/privacy', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(patch)
+    })
+      .then(res => { if (!res.ok) throw new Error(res.status); return res.json(); })
+      .then(data => setPrivacy(data))
+      .catch(() => setPrivacyError(language === 'ar' ? "تعذّر حفظ الإعداد." : "Le paramètre n'a pas pu être enregistré."));
+  };
+
   const [testResult, setTestResult] = useState(null);
   const [isTesting, setIsTesting] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -45,6 +61,11 @@ export default function InstitutionalMemoryView({ onConfigUpdated }) {
     apiFetch('/api/settings/ngo-profile')
       .then(res => res.json())
       .then(data => setProfile(data))
+      .catch(err => console.error(err));
+
+    apiFetch('/api/settings/privacy')
+      .then(res => res.json())
+      .then(data => setPrivacy(data))
       .catch(err => console.error(err));
 
     apiFetch('/api/settings/llm-config')
@@ -521,6 +542,49 @@ export default function InstitutionalMemoryView({ onConfigUpdated }) {
 
               </div>
             </div>
+
+            {/* Confidentialité des envois vers l'IA externe */}
+            {privacy && (
+              <div className="p-4 rounded-xl bg-amber-50 border border-amber-200 space-y-3 text-xs">
+                <h4 className="font-bold text-slate-800">
+                  {language === 'ar' ? "الخصوصية والذكاء الاصطناعي الخارجي" : "Confidentialité et IA externe"}
+                </h4>
+                <label className="flex items-start gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    className="mt-0.5"
+                    checked={!privacy.offline_mode}
+                    onChange={(e) => updatePrivacy({ offline_mode: !e.target.checked })}
+                  />
+                  <span>
+                    {language === 'ar'
+                      ? "السماح بإرسال الطلبات إلى ذكاء اصطناعي خارجي (Gemini). عند التعطيل، تبقى كل المعالجة على الجهاز."
+                      : "Autoriser l'envoi de requêtes à une IA externe (Gemini). Désactivé : tout reste traité sur le poste (Ollama ou moteur local)."}
+                  </span>
+                </label>
+                <label className="flex items-start gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    className="mt-0.5"
+                    checked={privacy.mask_sensitive_data}
+                    onChange={(e) => updatePrivacy({ mask_sensitive_data: e.target.checked })}
+                  />
+                  <span>
+                    {language === 'ar'
+                      ? "إخفاء البيانات الحساسة قبل الإرسال (RIB، ICE، IF، CIN، CNSS، الأجور). لا تُرسل الصور الممسوحة."
+                      : "Masquer les données sensibles avant envoi (RIB, IBAN, ICE, IF, CIN, CNSS, salaires). Les images scannées ne sont alors jamais envoyées."}
+                  </span>
+                </label>
+                {!privacy.secure_key_storage && (
+                  <p className="text-amber-800">
+                    {language === 'ar'
+                      ? "التخزين المشفّر للمفاتيح غير متاح هنا: يُحتفظ بمفتاح API حتى الإغلاق فقط."
+                      : "Stockage chiffré des clés indisponible ici : la clé API n'est conservée que jusqu'à la fermeture."}
+                  </p>
+                )}
+                {privacyError && <p className="text-red-700">{privacyError}</p>}
+              </div>
+            )}
 
             {/* Gemini Settings */}
             <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-3 text-xs">

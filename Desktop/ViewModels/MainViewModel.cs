@@ -156,8 +156,8 @@ namespace AFMI_Gestion_projet.ViewModels
         {
             try
             {
-                string folder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "AFMIGestionProjet");
-                string dbPath = Path.Combine(folder, "database.db");
+                string dbPath = DatabasePaths.GetDatabasePath();
+                string folder = Path.GetDirectoryName(dbPath)!;
                 
                 if (File.Exists(dbPath))
                 {
@@ -321,8 +321,8 @@ namespace AFMI_Gestion_projet.ViewModels
             {
                 try
                 {
-                    string folder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "AFMIGestionProjet");
-                    string dbPath = Path.Combine(folder, "database.db");
+                    string dbPath = DatabasePaths.GetDatabasePath();
+                    string folder = Path.GetDirectoryName(dbPath)!;
 
                     if (File.Exists(dbPath))
                     {
@@ -362,8 +362,8 @@ namespace AFMI_Gestion_projet.ViewModels
                 {
                     try
                     {
-                        string folder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "AFMIGestionProjet");
-                        string dbPath = Path.Combine(folder, "database.db");
+                        string dbPath = DatabasePaths.GetDatabasePath();
+                        string folder = Path.GetDirectoryName(dbPath)!;
 
                         // Perform a safety backup of current db before replacing it
                         if (File.Exists(dbPath))
@@ -381,6 +381,22 @@ namespace AFMI_Gestion_projet.ViewModels
 
                         // Copy imported database
                         File.Copy(ofd.FileName, dbPath, true);
+
+                        // La base importée peut venir d'une version antérieure : elle sera sauvegardée puis migrée
+                        // à la prochaine ouverture (ci-dessous). En cas d'échec, l'ancienne base est restaurée.
+                        DatabaseMigrator.ForgetMigrationState();
+                        try
+                        {
+                            using var migrated = new AppDbContext();
+                        }
+                        catch
+                        {
+                            Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools();
+                            string safetyBackup = Path.Combine(folder, "database_before_import.db");
+                            if (File.Exists(safetyBackup)) File.Copy(safetyBackup, dbPath, true);
+                            DatabaseMigrator.ForgetMigrationState();
+                            throw;
+                        }
 
                         System.Windows.MessageBox.Show(
                             "Base de données importée avec succès ! L'application va recharger les données.",

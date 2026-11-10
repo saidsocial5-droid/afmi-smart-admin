@@ -38,8 +38,11 @@ FRONTEND_DIST_DIR = Path(_frontend_env) if _frontend_env else BASE_DIR.parent / 
 class AppSettings(BaseModel):
     app_name: str = "AFMI-SmartOffice"
     app_title_ar: str = "المكتب الذكي للجمعية - إفران"
-    version: str = "1.3.0"
+    version: str = "2.0.0-dev"
     db_url: str = f"sqlite:///{DATA_DIR / 'afmi_smartoffice.db'}"
+
+    # Jeton de session fourni par l'application de bureau (vide = API ouverte aux pages locales, mode développement)
+    api_token: str = os.getenv("AFMI_API_TOKEN", "")
 
     # LLM Settings
     default_provider: str = os.getenv("LLM_PROVIDER", "gemini")  # "gemini" or "ollama"

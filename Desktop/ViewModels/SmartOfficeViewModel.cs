@@ -42,7 +42,8 @@ namespace AFMI_Gestion_projet.ViewModels
             try
             {
                 string url = await SmartOfficeHostService.Instance.EnsureStartedAsync();
-                PageUri = new Uri(url + "/");
+                // La page reçoit le jeton une fois ; le backend le remplace par un cookie HttpOnly.
+                PageUri = new Uri($"{url}/?afmi_token={SmartOfficeHostService.Instance.SessionToken}");
                 StatusMessage = string.Empty;
             }
             catch (Exception ex)

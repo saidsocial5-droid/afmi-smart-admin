@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Couche données et règles métier, sans dépendance WPF : testable sur tout système (Core.Tests). -->
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <RootNamespace>AFMI_Gestion_projet</RootNamespace>
+    <AssemblyName>AFMI.Core</AssemblyName>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.8">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.8" />
+    <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="9.0.8" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="AFMI.Core.Tests" />
+  </ItemGroup>
+
+</Project>

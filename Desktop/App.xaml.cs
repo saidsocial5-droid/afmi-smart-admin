@@ -20,6 +20,23 @@ namespace AFMI_Gestion_projet
                 ShowExceptionDialog(args.Exception, "Dispatcher Unhandled Exception");
                 args.Handled = true; // Keep app alive
             };
+
+            // Mise à jour du schéma avant toute fenêtre : sauvegarde automatique puis migrations EF Core.
+            // En cas d'échec, la transaction est annulée et l'application s'arrête au lieu de travailler sur une base incohérente.
+            try
+            {
+                using var db = new Data.AppDbContext();
+            }
+            catch (Exception ex)
+            {
+                string dbPath = Data.DatabasePaths.GetDatabasePath();
+                MessageBox.Show(
+                    "La mise à jour de la base de données a échoué. Aucune donnée n'a été modifiée.\n\n" +
+                    $"Détail : {ex.GetBaseException().Message}\n\n" +
+                    $"Base : {dbPath}\nSauvegardes : {Data.DatabasePaths.GetBackupDirectory(dbPath)}",
+                    "AFMI Smart Admin — mise à jour impossible", MessageBoxButton.OK, MessageBoxImage.Error);
+                Shutdown(1);
+            }
         }
 
         protected override void OnExit(ExitEventArgs e)

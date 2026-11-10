@@ -16,7 +16,10 @@ AFMI Smart Admin Officiel/
 ├── Desktop/                         ← application WPF (fenêtre principale)
 │   ├── Services/SmartOfficeHostService.cs   ← démarre/arrête le backend Python
 │   └── Views/SmartOfficeView.xaml            ← affiche l'UI Smart Office (WebView2)
-├── Desktop.Tests/                   ← tests xUnit
+├── Core/                            ← entités, AppDbContext, migrations EF Core, règles financières (net9.0)
+├── Core.Tests/                      ← tests xUnit multiplateformes (migrations, finance, audit)
+├── Desktop.Tests/                   ← tests xUnit (Windows)
+├── SharedTestCases/                 ← vecteurs de test communs .NET / Python
 └── SmartOffice/
     ├── backend/                     ← FastAPI (sert aussi frontend/dist)
     ├── frontend/                    ← React ; dist/ = build déjà compilé
@@ -53,7 +56,9 @@ Variables optionnelles : `AFMI_PYTHON` (chemin de python.exe), `AFMI_SMARTOFFICE
 ## Commandes
 
 - Build : `dotnet build "AFMI Smart Admin.sln"`
-- Tests bureau : `dotnet test "AFMI Smart Admin.sln"`
+- Tests bureau : `dotnet test "AFMI Smart Admin.sln"` (`dotnet test Core.Tests` fonctionne aussi hors Windows)
+- Nouvelle migration : `dotnet ef migrations add <Nom> --project Core -o Data/Migrations`, puis régénérer
+  `SmartOffice/tests/fixtures/unified_schema.sql` (voir [docs/v2/ARCHITECTURE.md](docs/v2/ARCHITECTURE.md))
 - Tests backend : `python -m pytest SmartOffice\tests`
 - Modifier l'UI Smart Office : `cd SmartOffice/frontend && npm install && npm run build` (régénère `dist/`)
 
@@ -96,7 +101,10 @@ Comparaison avec les logiciels du marché et feuille de route : [docs/COMPARAISO
 - SmartOffice installé : `%LocalAppData%\AFMI Smart Admin\SmartOffice\` (base, exports, profil institutionnel).
 - SmartOffice en développement : `SmartOffice/backend/data/`.
 
-Les deux bases restent séparées pour l'instant ; leur unification (projets, bailleurs) est une prochaine étape.
+Depuis la v2 (Lot 1), `database.db` est la **base unique** : son schéma est géré par les migrations EF Core (`Core/`),
+sauvegardée automatiquement avant chaque migration (`backups\`), et le backend y accède sans en modifier la structure.
+`afmi_smartoffice.db` ne garde que les données techniques du backend (agents, chaînes, paie) ; la reprise de ses projets
+et transactions est prévue au Lot 2. Feuille de route v2 : [docs/v2/ANALYSE.md](docs/v2/ANALYSE.md).
 
 ## 🔒 Sécurité
 
@@ -110,8 +118,9 @@ Corrigé :
   autre compte Windows demandera de ressaisir ces secrets.
 - Desktop : un envoi SMTP non configuré ou en échec est signalé comme « non envoyé ».
 
+- v2 Lot 1 : faux chiffrement AES (clé en dur) retiré, montants migrés en clair après sauvegarde ; IA externe désactivée
+  par défaut et masquage des RIB/ICE/IF/CIN/CNSS/salaires avant envoi ; jeton de session pour l'API locale ;
+  clé Gemini chiffrée par DPAPI ; journal d'audit en ajout seul et chaîné ; suppression logique. Détails : `CHANGELOG.md`.
+
 Reste à traiter :
-- `EncryptionService` (montants financiers) utilise toujours une clé AES codée en dur ; la remplacer demande un plan de
-  migration compatible avec l'export/import de base entre postes.
-- Le RIB, l'ICE et l'IF du profil institutionnel sont injectés dans chaque prompt envoyé à Gemini.
-- L'API n'a pas d'authentification : tout programme local de l'utilisateur peut l'appeler.
+- Chiffrement complet de la base (SQLCipher) : à évaluer (décision D2-b de `docs/v2/ANALYSE.md`).

@@ -23,6 +23,9 @@ namespace AFMI_Gestion_projet.Services
 
         public string? BaseUrl { get; private set; }
 
+        /// <summary>Jeton de la session en cours (à passer à la page via ?afmi_token=…, ou en en-tête X-AFMI-Token).</summary>
+        public string? SessionToken { get; private set; }
+
         public string LogFilePath { get; } = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "AFMIGestionProjet", "smartoffice.log");
 
@@ -74,6 +77,13 @@ namespace AFMI_Gestion_projet.Services
                         psi.ArgumentList.Add(arg);
                     }
                 }
+                // Jeton de session : seule cette application (et sa fenêtre Smart Office) peut appeler l'API locale.
+                string token = Convert.ToHexString(System.Security.Cryptography.RandomNumberGenerator.GetBytes(32));
+                psi.Environment["AFMI_API_TOKEN"] = token;
+                // Base unique du poste, partagée avec le backend (schéma géré par les migrations EF Core).
+                psi.Environment["AFMI_DESKTOP_DB"] = AFMI_Gestion_projet.Data.DatabasePaths.GetDatabasePath();
+                psi.Environment["AFMI_AUDIT_USER"] = AFMI_Gestion_projet.Data.AuditContext.CurrentUser;
+
                 // Le backend affiche de l'arabe et des emojis : sans UTF-8 la console Windows (cp1252) fait planter print().
                 psi.Environment["PYTHONIOENCODING"] = "utf-8";
                 psi.Environment["PYTHONUTF8"] = "1";
@@ -130,10 +140,13 @@ namespace AFMI_Gestion_projet.Services
                     }
                     try
                     {
-                        using var response = await _httpClient.GetAsync($"{url}/api/agents", cancellationToken);
+                        using var request = new HttpRequestMessage(HttpMethod.Get, $"{url}/api/agents");
+                        request.Headers.Add("X-AFMI-Token", token);
+                        using var response = await _httpClient.SendAsync(request, cancellationToken);
                         if (response.IsSuccessStatusCode)
                         {
                             BaseUrl = url;
+                            SessionToken = token;
                             return url;
                         }
                     }

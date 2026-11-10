@@ -10,11 +10,7 @@ namespace AFMI_Gestion_projet.Data
     {
         public static void Initialize(AppDbContext context)
         {
-            // Ensure database is created
-            context.Database.EnsureCreated();
-
-            // Safely add new document columns to existing databases (migration-free upgrade)
-            context.EnsureDocumentColumnsExist();
+            // Le schéma est créé et mis à jour par les migrations EF Core (DatabaseMigrator), dès la création du contexte.
 
             // Seed Templates if empty
             if (!context.Templates.Any())

@@ -2,7 +2,7 @@ using System;
 
 namespace AFMI_Gestion_projet.Models
 {
-    public class CostEntry
+    public class CostEntry : ISoftDeletable
     {
         public int Id { get; set; }
         public int ProjectId { get; set; }
@@ -16,5 +16,8 @@ namespace AFMI_Gestion_projet.Models
         public double EstimatedCost { get; set; }
         public double ActualCost { get; set; }
         public DateTime Date { get; set; } = DateTime.Now;
+
+        public bool IsDeleted { get; set; }
+        public DateTime? DeletedAtUtc { get; set; }
     }
 }

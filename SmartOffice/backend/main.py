@@ -1,3 +1,4 @@
+import hmac
 import os
 import re
 from pathlib import Path
@@ -13,7 +14,7 @@ from backend.api.routes_ocr import router as ocr_router
 from backend.api.routes_finance import router as finance_router
 from backend.api.routes_grants import router as grants_router
 from backend.api.routes_projects import router as projects_router
-from backend.api.routes_settings import router as settings_router
+from backend.api.routes_settings import router as settings_router, load_persisted_gemini_key
 from backend.api.routes_plugins import router as plugins_router
 from backend.api.routes_rss import router as rss_router
 from backend.api.routes_workflows import router as workflows_router
@@ -30,6 +31,9 @@ app = FastAPI(
 # Local-only access: the API has no authentication, so only pages served from this machine
 # (the app itself, the WPF WebView2, the Vite dev server) may call it.
 LOCAL_ORIGIN_REGEX = r"^https?://(127\.0\.0\.1|localhost)(:\d+)?$"
+TOKEN_HEADER = "X-AFMI-Token"
+TOKEN_COOKIE = "afmi_session"
+TOKEN_QUERY = "afmi_token"
 LOCAL_HOST_REGEX = re.compile(r"^(127\.0\.0\.1|localhost)(:\d+)?$", re.IGNORECASE)
 
 @app.middleware("http")
@@ -42,7 +46,22 @@ async def local_origin_guard(request: Request, call_next):
     origin = request.headers.get("origin")
     if origin is not None and not re.match(LOCAL_ORIGIN_REGEX, origin, re.IGNORECASE):
         return JSONResponse(status_code=403, content={"detail": "Origine non autorisée."})
-    return await call_next(request)
+
+    # Jeton de session (AFMI_API_TOKEN, généré par l'application de bureau à chaque démarrage) : seuls l'application
+    # et sa fenêtre Smart Office peuvent appeler l'API, pas les autres programmes du poste. La page est ouverte avec
+    # ?afmi_token=… ; le backend pose alors un cookie HttpOnly réutilisé par toutes les requêtes de la page.
+    expected = settings.api_token
+    if not expected:
+        return await call_next(request)
+    supplied = request.headers.get(TOKEN_HEADER) or request.cookies.get(TOKEN_COOKIE) or ""
+    if hmac.compare_digest(supplied.encode(), expected.encode()):
+        return await call_next(request)
+    query_token = request.query_params.get(TOKEN_QUERY, "")
+    if query_token and hmac.compare_digest(query_token.encode(), expected.encode()):
+        response = await call_next(request)
+        response.set_cookie(TOKEN_COOKIE, expected, httponly=True, samesite="strict", path="/")
+        return response
+    return JSONResponse(status_code=401, content={"detail": "Session Smart Office invalide : rouvrez le module depuis l'application."})
 
 app.add_middleware(
     CORSMiddleware,
@@ -58,6 +77,7 @@ def startup_event():
     print("[AFMI-SmartOffice] Initializing database and agents...")
     init_db()
     mark_interrupted_runs()
+    load_persisted_gemini_key()
     print("[AFMI-SmartOffice] System initialized successfully.")
 
 # Mount API Routers
