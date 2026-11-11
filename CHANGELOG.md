@@ -1,5 +1,42 @@
 # Journal des modifications
 
+## [2.2.0] — 12/11/2026 — Mise à jour automatique
+
+### Ajouté
+- **Recherche des nouvelles versions** :
+  - l'application de bureau consulte la dernière version publiée 10 secondes après le démarrage ;
+  - un bandeau propose « Installer maintenant » ou « Plus tard » ;
+  - rien n'est installé sans votre accord ;
+  - le lien « Version x · mises à jour », en bas du menu, lance la recherche à la demande.
+- **Installation sûre** :
+  - téléchargement de l'installateur ;
+  - contrôle de la signature du manifeste (ECDSA P-256, clé publique intégrée à l'application) ;
+  - contrôle de l'adresse (dépôt de publication officiel uniquement) ;
+  - contrôle de la taille et de l'empreinte SHA-256 ;
+  - **sauvegarde de la base** ;
+  - installation silencieuse, puis redémarrage automatique de l'application.
+- **Publication automatique** (workflow « Installateur Windows ») :
+  - elle a lieu à chaque fusion dans `main`, ou avec l'étiquette « publier » sur une pull request ;
+  - le workflow construit l'installateur, signe le manifeste et publie la version dans le dépôt public
+    `afmi-smart-admin-releases` ;
+  - une version déjà publiée n'est jamais remplacée.
+- Paramètres › Mises à jour : désactivation de la recherche automatique.
+
+### Sécurité
+- Le dépôt du code reste privé. Le dépôt de publication ne contient que les installateurs et le manifeste signé.
+- Un jeton GitHub volé ne suffirait pas à diffuser une fausse version : sans la clé privée de signature, l'application
+  refuse la mise à jour.
+- Aucune donnée n'est envoyée lors de la recherche, qui est une simple lecture du manifeste public.
+- Tests : 17 xUnit sur les règles de mise à jour (signature, signature openssl, adresse, version, taille, empreinte),
+  3 pytest sur le manifeste.
+
+### À faire une fois par l'association
+Créer le dépôt public `afmi-smart-admin-releases` et les secrets `RELEASES_TOKEN` et `UPDATE_SIGNING_KEY`
+(voir `docs/v2/MISES_A_JOUR.md`).
+
+**Important :** les versions 2.1.0 et antérieures n'ont pas la mise à jour automatique. Il faut installer une fois la
+2.2.0 à la main ; les versions suivantes arriveront seules.
+
 ## [2.1.0] — 11/11/2026 — Lot 9 : comptes rendus et PV, éditeur dans les rapports, dossiers, liaisons
 
 Demandes de l'utilisateur après la première installation.
@@ -53,7 +90,7 @@ Demandes de l'utilisateur après la première installation.
 - Paramètres › Rapports : copie des documents dans les dossiers locaux (activée par défaut) et dossier racine des
   projets.
 - La fenêtre principale s'ouvre en plein écran (agrandie).
-- Tests : 98 xUnit, 175 pytest.
+- Tests : 98 xUnit, 175 pytest (2.2.0 : 115 xUnit, 178 pytest).
 
 ### Points à valider
 1. Les **modèles de PV** sont des propositions, à remplacer par vos modèles s'ils existent. Envoyez-les-moi ou

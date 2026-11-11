@@ -29,3 +29,6 @@ SmartOffice/backend/data/
 # Composants tiers téléchargés par installer/prepare_third_party.ps1 (empreintes conservées)
 third_party/*
 !third_party/SHA256SUMS.txt
+
+# Clés privées (jamais dans le dépôt)
+*.pem

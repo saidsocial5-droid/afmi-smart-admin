@@ -173,6 +173,11 @@
                         <StackPanel VerticalAlignment="Center">
                             <TextBlock Text="Statut Global" FontSize="11.5" Foreground="#64748B"/>
                             <TextBlock Text="Base de données locale" FontSize="12.5" FontWeight="SemiBold" Foreground="#E2E8F0" Margin="0,2,0,0"/>
+                            <TextBlock FontSize="11.5" Margin="0,4,0,0" ToolTip="Rechercher une nouvelle version">
+                                <Hyperlink Command="{Binding CheckUpdatesNowCommand}" Foreground="#94A3B8">
+                                    <Run Text="{Binding InstalledVersionLabel, Mode=OneWay}"/><Run Text=" · mises à jour"/>
+                                </Hyperlink>
+                            </TextBlock>
                         </StackPanel>
 
                         <!-- Notification Badge (Late tasks) -->
@@ -198,6 +203,7 @@
         <Grid Grid.Column="1">
             <Grid.RowDefinitions>
                 <RowDefinition Height="55"/>
+                <RowDefinition Height="Auto"/>
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
 
@@ -213,8 +219,31 @@
                 </Grid>
             </Border>
 
+            <!-- Bandeau de mise à jour (version plus récente publiée, manifeste signé) -->
+            <Border Grid.Row="1" Background="#ECFDF5" BorderBrush="#10B981" BorderThickness="0,0,0,1" Padding="20,10"
+                    Visibility="{Binding IsUpdateBannerVisible, Converter={StaticResource BoolToVis}}">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="{Binding UpdateMessage}" FontWeight="SemiBold" Foreground="#065F46" TextWrapping="Wrap"/>
+                        <TextBlock Text="{Binding UpdateNotes}" FontSize="12" Foreground="#047857" TextWrapping="Wrap" MaxHeight="60" TextTrimming="CharacterEllipsis" Margin="0,2,0,0"/>
+                        <ProgressBar Height="6" Margin="0,6,0,0" Maximum="100" Value="{Binding UpdateProgress}"
+                                     Visibility="{Binding IsUpdateBusy, Converter={StaticResource BoolToVis}}"/>
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="15,0,0,0">
+                        <Button Content="Installer maintenant" Command="{Binding InstallUpdateCommand}" Padding="14,6" Margin="0,0,8,0"
+                                Background="#1B4332" Foreground="White" BorderThickness="0" IsEnabled="{Binding IsUpdateIdle}"/>
+                        <Button Content="Plus tard" Command="{Binding DismissUpdateCommand}" Padding="14,6"
+                                IsEnabled="{Binding IsUpdateIdle}"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
             <!-- Active View Content -->
-            <ContentControl Grid.Row="1" Content="{Binding CurrentViewModel}"/>
+            <ContentControl Grid.Row="2" Content="{Binding CurrentViewModel}"/>
         </Grid>
 
         <!-- SMTP CONFIGURATION DIALOG OVERLAY -->

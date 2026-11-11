@@ -48,8 +48,8 @@ namespace AFMI_Gestion_projet.ViewModels
         public bool IsDemoMode => Services.DemoService.IsDemoMode;
         public bool IsNotDemoMode => !IsDemoMode;
         public string WindowTitle => IsDemoMode
-            ? "AFMI Smart Admin 2.1 — DÉMONSTRATION (données fictives)"
-            : "AFMI Smart Admin 2.1 - Gestion de Projets, Agents IA & Reporting";
+            ? "AFMI Smart Admin 2.2 — DÉMONSTRATION (données fictives)"
+            : "AFMI Smart Admin 2.2 - Gestion de Projets, Agents IA & Reporting";
 
         public MainViewModel()
         {
@@ -85,6 +85,9 @@ namespace AFMI_Gestion_projet.ViewModels
             ExportDbCommand = new RelayCommand(ExportDatabase);
             ImportDbCommand = new RelayCommand(ImportDatabase);
             OpenDemoCommand = new RelayCommand(OpenDemo);
+
+            // Mise à jour automatique (manifeste signé, rien n'est installé sans accord)
+            StartUpdateCheck();
 
             UpdateGlobalNotifications();
         }

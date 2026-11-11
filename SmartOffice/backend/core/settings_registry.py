@@ -51,6 +51,7 @@ SECTIONS = [
     ("sauvegardes", "Sauvegardes", "Dossier, fréquence, conservation, restauration"),
     ("apparence", "Apparence", "Langue de l'interface, taille du texte, couleur principale"),
     ("rapports", "Rapports et cycle de vie", "Niveaux des contrôles, documents attendus par phase"),
+    ("mises_a_jour", "Mises à jour", "Recherche automatique des nouvelles versions"),
 ]
 
 MONTHS = list(range(1, 13))
@@ -123,11 +124,16 @@ FIELDS += [
     Field("backup.frequency", "sauvegardes", "Fréquence", "select", "daily", options=["startup", "daily", "weekly", "manual"],
           help="Vérifiée au démarrage de l'application de bureau et toutes les heures.", restart=True),
     Field("backup.retention", "sauvegardes", "Nombre de sauvegardes conservées", "int", 30, min=1, max=365),
-    # Apparence
+    # Documents (Lot 9)
     Field("ged.mirror_local", "rapports", "Copier chaque document dans les dossiers locaux du projet", "bool", True, group="Documents",
           help="Structure des « Dossiers Locaux » : Année › Trimestre › Comptes rendus, Rapports d'avancement, Rapports financiers."),
     Field("ged.local_root", "rapports", "Dossier racine des projets", "string", "", group="Documents",
           help="Vide : Documents\\AFMI_Projets. Utilisé quand un projet n'a pas encore de dossier local."),
+    # Mises à jour
+    Field("updates.auto_check", "mises_a_jour", "Rechercher automatiquement les nouvelles versions au démarrage", "bool", True,
+          help="L'application de bureau consulte la dernière version publiée (manifeste signé). Rien n'est installé sans votre accord : "
+               "un bandeau propose « Installer maintenant ». Seule la version installée est envoyée par la requête, aucune donnée."),
+    # Apparence
     Field("ui.language", "apparence", "Langue de l'interface", "select", "fr", options=["fr", "ar"]),
     Field("ui.font_scale", "apparence", "Taille du texte (%)", "int", 100, min=85, max=130),
     Field("ui.primary_color", "apparence", "Couleur principale de l'interface", "color", "#1B4332"),

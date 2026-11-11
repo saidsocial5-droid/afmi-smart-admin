@@ -5,6 +5,8 @@
     <TargetFramework>net9.0-windows</TargetFramework>
     <RootNamespace>AFMI_Gestion_projet</RootNamespace>
     <AssemblyName>AFMI Smart Admin</AssemblyName>
+    <!-- Version de l application ; build_installer.bat la fixe aussi (-p:Version). Sert à la mise à jour automatique. -->
+    <Version>2.2.0</Version>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>

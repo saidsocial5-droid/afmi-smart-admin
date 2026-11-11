@@ -266,7 +266,7 @@ def preview_notifications():
     return {"alerts": _guard(notifications.collect)}
 
 
-APP_VERSION = "2.1.0"
+APP_VERSION = "2.2.0"
 
 
 @router.get("/header")

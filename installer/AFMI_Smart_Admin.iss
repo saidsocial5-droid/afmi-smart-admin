@@ -3,7 +3,7 @@
 
 #define AppName "AFMI Smart Admin"
 #ifndef AppVersion
-  #define AppVersion "2.1.0"
+  #define AppVersion "2.2.0"
 #endif
 #define AppPublisher "Association Forêt Modèle d'Ifrane (AFMI)"
 #define AppExe "AFMI Smart Admin.exe"
@@ -54,6 +54,8 @@ Name: "{autodesktop}\{#AppName}"; Filename: "{app}\{#AppExe}"; Tasks: desktopico
 
 [Run]
 Filename: "{app}\{#AppExe}"; Description: "{cm:LaunchProgram,{#AppName}}"; Flags: nowait postinstall skipifsilent
+; Mise à jour automatique (installation silencieuse lancée par l'application) : l'application redémarre seule
+Filename: "{app}\{#AppExe}"; Flags: nowait runasoriginaluser; Check: WizardSilent
 
 [UninstallRun]
 ; Arrête un backend Smart Office resté actif avant la suppression des fichiers
