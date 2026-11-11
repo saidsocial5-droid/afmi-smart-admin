@@ -1,4 +1,4 @@
-# Prépare les composants tiers embarqués dans l'installateur AFMI Smart Admin 2.0 (à lancer une fois, sous Windows) :
+﻿# Prépare les composants tiers embarqués dans l'installateur AFMI Smart Admin 2.0 (à lancer une fois, sous Windows) :
 #   third_party\tesseract\  : Tesseract OCR 5 (UB Mannheim, licence Apache 2.0) + langues fra et ara (tessdata, Apache 2.0)
 #   third_party\fonts\      : police arabe Amiri (SIL Open Font License 1.1), utilisée par les rapports en arabe
 # Chaque fichier téléchargé est consigné avec son empreinte SHA-256 dans third_party\SHA256SUMS.txt. Aux constructions
