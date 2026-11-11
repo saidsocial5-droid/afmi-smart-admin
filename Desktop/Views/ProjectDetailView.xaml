@@ -6,6 +6,7 @@
              xmlns:models="clr-namespace:AFMI_Gestion_projet.Models;assembly=AFMI.Core"
              xmlns:converters="clr-namespace:AFMI_Gestion_projet.Converters"
              xmlns:views="clr-namespace:AFMI_Gestion_projet.Views"
+             xmlns:wv2="clr-namespace:Microsoft.Web.WebView2.Wpf;assembly=Microsoft.Web.WebView2.Wpf"
              mc:Ignorable="d" 
              d:DesignHeight="800" d:DesignWidth="1100">
 
@@ -62,10 +63,10 @@
                 </Grid>
 
                 <!-- Budget -->
-                <TextBlock Grid.Column="3" Text="{Binding Budget, StringFormat={}{0:N0} €}" VerticalAlignment="Center"/>
+                <TextBlock Grid.Column="3" Text="{Binding Budget, StringFormat={}{0:N0} MAD}" VerticalAlignment="Center"/>
 
                 <!-- Cost -->
-                <TextBlock Grid.Column="4" Text="{Binding Cost, StringFormat={}{0:N0} €}" VerticalAlignment="Center"/>
+                <TextBlock Grid.Column="4" Text="{Binding Cost, StringFormat={}{0:N0} MAD}" VerticalAlignment="Center"/>
 
                 <!-- Status Label -->
                 <Border Grid.Column="5" CornerRadius="8" Padding="6,2" HorizontalAlignment="Left" Background="#F3F4F6">
@@ -168,25 +169,25 @@
                                 <Border Style="{StaticResource CardStyle}" Padding="10" Margin="4">
                                     <StackPanel>
                                         <TextBlock Text="Budget Initial (BAC)" FontSize="10.5" Foreground="{StaticResource TextMutedBrush}"/>
-                                        <TextBlock Text="{Binding Metrics.BAC, StringFormat={}{0:N0} €}" FontSize="16" FontWeight="Bold" Margin="0,5,0,0"/>
+                                        <TextBlock Text="{Binding Metrics.BAC, StringFormat={}{0:N0} MAD}" FontSize="16" FontWeight="Bold" Margin="0,5,0,0"/>
                                     </StackPanel>
                                 </Border>
                                 <Border Style="{StaticResource CardStyle}" Padding="10" Margin="4">
                                     <StackPanel>
                                         <TextBlock Text="Valeur Planifiée (PV)" FontSize="10.5" Foreground="{StaticResource TextMutedBrush}"/>
-                                        <TextBlock Text="{Binding Metrics.PV, StringFormat={}{0:N0} €}" FontSize="16" FontWeight="Bold" Margin="0,5,0,0"/>
+                                        <TextBlock Text="{Binding Metrics.PV, StringFormat={}{0:N0} MAD}" FontSize="16" FontWeight="Bold" Margin="0,5,0,0"/>
                                     </StackPanel>
                                 </Border>
                                 <Border Style="{StaticResource CardStyle}" Padding="10" Margin="4">
                                     <StackPanel>
                                         <TextBlock Text="Valeur Acquise (EV)" FontSize="10.5" Foreground="{StaticResource TextMutedBrush}"/>
-                                        <TextBlock Text="{Binding Metrics.EV, StringFormat={}{0:N0} €}" FontSize="16" FontWeight="Bold" Foreground="{StaticResource SuccessBrush}" Margin="0,5,0,0"/>
+                                        <TextBlock Text="{Binding Metrics.EV, StringFormat={}{0:N0} MAD}" FontSize="16" FontWeight="Bold" Foreground="{StaticResource SuccessBrush}" Margin="0,5,0,0"/>
                                     </StackPanel>
                                 </Border>
                                 <Border Style="{StaticResource CardStyle}" Padding="10" Margin="4">
                                     <StackPanel>
                                         <TextBlock Text="Coût Réel Engagé (AC)" FontSize="10.5" Foreground="{StaticResource TextMutedBrush}"/>
-                                        <TextBlock Text="{Binding Metrics.AC, StringFormat={}{0:N0} €}" FontSize="16" FontWeight="Bold" Margin="0,5,0,0"/>
+                                        <TextBlock Text="{Binding Metrics.AC, StringFormat={}{0:N0} MAD}" FontSize="16" FontWeight="Bold" Margin="0,5,0,0"/>
                                     </StackPanel>
                                 </Border>
                                 <Border Style="{StaticResource CardStyle}" Padding="10" Margin="4">
@@ -213,19 +214,19 @@
                                 <Border Style="{StaticResource CardStyle}" Padding="10" Margin="4">
                                     <StackPanel>
                                         <TextBlock Text="Coût Estimé Final (EAC)" FontSize="10.5" Foreground="{StaticResource TextMutedBrush}"/>
-                                        <TextBlock Text="{Binding Metrics.EAC, StringFormat={}{0:N0} €}" FontSize="16" FontWeight="Bold" Margin="0,5,0,0"/>
+                                        <TextBlock Text="{Binding Metrics.EAC, StringFormat={}{0:N0} MAD}" FontSize="16" FontWeight="Bold" Margin="0,5,0,0"/>
                                     </StackPanel>
                                 </Border>
                                 <Border Style="{StaticResource CardStyle}" Padding="10" Margin="4">
                                     <StackPanel>
                                         <TextBlock Text="Reste à Dépenser (ETC)" FontSize="10.5" Foreground="{StaticResource TextMutedBrush}"/>
-                                        <TextBlock Text="{Binding Metrics.ETC, StringFormat={}{0:N0} €}" FontSize="16" FontWeight="Bold" Margin="0,5,0,0"/>
+                                        <TextBlock Text="{Binding Metrics.ETC, StringFormat={}{0:N0} MAD}" FontSize="16" FontWeight="Bold" Margin="0,5,0,0"/>
                                     </StackPanel>
                                 </Border>
                                 <Border Style="{StaticResource CardStyle}" Padding="10" Margin="4">
                                     <StackPanel>
                                         <TextBlock Text="Écart Consolidé (VAC)" FontSize="10.5" Foreground="{StaticResource TextMutedBrush}"/>
-                                        <TextBlock Text="{Binding Metrics.VAC, StringFormat={}{0:N0} €}" FontSize="16" FontWeight="Bold" Margin="0,5,0,0"/>
+                                        <TextBlock Text="{Binding Metrics.VAC, StringFormat={}{0:N0} MAD}" FontSize="16" FontWeight="Bold" Margin="0,5,0,0"/>
                                     </StackPanel>
                                 </Border>
                             </UniformGrid>
@@ -502,8 +503,8 @@
                                 <DataGridTextColumn Header="Catégorie" Binding="{Binding Category}" Width="150"/>
                                 <DataGridTextColumn Header="Description" Binding="{Binding Description}" Width="2*"/>
                                 <DataGridTextColumn Header="Ressource / Fournisseur" Binding="{Binding ResourceName}" Width="1.5*"/>
-                                <DataGridTextColumn Header="Coût Estimé" Binding="{Binding EstimatedCost, StringFormat={}{0:N0} €}" Width="120"/>
-                                <DataGridTextColumn Header="Coût Réel engagé" Binding="{Binding ActualCost, StringFormat={}{0:N0} €}" Width="120"/>
+                                <DataGridTextColumn Header="Coût Estimé" Binding="{Binding EstimatedCost, StringFormat={}{0:N0} MAD}" Width="120"/>
+                                <DataGridTextColumn Header="Coût Réel engagé" Binding="{Binding ActualCost, StringFormat={}{0:N0} MAD}" Width="120"/>
                                 
                                 <DataGridTemplateColumn Width="100">
                                     <DataGridTemplateColumn.CellTemplate>
@@ -543,7 +544,8 @@
                                 <TextBlock Text="Choix du Type de Rapport :" FontSize="11.5" FontWeight="Bold" Foreground="{StaticResource TextMutedBrush}" Margin="0,0,0,5"/>
                                 <ComboBox ItemsSource="{Binding ReportTypes}" SelectedItem="{Binding SelectedReportType}" Height="34" Margin="0,0,0,12"/>
                                 
-                                <Button Content="Afficher l'Aperçu" Command="{Binding ShowPreviewCommand}" Height="36" Margin="0,0,0,20"/>
+                                <Button Content="Générer et ouvrir dans l'éditeur" Command="{Binding ShowPreviewCommand}" Height="36" Margin="0,0,0,6"/>
+                                <TextBlock Text="Le rapport s'ouvre dans l'éditeur de type Word : modifiable, aux couleurs de la charte, exportable en Word, PDF et PDF/A (menu « Exporter… » de l'éditeur). Chaque régénération crée une nouvelle version." FontSize="11" Foreground="{StaticResource TextMutedBrush}" TextWrapping="Wrap" Margin="0,0,0,20"/>
 
                                 <!-- Export Format and Final Button -->
                                 <StackPanel IsEnabled="{Binding IsPreviewVisible}">
@@ -583,12 +585,21 @@
                                         </TextBlock.Style>
                                     </TextBlock>
 
-                                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                                    <!-- Éditeur de type Word (Smart Office) : le rapport devient un document modifiable et exportable -->
+                                    <Grid Visibility="{Binding IsReportEditorVisible, Converter={StaticResource BoolToVis}}">
+                                        <wv2:WebView2 x:Name="ReportEditor"/>
+                                    </Grid>
+                                    <TextBlock Text="{Binding ReportEditorStatus}" Foreground="#92400E" TextWrapping="Wrap" VerticalAlignment="Top" Margin="10,0,10,0"/>
+
+                                    <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="0,24,0,0">
                                         <ScrollViewer.Style>
                                             <Style TargetType="ScrollViewer">
                                                 <Setter Property="Visibility" Value="Visible"/>
                                                 <Style.Triggers>
                                                     <DataTrigger Binding="{Binding IsPreviewVisible}" Value="False">
+                                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding IsReportEditorVisible}" Value="True">
                                                         <Setter Property="Visibility" Value="Collapsed"/>
                                                     </DataTrigger>
                                                 </Style.Triggers>
@@ -717,13 +728,13 @@
                                     <Border Style="{StaticResource CardStyle}" Padding="12" Margin="4" Background="#F0F7FF">
                                         <StackPanel>
                                             <TextBlock Text="Total Subvention Contractuelle" FontSize="10" Foreground="{StaticResource TextMutedBrush}" TextWrapping="Wrap"/>
-                                            <TextBlock Text="{Binding BaselineDiagnostic.TotalGrantCommitted, StringFormat={}{0:N0} €}" FontSize="16" FontWeight="Bold" Foreground="{StaticResource PrimaryBrush}" Margin="0,5,0,0"/>
+                                            <TextBlock Text="{Binding BaselineDiagnostic.TotalGrantCommitted, StringFormat={}{0:N0} MAD}" FontSize="16" FontWeight="Bold" Foreground="{StaticResource PrimaryBrush}" Margin="0,5,0,0"/>
                                         </StackPanel>
                                     </Border>
                                     <Border Style="{StaticResource CardStyle}" Padding="12" Margin="4" Background="#FFF7ED">
                                         <StackPanel>
                                             <TextBlock Text="Dépenses Engagées (AC)" FontSize="10" Foreground="{StaticResource TextMutedBrush}" TextWrapping="Wrap"/>
-                                            <TextBlock Text="{Binding BaselineDiagnostic.TotalSpent, StringFormat={}{0:N0} €}" FontSize="16" FontWeight="Bold" Margin="0,5,0,0"/>
+                                            <TextBlock Text="{Binding BaselineDiagnostic.TotalSpent, StringFormat={}{0:N0} MAD}" FontSize="16" FontWeight="Bold" Margin="0,5,0,0"/>
                                         </StackPanel>
                                     </Border>
                                     <Border Style="{StaticResource CardStyle}" Padding="12" Margin="4" Background="#F0FDF4">
@@ -881,7 +892,7 @@
                                                             <TextBlock Text="{Binding SignatureDate, StringFormat={}{0:dd/MM/yyyy}}" FontSize="11.5"/>
                                                             <TextBlock Text="{Binding ContractualEndDate, StringFormat={}Fin: {0:dd/MM/yyyy}}" FontSize="10" Foreground="#D32F2F"/>
                                                         </StackPanel>
-                                                        <TextBlock Grid.Column="4" Text="{Binding ApprovedGrantAmount, StringFormat={}{0:N0} €}" FontSize="12" FontWeight="Bold" Foreground="{StaticResource PrimaryBrush}" Margin="8,0" VerticalAlignment="Center"/>
+                                                        <TextBlock Grid.Column="4" Text="{Binding ApprovedGrantAmount, StringFormat={}{0:N0} MAD}" FontSize="12" FontWeight="Bold" Foreground="{StaticResource PrimaryBrush}" Margin="8,0" VerticalAlignment="Center"/>
                                                         <StackPanel Grid.Column="5" Orientation="Horizontal" Margin="4,0" VerticalAlignment="Center">
                                                             <Button Content="🔍 Examen" ToolTip="Examiner le texte et les معطيات المستخرجة" Command="{Binding DataContext.PreviewDocumentCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}" CommandParameter="{Binding}" FontSize="10" Padding="4,2" Height="26" Margin="1" Style="{StaticResource SecondaryButtonStyle}"/>
                                                             <Button Content="Ouvrir" ToolTip="Ouvrir le fichier" Command="{Binding DataContext.OpenDocumentFileCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}" CommandParameter="{Binding}" FontSize="10" Width="36" Height="26" Margin="1" Padding="2"/>
@@ -1038,7 +1049,7 @@
                                                         </StackPanel>
 
                                                         <StackPanel Grid.Column="2" HorizontalAlignment="Right" VerticalAlignment="Center">
-                                                            <TextBlock Text="{Binding EstimatedBudget, StringFormat={}{0:N0} €}" FontSize="13" FontWeight="Bold" Foreground="#1E3A8A" HorizontalAlignment="Right"/>
+                                                            <TextBlock Text="{Binding EstimatedBudget, StringFormat={}{0:N0} MAD}" FontSize="13" FontWeight="Bold" Foreground="#1E3A8A" HorizontalAlignment="Right"/>
                                                             <TextBlock Text="{Binding DurationWeeks, StringFormat='Durée : {0} sem.'}" FontSize="10.5" Foreground="#64748B" HorizontalAlignment="Right"/>
                                                         </StackPanel>
                                                     </Grid>
@@ -1074,7 +1085,7 @@
                                                             <TextBlock Text="{Binding Description}" FontSize="11" Foreground="#78350F" Margin="0,3,0,0" TextWrapping="Wrap"/>
                                                             <TextBlock Text="{Binding FundingSource, StringFormat='Source : {0}'}" FontSize="10" Foreground="#B45309" Margin="0,2,0,0"/>
                                                         </StackPanel>
-                                                        <TextBlock Grid.Column="1" Text="{Binding EstimatedCost, StringFormat={}{0:N0} €}" FontSize="14" FontWeight="Bold" Foreground="#92400E" VerticalAlignment="Center"/>
+                                                        <TextBlock Grid.Column="1" Text="{Binding EstimatedCost, StringFormat={}{0:N0} MAD}" FontSize="14" FontWeight="Bold" Foreground="#92400E" VerticalAlignment="Center"/>
                                                     </Grid>
                                                 </Border>
                                             </DataTemplate>

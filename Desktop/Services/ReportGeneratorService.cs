@@ -423,8 +423,8 @@ namespace AFMI_Gestion_projet.Services
                                     h.Cell().Background(color).Padding(5).Text("Catégorie").Bold().FontColor(Colors.White).FontSize(9);
                                     h.Cell().Background(color).Padding(5).Text("Description").Bold().FontColor(Colors.White).FontSize(9);
                                     h.Cell().Background(color).Padding(5).Text("Ressource / Fournisseur").Bold().FontColor(Colors.White).FontSize(9);
-                                    h.Cell().Background(color).Padding(5).AlignRight().Text("Est. (€)").Bold().FontColor(Colors.White).FontSize(9);
-                                    h.Cell().Background(color).Padding(5).AlignRight().Text("Réel (€)").Bold().FontColor(Colors.White).FontSize(9);
+                                    h.Cell().Background(color).Padding(5).AlignRight().Text("Est. (MAD)").Bold().FontColor(Colors.White).FontSize(9);
+                                    h.Cell().Background(color).Padding(5).AlignRight().Text("Réel (MAD)").Bold().FontColor(Colors.White).FontSize(9);
                                 });
 
                                 int idx = 0;
@@ -525,7 +525,7 @@ namespace AFMI_Gestion_projet.Services
 
                             // Budget
                             double budgetVar = metrics.BAC - metrics.AC;
-                            table.Cell().Padding(5).Text("Budget Global (€)").FontSize(9);
+                            table.Cell().Padding(5).Text("Budget Global (MAD)").FontSize(9);
                             table.Cell().Padding(5).AlignRight().Text($"{metrics.BAC:N0}").FontSize(9);
                             table.Cell().Padding(5).AlignRight().Text($"{metrics.AC:N0}").FontSize(9);
                             table.Cell().Padding(5).AlignRight().Text($"{(budgetVar >= 0 ? "+" : "")}{budgetVar:N0}").FontSize(9).Bold().FontColor(budgetVar >= 0 ? Colors.Green.Darken2 : Colors.Red.Darken2);
@@ -668,13 +668,13 @@ namespace AFMI_Gestion_projet.Services
                             grid.RelativeItem().Border(1).BorderColor(Colors.Grey.Lighten2).Padding(8).Column(indicator =>
                             {
                                 indicator.Item().Text("SUBVENTION CONVENTIONNÉE").FontSize(8.5f).Bold().FontColor(Colors.Grey.Darken1);
-                                indicator.Item().Text($"{diagnostic.TotalGrantCommitted:N0} €").FontSize(15).Bold().FontColor(color);
+                                indicator.Item().Text($"{diagnostic.TotalGrantCommitted:N0} MAD").FontSize(15).Bold().FontColor(color);
                             });
                             grid.ConstantItem(10);
                             grid.RelativeItem().Border(1).BorderColor(Colors.Grey.Lighten2).Padding(8).Column(indicator =>
                             {
                                 indicator.Item().Text("DÉPENSES JUSTIFIÉES").FontSize(8.5f).Bold().FontColor(Colors.Grey.Darken1);
-                                indicator.Item().Text($"{diagnostic.GrantConsumedAmount:N0} €").FontSize(15).Bold();
+                                indicator.Item().Text($"{diagnostic.GrantConsumedAmount:N0} MAD").FontSize(15).Bold();
                             });
                             grid.ConstantItem(10);
                             grid.RelativeItem().Border(1).BorderColor(Colors.Grey.Lighten2).Padding(8).Column(indicator =>
@@ -730,7 +730,7 @@ namespace AFMI_Gestion_projet.Services
                                     table.Cell().Background(bg).Padding(4).Text(doc.Category).FontSize(8.5f);
                                     table.Cell().Background(bg).Padding(4).Text(string.IsNullOrEmpty(doc.DonorName) ? "-" : doc.DonorName).FontSize(8.5f);
                                     table.Cell().Background(bg).Padding(4).Text(string.IsNullOrEmpty(doc.DocumentReference) ? "-" : doc.DocumentReference).FontSize(8.5f);
-                                    table.Cell().Background(bg).Padding(4).AlignRight().Text(doc.ApprovedGrantAmount > 0 ? $"{doc.ApprovedGrantAmount:N0} €" : "-").FontSize(8.5f);
+                                    table.Cell().Background(bg).Padding(4).AlignRight().Text(doc.ApprovedGrantAmount > 0 ? $"{doc.ApprovedGrantAmount:N0} MAD" : "-").FontSize(8.5f);
                                     table.Cell().Background(bg).Padding(4).AlignRight().Text(doc.ContractualEndDate?.ToString("dd/MM/yyyy") ?? "-").FontSize(8.5f);
                                 }
                             });
@@ -798,7 +798,7 @@ namespace AFMI_Gestion_projet.Services
                                 table.Cell().Background(bg).Padding(4).Text(task.Assignee).FontSize(8.5f);
                                 table.Cell().Background(bg).Padding(4).Text(task.Status).FontSize(8.5f);
                                 table.Cell().Background(bg).Padding(4).AlignRight().Text($"{task.ProgressPercentage}%").FontSize(8.5f);
-                                table.Cell().Background(bg).Padding(4).AlignRight().Text($"{task.Cost:N0} €").FontSize(8.5f);
+                                table.Cell().Background(bg).Padding(4).AlignRight().Text($"{task.Cost:N0} MAD").FontSize(8.5f);
                             }
                         });
                     });

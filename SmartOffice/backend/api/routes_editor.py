@@ -10,7 +10,7 @@ from fastapi.responses import FileResponse
 
 from backend.config.settings import settings
 from backend.core import unified_db
-from backend.tools.editor import assistant, blocks, charts, documents, photos
+from backend.tools.editor import assistant, blocks, charts, documents, from_report, photos
 
 router = APIRouter(tags=["Éditeur de documents"])
 IMAGE_TYPES = {".png", ".jpg", ".jpeg", ".webp", ".svg", ".gif"}
@@ -282,3 +282,10 @@ def delete_photo(photo_id: int):
 @router.post("/api/photos/{photo_id}/suggest-caption")
 async def suggest_caption(photo_id: int):
     return await _aguard(photos.suggest_caption(photo_id))
+
+
+@router.post("/api/editor/documents/from-report")
+def document_from_report(data: Dict[str, Any]):
+    """Rapport généré par l'application de bureau (Projet › Rapports) → document de l'éditeur, nouvelle version si existant."""
+    return _guard(from_report.create_or_update, int(data["project_id"]), data.get("report_type") or "", (data.get("title") or "Rapport").strip()[:250],
+                  data.get("text") or "")

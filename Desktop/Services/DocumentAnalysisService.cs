@@ -416,7 +416,7 @@ namespace AFMI_Gestion_projet.Services
                 if (doc.SignatureDate.HasValue)
                     sb.AppendLine($"  Date signature : {doc.SignatureDate:dd/MM/yyyy}");
                 if (doc.ApprovedGrantAmount > 0)
-                    sb.AppendLine($"  Montant approuvé : {doc.ApprovedGrantAmount:N0} €");
+                    sb.AppendLine($"  Montant approuvé : {doc.ApprovedGrantAmount:N0} MAD");
 
                 // Add key insights
                 if (!string.IsNullOrEmpty(doc.KeyInsights))
@@ -484,7 +484,7 @@ namespace AFMI_Gestion_projet.Services
                 {
                     sb.AppendLine($"• [{d.Category}] {d.Title}");
                     if (d.ApprovedGrantAmount > 0)
-                        sb.AppendLine($"  → Montant conventionné : {d.ApprovedGrantAmount:N0} €");
+                        sb.AppendLine($"  → Montant conventionné : {d.ApprovedGrantAmount:N0} MAD");
                     if (!string.IsNullOrEmpty(d.DocumentReference))
                         sb.AppendLine($"  → Réf. : {d.DocumentReference}");
                 }
@@ -590,7 +590,7 @@ namespace AFMI_Gestion_projet.Services
             if (actualCostTotal > totalGrant && totalGrant > 0)
             {
                 double over = actualCostTotal - totalGrant;
-                result.ComplianceAlerts.Add($"Dépassement de l'enveloppe conventionnée : les dépenses engagées excèdent la subvention de {over:N0} €.");
+                result.ComplianceAlerts.Add($"Dépassement de l'enveloppe conventionnée : les dépenses engagées excèdent la subvention de {over:N0} MAD.");
             }
             else if (eligibilityEnd.HasValue && (eligibilityEnd.Value - today).TotalDays < 60 && result.GrantConsumptionRate < 60)
             {
@@ -685,9 +685,9 @@ namespace AFMI_Gestion_projet.Services
 
             var sb = new StringBuilder();
             sb.Append($"L'analyse approfondie des documents fondateurs et conventions pour le projet \"{project.Name}\" ");
-            sb.Append($"atteste d'un engagement conventionné total de **{totalGrant:N0} €** avec **{donorTitle}**{refCode}. ");
+            sb.Append($"atteste d'un engagement conventionné total de **{totalGrant:N0} MAD** avec **{donorTitle}**{refCode}. ");
             sb.Append($"À la date du {today:dd/MM/yyyy}, le taux de consommation de la subvention s'établit à **{result.GrantConsumptionRate:F1}%** ");
-            sb.Append($"(soit {actualCostTotal:N0} € engagés sur un reliquat disponible de {result.GrantRemainingAmount:N0} €). ");
+            sb.Append($"(soit {actualCostTotal:N0} MAD engagés sur un reliquat disponible de {result.GrantRemainingAmount:N0} MAD). ");
             sb.Append($"L'indice global de conformité contractuelle est évalué à **{result.ComplianceScore:F0}/100**. ");
             sb.Append($"La base documentaire du projet compte **{project.Documents.Count} document(s)** couvrant {_projectPhases.Length - result.MissingPhases.Count} sur {_projectPhases.Length} phases du cycle de vie.");
 
@@ -729,7 +729,7 @@ namespace AFMI_Gestion_projet.Services
                 program.GeneralObjectives.Add($"Atteinte des indicateurs de performance et conformité aux exigences contractuelles du bailleur ({program.DonorName})");
                 
                 program.SpecificObjectives.Add($"Exécution des livrables techniques dans le respect du calendrier (Échéance : {program.TargetEndDate:dd/MM/yyyy})");
-                program.SpecificObjectives.Add($"Optimisation de la consommation budgétaire et maîtrise de l'enveloppe allouée ({program.TotalBudget:N0} €)");
+                program.SpecificObjectives.Add($"Optimisation de la consommation budgétaire et maîtrise de l'enveloppe allouée ({program.TotalBudget:N0} MAD)");
                 program.SpecificObjectives.Add("Garantie de la qualité, de la traçabilité des dépenses et de la pérennité des résultats");
             }
 
@@ -805,7 +805,7 @@ namespace AFMI_Gestion_projet.Services
             sb.AppendLine($"# PROGRAMME DE TRAVAIL & PROPOSITION D'EXÉCUTION DU PROJET");
             sb.AppendLine($"**Projet :** {program.ProjectName} ({program.ProjectCode})");
             sb.AppendLine($"**Bailleur / Partenaire :** {program.DonorName}");
-            sb.AppendLine($"**Enveloppe Budgétaire globale :** {program.TotalBudget:N0} €");
+            sb.AppendLine($"**Enveloppe Budgétaire globale :** {program.TotalBudget:N0} MAD");
             sb.AppendLine($"**Période d'exécution :** du {program.TargetStartDate:dd/MM/yyyy} au {program.TargetEndDate:dd/MM/yyyy}");
             sb.AppendLine();
             sb.AppendLine("## 1. OBJECTIFS DU PROGRAMME DE TRAVAIL");
@@ -825,13 +825,13 @@ namespace AFMI_Gestion_projet.Services
                 sb.AppendLine($"### {act.Name} [{act.Phase}]");
                 sb.AppendLine($"  * **Description :** {act.Description}");
                 sb.AppendLine($"  * **Responsable :** {act.ResponsibleRole} | **Durée :** {act.DurationWeeks} semaines");
-                sb.AppendLine($"  * **Budget estimé :** {act.EstimatedBudget:N0} € | **Livrable :** {act.ExpectedDeliverable}");
+                sb.AppendLine($"  * **Budget estimé :** {act.EstimatedBudget:N0} MAD | **Livrable :** {act.ExpectedDeliverable}");
                 sb.AppendLine();
             }
             sb.AppendLine("## 4. BUDGET ET ESTIMATION DES DÉPENSES PAR POSTE");
             foreach (var b in program.BudgetLedger)
             {
-                sb.AppendLine($"* **{b.Category}** : {b.EstimatedCost:N0} € ({b.Description}) — *Source : {b.FundingSource}*");
+                sb.AppendLine($"* **{b.Category}** : {b.EstimatedCost:N0} MAD ({b.Description}) — *Source : {b.FundingSource}*");
             }
             sb.AppendLine();
             sb.AppendLine("## 5. GESTION DES RISQUES ET MESURES ATTÉNUANTES");

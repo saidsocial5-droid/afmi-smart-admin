@@ -487,7 +487,7 @@ namespace AFMI_Gestion_projet.Services
             if (proj != null)
             {
                 sb.AppendLine();
-                sb.AppendLine($"[Projet de référence : {proj.Code} - {proj.Name} | Statut : {proj.Status} | Avancement Global : {proj.BudgetGlobal:N0} €]");
+                sb.AppendLine($"[Projet de référence : {proj.Code} - {proj.Name} | Statut : {proj.Status} | Avancement Global : {proj.BudgetGlobal:N0} MAD]");
             }
 
             return sb.ToString();
@@ -636,7 +636,7 @@ namespace AFMI_Gestion_projet.Services
                 sb.AppendLine($"• Projet concerné  : {project.Name} (Code : {project.Code})");
                 sb.AppendLine($"• Commanditaire    : {(!string.IsNullOrWhiteSpace(project.Client) ? project.Client : "Non spécifié")}");
                 sb.AppendLine($"• Phase actuelle   : {project.Status} | Priorité : {project.Priority}");
-                sb.AppendLine($"• Budget Alloué    : {project.BudgetGlobal:N0} €");
+                sb.AppendLine($"• Budget Alloué    : {project.BudgetGlobal:N0} MAD");
             }
             sb.AppendLine();
 
@@ -855,7 +855,7 @@ namespace AFMI_Gestion_projet.Services
             sb.AppendLine($"Date de génération : {DateTime.Now:dd/MM/yyyy à HH:mm}");
             sb.AppendLine($"Responsable du projet : {project.Manager ?? "Direction du projet"}");
             sb.AppendLine($"Commanditaire / Bailleur : {project.Client ?? "Partenaire Institutionnel"}");
-            sb.AppendLine($"Statut : {project.Status} | Priorité : {project.Priority} | Budget Global : {project.BudgetGlobal:N0} €");
+            sb.AppendLine($"Statut : {project.Status} | Priorité : {project.Priority} | Budget Global : {project.BudgetGlobal:N0} MAD");
             sb.AppendLine();
 
             switch (reportType)
@@ -895,7 +895,7 @@ namespace AFMI_Gestion_projet.Services
                 case AiReportType.AnalyseRisquesEtCouts:
                     sb.AppendLine("1. AUDIT BUDGÉTAIRE ET PERFORMANCE DES COÛTS");
                     sb.AppendLine("--------------------------------------------------------------------------------");
-                    sb.AppendLine($"L'enveloppe budgétaire globale contractuelle s'élève à {project.BudgetGlobal:N0} €.");
+                    sb.AppendLine($"L'enveloppe budgétaire globale contractuelle s'élève à {project.BudgetGlobal:N0} MAD.");
                     sb.AppendLine("Le contrôle de gestion confirme que les dépenses engagées sont régulières et adossées aux livrables prévus dans le plan d'action.");
                     sb.AppendLine();
                     sb.AppendLine("2. MATRICE DES RISQUES ET IMPACT SUR LES DÉLAIS");
@@ -1074,7 +1074,7 @@ namespace AFMI_Gestion_projet.Services
             if (!string.IsNullOrWhiteSpace(model.Q_NextSteps)) sb.AppendLine($"Prochaines étapes clés : {model.Q_NextSteps}");
             if (project != null)
             {
-                sb.AppendLine($"Projet : {project.Name} ({project.Code}), Budget : {project.BudgetGlobal} €, Manager : {project.Manager}");
+                sb.AppendLine($"Projet : {project.Name} ({project.Code}), Budget : {project.BudgetGlobal} MAD, Manager : {project.Manager}");
             }
             return sb.ToString();
         }
@@ -1083,7 +1083,7 @@ namespace AFMI_Gestion_projet.Services
         {
             var sb = new StringBuilder();
             sb.AppendLine($"Rédige un rapport officiel de type '{type}' pour le projet '{project.Name}' ({project.Code}).");
-            sb.AppendLine($"Manager: {project.Manager}, Statut: {project.Status}, Budget: {project.BudgetGlobal} €.");
+            sb.AppendLine($"Manager: {project.Manager}, Statut: {project.Status}, Budget: {project.BudgetGlobal} MAD.");
             sb.AppendLine($"Notes complémentaires : {notes}");
             return sb.ToString();
         }

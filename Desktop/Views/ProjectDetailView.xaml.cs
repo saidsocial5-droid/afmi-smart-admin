@@ -6,9 +6,45 @@ namespace AFMI_Gestion_projet.Views
 {
     public partial class ProjectDetailView : UserControl
     {
+        private ProjectDetailViewModel? _vm;
+        private bool _editorReady;
+
         public ProjectDetailView()
         {
             InitializeComponent();
+            Loaded += async (_, _) =>
+            {
+                if (_editorReady) return;
+                try
+                {
+                    await ReportEditor.EnsureCoreWebView2Async(await Services.WebViewEnvironment.GetAsync());
+                    _editorReady = true;
+                    ApplyEditorUri();
+                }
+                catch (System.Exception ex)
+                {
+                    if (_vm != null) _vm.ReportEditorStatus = "Composant WebView2 indisponible : " + ex.Message;
+                }
+            };
+            DataContextChanged += (_, e) =>
+            {
+                if (_vm != null) _vm.PropertyChanged -= OnVmPropertyChanged;
+                _vm = e.NewValue as ProjectDetailViewModel;
+                if (_vm != null) _vm.PropertyChanged += OnVmPropertyChanged;
+                ApplyEditorUri();
+            };
+        }
+
+        private void OnVmPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(ProjectDetailViewModel.ReportEditorUri)) ApplyEditorUri();
+        }
+
+        /// <summary>Le document n'est chargé qu'une fois WebView2 initialisé avec le profil de l'application.</summary>
+        private void ApplyEditorUri()
+        {
+            if (!_editorReady || _vm?.ReportEditorUri is not { } uri) return;
+            if (ReportEditor.Source?.AbsoluteUri != uri.AbsoluteUri) ReportEditor.Source = uri;
         }
 
         private void OnCancelTaskClick(object sender, RoutedEventArgs e)

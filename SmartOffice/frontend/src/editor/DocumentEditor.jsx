@@ -67,7 +67,7 @@ const setPath = (o, path, value) => {
   return out;
 };
 
-export default function DocumentEditor({ initialDocumentId = null }) {
+export default function DocumentEditor({ initialDocumentId = null, embedded = false }) {
   const [ctx, setCtx] = useState({ projects: [], funders: [], tasks: [], user: '' });
   const [docs, setDocs] = useState([]);
   const [templates, setTemplates] = useState([]);
@@ -306,6 +306,7 @@ export default function DocumentEditor({ initialDocumentId = null }) {
     <DocContext.Provider value={ctxValue}>
       <style>{chartCss(chart.style, effectiveLayout)}</style>
       <div className="space-y-3">
+        {!embedded && (<>
         <div className="flex flex-wrap items-end gap-3">
           <div className="me-4">
             <h1 className="text-2xl font-bold text-slate-800">Éditeur de documents</h1>
@@ -335,6 +336,7 @@ export default function DocumentEditor({ initialDocumentId = null }) {
           </select>
           <button className="bg-afmi-forest text-white rounded px-3 py-1.5" onClick={createDocument}>Créer</button>
         </section>
+        </>)}
 
         {status && <div role="status" className={`rounded px-3 py-2 text-sm ${status.kind === 'error' ? 'bg-red-50 text-red-800' : 'bg-emerald-50 text-emerald-800'}`}>{status.text}</div>}
 

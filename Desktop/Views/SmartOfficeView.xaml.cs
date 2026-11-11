@@ -26,9 +26,7 @@ namespace AFMI_Gestion_projet.Views
             try
             {
                 // Profil WebView2 dans LocalAppData : le dossier de l'exécutable peut être en lecture seule.
-                string userData = Path.Combine(
-                    Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "AFMIGestionProjet", "WebView2");
-                var env = await CoreWebView2Environment.CreateAsync(null, userData);
+                var env = await Services.WebViewEnvironment.GetAsync();
                 await WebView.EnsureCoreWebView2Async(env);
                 WebView.CoreWebView2.NewWindowRequested += OnNewWindowRequested;
                 _webViewReady = true;

@@ -195,3 +195,16 @@ def test_assistant_offline_and_number_check(client, unified):
     assert client.post("/api/editor/assistant", json={"action": "pirater", "text": "x"}).status_code == 400
     facts = {"indicateurs": [{"current": 6500, "target": 10000}]}
     assert assistant.numbers_not_in_facts("6 500 plants sur 10000 prévus, soit 65 %", facts) == ["65"]
+
+
+def test_report_from_desktop_becomes_structured_document(unified_editor_db=None):
+    """Lot 9 : le texte d'un rapport de l'onglet Projet › Rapports devient un document structuré de l'éditeur."""
+    from backend.tools.editor.from_report import text_to_content, _pretty
+    nodes = text_to_content("RAPPORT D'AVANCEMENT\n------\nChef de Projet : Salma\nStatut : Exécution\n\n=== RISQUES IDENTIFIÉS (SPI) ===\n"
+                            "• Retard **important**\n• Autre\n\nUn paragraphe libre.", "Rapport — P1")
+    types = [n["type"] for n in nodes]
+    assert types == ["heading", "table", "heading", "bulletList", "paragraph"]
+    assert nodes[2]["content"][0]["text"] == "Risques identifiés (SPI)"
+    bold = nodes[3]["content"][0]["content"][0]["content"][1]
+    assert bold == {"type": "text", "text": "important", "marks": [{"type": "bold"}]}
+    assert _pretty("SYNTHÈSE DE PERFORMANCE") == "Synthèse de performance"

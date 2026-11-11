@@ -88,6 +88,16 @@ export default function App() {
     setActiveTab("agents");
   };
 
+  // Mode intégré (#editor-embed/<id>) : l'application de bureau affiche l'éditeur seul dans l'onglet Projet › Rapports
+  const embed = activeTab.match(/^editor-embed\/(\d+)/);
+  if (embed) {
+    return (
+      <div dir={dir} className={`min-h-screen bg-afmi-slate p-3 ${isRtl ? 'font-arabic' : 'font-sans'} text-slate-800`}>
+        <DocumentEditor key={embed[1]} initialDocumentId={Number(embed[1])} embedded />
+      </div>
+    );
+  }
+
   return (
     <div 
       dir={dir}

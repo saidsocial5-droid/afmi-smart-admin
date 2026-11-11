@@ -16,7 +16,7 @@ namespace AFMI_Gestion_projet.Services
             var sb = new StringBuilder();
             
             // CSV Header
-            sb.AppendLine("ID;Code;Nom;Directeur;Propriétaire;Client;Département;Statut;Priorité;Budget Global (€);Date Début Prévue;Date Fin Prévue;Date Début Réelle;Date Fin Réelle");
+            sb.AppendLine("ID;Code;Nom;Directeur;Propriétaire;Client;Département;Statut;Priorité;Budget Global (MAD);Date Début Prévue;Date Fin Prévue;Date Début Réelle;Date Fin Réelle");
 
             foreach (var p in projects)
             {
@@ -49,12 +49,12 @@ namespace AFMI_Gestion_projet.Services
             
             sb.AppendLine($"Export du Budget - Projet : {project.Name} ({project.Code})");
             sb.AppendLine($"Généré le : {DateTime.Now:dd/MM/yyyy HH:mm}");
-            sb.AppendLine($"Budget Global Initial : {project.BudgetGlobal:F2} €");
+            sb.AppendLine($"Budget Global Initial : {project.BudgetGlobal:F2} MAD");
             sb.AppendLine();
             
             // Section 1: Detailed Cost Ledger
             sb.AppendLine("REGISTRE DES DEPENSES");
-            sb.AppendLine("Date;Catégorie;Description;Ressource/Fournisseur;Coût Estimé (€);Coût Réel (€);Écart (€)");
+            sb.AppendLine("Date;Catégorie;Description;Ressource/Fournisseur;Coût Estimé (MAD);Coût Réel (MAD);Écart (MAD)");
             
             double totalEst = 0;
             double totalAct = 0;
@@ -80,7 +80,7 @@ namespace AFMI_Gestion_projet.Services
 
             // Section 2: Task-level Budgets
             sb.AppendLine("BUDGET DES TACHES");
-            sb.AppendLine("ID Tâche;Nom de la Tâche;Responsable;Statut;Avancement;Budget Alloué (€);Coût Engagé (€);Écart (€)");
+            sb.AppendLine("ID Tâche;Nom de la Tâche;Responsable;Statut;Avancement;Budget Alloué (MAD);Coût Engagé (MAD);Écart (MAD)");
 
             foreach (var task in project.Tasks)
             {
@@ -146,7 +146,7 @@ namespace AFMI_Gestion_projet.Services
 
             // Meta Info Table
             sb.AppendLine("<table class='meta-table'>");
-            sb.AppendLine($"  <tr><td class='label'>Partenaire / Bailleur</td><td>{System.Net.WebUtility.HtmlEncode(program.DonorName)}</td><td class='label'>Enveloppe Budgétaire</td><td><b>{program.TotalBudget:N0} €</b></td></tr>");
+            sb.AppendLine($"  <tr><td class='label'>Partenaire / Bailleur</td><td>{System.Net.WebUtility.HtmlEncode(program.DonorName)}</td><td class='label'>Enveloppe Budgétaire</td><td><b>{program.TotalBudget:N0} MAD</b></td></tr>");
             sb.AppendLine($"  <tr><td class='label'>Date de Début</td><td>{program.TargetStartDate:dd/MM/yyyy}</td><td class='label'>Date d'Échéance</td><td>{program.TargetEndDate:dd/MM/yyyy}</td></tr>");
             sb.AppendLine($"  <tr><td class='label'>Généré le</td><td colspan='3'>{DateTime.Now:dd/MM/yyyy HH:mm} par AFMI Gestion Projet</td></tr>");
             sb.AppendLine("</table>");
@@ -178,7 +178,7 @@ namespace AFMI_Gestion_projet.Services
             // 3. Activities Breakdown Table
             sb.AppendLine("<h2>3. PROGRAMME DES ACTIVITÉS & PLAN D'ACTION DETAILÉ</h2>");
             sb.AppendLine("<table class='data-table'>");
-            sb.AppendLine("  <tr><th>N°</th><th>Activité & Intitulé</th><th>Phase</th><th>Responsable</th><th>Durée</th><th>Budget Est. (€)</th><th>Livrables Attendus</th></tr>");
+            sb.AppendLine("  <tr><th>N°</th><th>Activité & Intitulé</th><th>Phase</th><th>Responsable</th><th>Durée</th><th>Budget Est. (MAD)</th><th>Livrables Attendus</th></tr>");
 
             foreach (var act in program.Activities)
             {
@@ -188,7 +188,7 @@ namespace AFMI_Gestion_projet.Services
                 sb.AppendLine($"    <td><span class='badge'>{System.Net.WebUtility.HtmlEncode(act.Phase)}</span></td>");
                 sb.AppendLine($"    <td>{System.Net.WebUtility.HtmlEncode(act.ResponsibleRole)}</td>");
                 sb.AppendLine($"    <td>{act.DurationWeeks} sem.</td>");
-                sb.AppendLine($"    <td><b>{act.EstimatedBudget:N0} €</b></td>");
+                sb.AppendLine($"    <td><b>{act.EstimatedBudget:N0} MAD</b></td>");
                 sb.AppendLine($"    <td>{System.Net.WebUtility.HtmlEncode(act.ExpectedDeliverable)}</td>");
                 sb.AppendLine("  </tr>");
             }
@@ -197,20 +197,20 @@ namespace AFMI_Gestion_projet.Services
             // 4. Expected Budget Ledger Table
             sb.AppendLine("<h2>4. ESTIMATION DES DÉPENSES ET BUDGET PRÉVISIONNEL</h2>");
             sb.AppendLine("<table class='data-table'>");
-            sb.AppendLine("  <tr><th>Poste Budgétaire</th><th>Description & Intitulé</th><th>Montant Estimé (€)</th><th>Source de Financement</th></tr>");
+            sb.AppendLine("  <tr><th>Poste Budgétaire</th><th>Description & Intitulé</th><th>Montant Estimé (MAD)</th><th>Source de Financement</th></tr>");
 
             foreach (var b in program.BudgetLedger)
             {
                 sb.AppendLine("  <tr>");
                 sb.AppendLine($"    <td><b>{System.Net.WebUtility.HtmlEncode(b.Category)}</b></td>");
                 sb.AppendLine($"    <td>{System.Net.WebUtility.HtmlEncode(b.Description)}</td>");
-                sb.AppendLine($"    <td><b>{b.EstimatedCost:N0} €</b></td>");
+                sb.AppendLine($"    <td><b>{b.EstimatedCost:N0} MAD</b></td>");
                 sb.AppendLine($"    <td>{System.Net.WebUtility.HtmlEncode(b.FundingSource)}</td>");
                 sb.AppendLine("  </tr>");
             }
             sb.AppendLine($"  <tr style='background:#E2E8F0;'>");
             sb.AppendLine($"    <td colspan='2'><b>TOTAL BUDGET ENVISAGÉ</b></td>");
-            sb.AppendLine($"    <td><b>{program.TotalBudget:N0} €</b></td>");
+            sb.AppendLine($"    <td><b>{program.TotalBudget:N0} MAD</b></td>");
             sb.AppendLine($"    <td>-</td>");
             sb.AppendLine("  </tr>");
             sb.AppendLine("</table>");
@@ -421,7 +421,7 @@ namespace AFMI_Gestion_projet.Services
             {
                 sb.AppendLine("<table class='meta-table'>");
                 sb.AppendLine($"  <tr><td class='label'>Manager de Projet</td><td>{System.Net.WebUtility.HtmlEncode(project.Manager)}</td><td class='label'>Bailleur / Client</td><td>{System.Net.WebUtility.HtmlEncode(project.Client)}</td></tr>");
-                sb.AppendLine($"  <tr><td class='label'>Phase / Statut</td><td>{System.Net.WebUtility.HtmlEncode(project.Status)}</td><td class='label'>Budget Alloué</td><td><b>{project.BudgetGlobal:N0} €</b></td></tr>");
+                sb.AppendLine($"  <tr><td class='label'>Phase / Statut</td><td>{System.Net.WebUtility.HtmlEncode(project.Status)}</td><td class='label'>Budget Alloué</td><td><b>{project.BudgetGlobal:N0} MAD</b></td></tr>");
                 sb.AppendLine($"  <tr><td class='label'>Date du Rapport</td><td colspan='3'>{DateTime.Now:dd/MM/yyyy à HH:mm} — AFMI Gestion Projet</td></tr>");
                 sb.AppendLine("</table>");
             }
