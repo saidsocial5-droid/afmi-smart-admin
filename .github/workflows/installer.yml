@@ -7,12 +7,16 @@ on:
   workflow_dispatch:
   push:
     tags: ["v*"]
+  # Sur une pull request : poser l'étiquette « installateur » lance la construction
+  pull_request:
+    types: [labeled]
 
 permissions:
   contents: read
 
 jobs:
   installer:
+    if: github.event_name != 'pull_request' || github.event.label.name == 'installateur'
     runs-on: windows-latest
     timeout-minutes: 90
     steps:
