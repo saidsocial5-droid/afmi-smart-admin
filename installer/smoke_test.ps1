@@ -28,7 +28,8 @@ try {
         Write-Host "$path -> $($r.StatusCode)"
     }
     $index = Invoke-WebRequest -Uri "http://127.0.0.1:8765/" -Headers $headers -UseBasicParsing
-    $script = [regex]::Match($index.Content, 'src="(/assets/[^"]+\.js)"').Groups[1].Value
+    $script = [regex]::Match($index.Content, 'src="\.?(/assets/[^"]+\.js)"').Groups[1].Value
+    if (-not $script) { throw "Aucun script trouvé dans la page d'accueil." }
     $js = Invoke-WebRequest -Uri "http://127.0.0.1:8765$script" -Headers $headers -UseBasicParsing
     Write-Host "Type du script $script : $($js.Headers['Content-Type'])"
     if ($js.Headers['Content-Type'] -notmatch "javascript") { throw "Script servi avec le type $($js.Headers['Content-Type'])." }
