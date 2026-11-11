@@ -1,5 +1,83 @@
 # Journal des modifications
 
+## [2.0.0 — Lot 3 : Lecture intelligente des relevés] — 11/11/2026
+
+Nouveau menu **Smart Office → Relevés bancaires**. La lecture se fait **sur le poste** (OCR Tesseract) ; l'IA n'est
+qu'un recours facultatif, soumis aux paramètres de confidentialité du Lot 1.
+
+### Ajouté
+- **Import** à l'unité ou par lot : PDF natif, PDF scanné, JPG, PNG, TIFF, CSV, Excel. Les photos de plusieurs pages
+  d'un même relevé peuvent être regroupées (« les pages d'un même relevé »).
+- **Pipeline** (`SmartOffice/backend/tools/statements/`) :
+  1. prétraitement (OpenCV) : redressement par profil de projection, débruitage, contraste local, mise à
+     300 dpi ;
+  2. OCR Tesseract (français), avec position et confiance de chaque mot. Les PDF natifs sont lus directement, sans
+     OCR ;
+  3. détection de la banque par gabarits configurables (`config/bank_templates.json` : Banque Populaire,
+     Attijariwafa bank, Bank of Africa, CIH, Crédit Agricole du Maroc, Société Générale, générique) ;
+  4. extraction structurée :
+     - colonnes repérées sur l'en-tête, lignes commençant par une date, libellés sur plusieurs lignes ;
+     - montants à milliers séparés recollés, confusions O/0 et l/1 corrigées ;
+     - soldes initial et final, période, RIB (clé contrôlée) ;
+     - pages multiples, en-tête répété ignoré ;
+  5. **seconde lecture** si l'équilibre des soldes échoue. Un montant n'est corrigé que si une seule correction
+     rétablit l'équilibre ; il est alors surligné pour vérification ;
+  6. **IA en option**, seulement si la lecture OCR ne s'équilibre pas et que l'utilisateur l'a cochée. Le résultat
+     n'est retenu que s'il équilibre les soldes.
+- **Contrôles bloquants** : solde initial + mouvements = solde final, relevé déjà importé (même fichier, ou même
+  période et même solde), continuité avec le relevé précédent. Relevé manquant signalé.
+- **Écran de validation** :
+  - image du relevé à côté du tableau extrait ;
+  - champs à faible confiance surlignés ;
+  - un clic sur une ligne la repère sur l'image ;
+  - correction des dates, libellés, montants et soldes, ajout ou suppression de lignes ;
+  - écart de soldes recalculé en direct. La validation reste impossible tant qu'un écart subsiste.
+- **Catégorisation** :
+  - règles saisies, règles apprises des corrections de l'utilisateur (la correction d'une catégorie ou d'une
+    imputation est mémorisée et reproposée), puis règles de base prudentes (frais bancaires, salaires et CNSS,
+    loyer, déplacements, subventions, dons, cotisations, intérêts, prestations) ;
+  - projet proposé d'après les liaisons du compte ;
+  - ligne budgétaire proposée si elle est unique pour ce projet et cette catégorie.
+- **Anomalies** : frais bancaires inhabituels (au-delà de 3 fois la médiane de l'historique, ou de 500 MAD sans
+  historique), dépassement d'une ligne budgétaire (en cumul), dépense de 1 000 MAD ou plus sans justificatif, ligne
+  en double, champs peu sûrs.
+- **Intégration** (après validation explicite) : une opération en **brouillon** par ligne, avec l'imputation
+  proposée. Elle est à ventiler et valider dans la Trésorerie, qui applique toutes les règles de `Core/Finance`.
+  - une ligne déjà comptabilisée (même montant, à ± 3 jours) n'est pas dupliquée ;
+  - relancer l'intégration ne crée aucun doublon.
+- **Archivage** : le fichier source est conservé, identifié par son SHA-256 et lié au relevé ; les images des pages
+  sont conservées pour la relecture. Toutes les écritures sont journalisées dans `AuditEntries`.
+- **Mesure de précision** :
+  - générateur déterministe de relevés de test (`SmartOffice/tests/tools/statement_fixtures.py`) : 3 mises en page,
+    chacune en PDF natif, en scan (inclinaison ±2°, bruit, flou, JPEG) et en photo difficile (3 à 4,5°,
+    150 dpi, éclairage inégal) ;
+  - banc de mesure (`tests/tools/statement_accuracy.py`) et dossier `backend/tests/fixtures/releves/` pour les vrais
+    relevés, évalués automatiquement dès qu'ils sont déposés.
+- 27 tests pytest (98 au total), dont un parcours complet vérifié dans un navigateur (Playwright) : import d'un scan,
+  correction, contrôle de l'écart, validation, intégration.
+
+### Résultats mesurés
+| Jeu | Lignes correctes | Soldes corrects |
+|---|---|---|
+| Relevés **synthétiques** (6 PDF natifs, 6 scans, 3 photos difficiles) | **270/270 (100 %)** | 15/15 |
+| **Vrais relevés de l'AFMI** | **non mesuré : aucun relevé fourni** | — |
+
+Le critère d'acceptation (≥ 95 % sur `fixtures/releves/`) est automatisé, mais il ne vaut que pour des relevés que
+j'ai moi-même générés. Les mises en page réelles des banques marocaines, les tampons, le papier froissé ou les
+colonnes alignées différemment ne sont pas encore éprouvés.
+
+### Points à valider
+1. **Relevés réels anonymisés** : 2 à 3 par banque utilisée, à déposer dans `SmartOffice/backend/tests/fixtures/releves/`
+   avec leur vérité terrain (le format est décrit dans le README du dossier). C'est la seule façon de mesurer
+   réellement les 95 %.
+2. **Seuils d'anomalies** : frais inhabituels (3 × la médiane, ou 500 MAD) et justificatif attendu dès 1 000 MAD.
+   Ils seront paramétrables au Lot 7.
+3. **Tesseract dans l'installateur Windows** : à intégrer au Lot 8, avec les langues fra et ara (environ +70 Mo).
+   D'ici là, il faut l'installer à part ou renseigner `AFMI_TESSERACT`. Sans lui, seuls les PDF natifs, CSV et Excel
+   sont lus.
+4. **Arabe** : la reconnaissance est réglée sur le français, la langue des relevés bancaires marocains courants.
+   Un relevé entièrement en arabe nécessitera un réglage du gabarit.
+
 ## [2.0.0 — Lot 2 : Banque et trésorerie] — 10/11/2026
 
 Nouveau menu **🏦 Trésorerie** dans l'application de bureau. Toutes les règles de calcul sont dans `Core/Finance`

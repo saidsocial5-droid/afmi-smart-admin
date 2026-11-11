@@ -1,6 +1,6 @@
 # Point de reprise — v2
 
-*Dernière session : 10/11/2026. Branche : `claude/v2-analyse`.*
+*Dernière session : 11/11/2026. Branche : `claude/v2-analyse`.*
 
 ## Où en est le projet
 
@@ -9,10 +9,11 @@
 | Analyse (`ANALYSE.md`) | Validée |
 | Lot 1 — Fondations (base unique, migrations, audit, sécurité) | Livré (`eddba95`) |
 | Lot 2 — Banque et trésorerie (écran Trésorerie, rapprochement, prévisions) | Livré (`fa047db`) |
-| Lot 3 — Relevés scannés (OCR, validation, catégorisation, anomalies) | **Prochaine étape** |
-| Lots 4 à 8 | À faire (voir `ANALYSE.md` § 7) |
+| Lot 3 — Relevés scannés (OCR, validation, catégorisation, anomalies) | Livré (voir CHANGELOG) |
+| Lot 4 — Éditeur, chartes, galerie photos | **Prochaine étape** |
+| Lots 5 à 8 | À faire (voir `ANALYSE.md` § 7) |
 
-Tests au dernier commit : 76 xUnit (`Core.Tests`) et 71 pytest, tous verts.
+Tests au dernier commit : 76 xUnit (`Core.Tests`) et 98 pytest (1 sauté : vrais relevés absents), tous verts.
 
 ## En attente de l'AFMI
 
@@ -42,6 +43,10 @@ dotnet tool install --global dotnet-ef --version 9.0.8
 
 ```bash
 DOTNET_ROLL_FORWARD=Major dotnet test Core.Tests
+```
+
+```bash
+apt-get install -y tesseract-ocr tesseract-ocr-fra tesseract-ocr-ara
 ```
 
 ```bash

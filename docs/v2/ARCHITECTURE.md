@@ -1,6 +1,6 @@
 # AFMI Smart Admin 2.0 — Architecture
 
-*Mis à jour à la fin de chaque lot. État actuel : **Lot 2 (banque et trésorerie)**.*
+*Mis à jour à la fin de chaque lot. État actuel : **Lot 3 (lecture des relevés)**.*
 
 ## 1. Vue d'ensemble
 
@@ -153,6 +153,46 @@ et virements, Budget et conventions, Rapprochement bancaire, Prévisions et aler
 règle financière : chaque action appelle un service de `Core` et affiche son refus éventuel. L'état de rapprochement
 est exporté par `Desktop/Services/ReconciliationExportService.cs` (QuestPDF et CSV).
 
+### 2.6 Lecture des relevés (Lot 3)
+
+```mermaid
+flowchart LR
+    F["Fichier<br/>PDF / JPG / PNG / CSV / XLSX"] --> T{"Type"}
+    T -- "PDF avec texte" --> N["Mots + positions<br/>(PyMuPDF, confiance 100)"]
+    T -- "scan / photo" --> P["Prétraitement OpenCV<br/>redressement, débruitage, contraste"] --> O["Tesseract<br/>mots + boîtes + confiance"]
+    T -- "CSV / Excel" --> TAB["Lecture tabulaire"]
+    N --> X["Extraction<br/>gabarit banque, colonnes, lignes,<br/>soldes, période, RIB"]
+    O --> X
+    X --> B{"Soldes<br/>équilibrés ?"}
+    B -- non --> S2["Seconde lecture (binarisée)<br/>correction unique, surlignée"] --> AI{"IA cochée ?"}
+    AI -- oui --> IA["Extraction IA<br/>(règles de confidentialité)"]
+    B -- oui --> DB
+    AI -- non --> DB
+    IA --> DB
+    TAB --> DB["Brouillon : BankStatements + StatementLines<br/>+ fichier archivé (SHA-256) + suggestions"]
+    DB --> V["Écran de validation (React)<br/>image ↔ tableau, corrections, apprentissage"]
+    V -- "Valider (contrôles bloquants)" --> I["Intégrer → Operations en brouillon"]
+    I --> TR["Trésorerie (WPF) : ventiler, valider, rapprocher"]
+```
+
+| Module (`SmartOffice/backend/tools/statements/`) | Rôle |
+|---|---|
+| `preprocess.py` | Redressement (variance du profil de projection, recherche grossière puis fine), débruitage, CLAHE. Binarisation seulement pour la seconde lecture : Tesseract lit mieux les scans flous en niveaux de gris. |
+| `ocr.py` | Tesseract en ligne de commande (sortie TSV). L'exécutable est cherché dans `AFMI_TESSERACT`, puis dans un dossier `tesseract/` livré avec l'application, puis dans le PATH. |
+| `templates.py` + `config/bank_templates.json` | Gabarits de banques (mots d'identification, libellés des soldes) et mots d'en-tête des colonnes. Modifiables sans programmation ; une copie dans le dossier de configuration de l'utilisateur est prioritaire. |
+| `extract.py` | Reconstruction en lignes et colonnes, confiance par champ (date et montants : minimum ; libellé : moyenne). |
+| `pipeline.py` | Orchestration par type de fichier, images des pages pour l'écran, seconde lecture. |
+| `categorize.py` | Règles manuelles, apprises, puis de base ; propositions de projet et de ligne budgétaire ; apprentissage. |
+| `store.py` | Archivage, brouillon, corrections, contrôles, anomalies, validation, intégration (journalisées). |
+| `ai_extract.py` | Recours IA, retenu seulement si les soldes s'équilibrent. |
+
+API : `/api/statements` (`context`, `upload`, `{id}`, `{id}/pages/{n}`, `PUT {id}`, `{id}/validate`, `{id}/integrate`,
+`DELETE {id}`). Les fichiers sources et les images des pages sont archivés dans `<données Smart Office>/archives/releves/`.
+
+**Répartition des règles :** le backend ne crée que des opérations **en brouillon** (contrôles de base : compte actif,
+date ≥ ouverture, devise du compte, taux daté). La validation d'une opération, avec ventilation exacte sur des lignes
+budgétaires cohérentes, reste dans `Core/Finance`. Aucune règle financière n'est dupliquée en Python.
+
 ## 3. Sécurité et confidentialité
 
 | Sujet | Mesure |
@@ -178,6 +218,6 @@ est exporté par `Desktop/Services/ReconciliationExportService.cs` (QuestPDF et 
 |---|---|---|
 | `Core.Tests` (xUnit, multiplateforme) | `dotnet test Core.Tests` | Migrations (base neuve, base 1.3.0 chiffrée, échec atomique, aller-retour), règles financières, audit, suppression logique, paramètres, vecteurs partagés |
 | `Desktop.Tests` (xUnit, Windows) | `dotnet test Desktop.Tests` | Tests existants de la 1.3.0, désormais sur une base jetable |
-| Backend (pytest) | `python -m pytest SmartOffice/tests` | Tests existants, plus confidentialité, jeton de session, base unique et vecteurs partagés |
+| Backend (pytest) | `python -m pytest SmartOffice/tests` | Tests existants ; confidentialité, jeton de session, base unique, vecteurs partagés ; pipeline des relevés (précision ≥ 95 %, sautée si Tesseract est absent) et API des relevés |
 
 Le workflow `.github/workflows/ci.yml` exécute l'ensemble sous Windows à chaque push.

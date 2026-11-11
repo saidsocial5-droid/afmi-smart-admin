@@ -230,7 +230,7 @@ def extract(words: List[Word], templates: List[BankTemplate], columns: Dict[str,
                 extra = " ".join(w.text for w in l if w.x1 <= zone)
                 if extra:
                     current.label = (current.label + " " + extra).strip()
-                    current.confidence["label"] = min(current.confidence.get("label", 100), min(w.conf for w in l))
+                    current.confidence["label"] = min(current.confidence.get("label", 100), sum(w.conf for w in l) / len(l))
             continue
 
         conf: Dict[str, float] = {"date": l[0].conf}
@@ -265,7 +265,8 @@ def extract(words: List[Word], templates: List[BankTemplate], columns: Dict[str,
         else:
             conf["debit"] = conf["credit"] = 0.0
             st.warnings.append(f"Opération du {first_date} sans montant lisible.")
-        conf["label"] = min((w.conf for w in label_words), default=0.0)
+        # Libellé : confiance moyenne (un mot isolé peu sûr n'en fait pas un libellé faux) ; dates et montants : minimum.
+        conf["label"] = sum(w.conf for w in label_words) / len(label_words) if label_words else 0.0
 
         height = (page_heights or {}).get(l[0].page)
         current = ExtractedLine(

@@ -52,6 +52,14 @@ export default function Sidebar({ activeTab, setActiveTab }) {
       badge: t('badgeOcr')
     },
     {
+      id: 'statements',
+      label_ar: 'الكشوفات البنكية',
+      label_fr: 'Relevés bancaires',
+      label_en: 'Bank statements',
+      icon: FileScan,
+      badge: 'OCR'
+    },
+    {
       id: 'payroll',
       label_ar: 'الأجور والتصريحات الضريبية',
       label_fr: 'Paie & Déclarations',

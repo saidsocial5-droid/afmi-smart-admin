@@ -11,3 +11,4 @@ pillow
 python-docx
 openpyxl
 lxml
+opencv-python-headless

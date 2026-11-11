@@ -10,6 +10,7 @@ import InstitutionalMemoryView from './views/InstitutionalMemoryView';
 import ProjectRadarView from './views/ProjectRadarView';
 import WorkflowsView from './views/WorkflowsView';
 import PayrollView from './views/PayrollView';
+import StatementsView from './views/StatementsView';
 import { apiFetch } from './apiClient';
 import { useLanguage } from './context/LanguageContext';
 
@@ -84,7 +85,7 @@ export default function App() {
         />
 
         {/* Main Content Area */}
-        <main className="flex-1 p-4 md:p-6 lg:p-8 max-w-7xl mx-auto w-full overflow-y-auto">
+        <main className={`flex-1 p-4 md:p-6 lg:p-8 mx-auto w-full overflow-y-auto ${activeTab === "statements" ? "max-w-none min-w-0" : "max-w-7xl"}`}>
           {activeTab === "dashboard" && (
             <DashboardView 
               projects={projects}
@@ -109,6 +110,10 @@ export default function App() {
 
           {activeTab === "payroll" && (
             <PayrollView />
+          )}
+
+          {activeTab === "statements" && (
+            <StatementsView />
           )}
 
           {activeTab === "ocr" && (
