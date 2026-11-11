@@ -27,8 +27,13 @@ Version 2.0.0 : les huit lots du cahier des charges sont livrés. Documentation 
     les contrôles.
 - **Mode démonstration** (bouton « 🎓 Démonstration ») : fenêtre marquée « DÉMONSTRATION — données fictives »,
   remise à zéro possible, aucun e-mail envoyé.
-- **Rôles dans l'application de bureau** : la Trésorerie est en consultation seule pour les rôles Chargé de projet et
-  Lecteur, avec un bandeau explicatif.
+- **Rôles dans toute l'application de bureau**, y compris les écrans de la 1.3.0 (portefeuille, tâches, bailleurs,
+  SMTP). Le contrôle se fait à l'enregistrement en base (`AppDbContext.WritePermission`), mêmes zones que Smart Office :
+  - paramètres : administrateur ;
+  - trésorerie : administrateur et comptable ;
+  - projets : tous sauf lecteur.
+
+  La Trésorerie affiche en plus un bandeau « consultation seule ».
 - **Alertes par e-mail** :
   - contenu : échéances de rapports et de conventions, solde négatif ou sous le seuil, éléments non rapprochés,
     échec d'une sauvegarde automatique ;
@@ -59,7 +64,7 @@ Version 2.0.0 : les huit lots du cahier des charges sont livrés. Documentation 
 - **Dossier annuel** : le message d'erreur plantait quand un contrôle bloquant empêchait la génération du rapport.
   Le défaut a été trouvé par le test de bout en bout.
 - La sauvegarde automatique signale désormais ses échecs (paramètres et alertes) au lieu de les ignorer.
-- Tests : 96 xUnit, 164 pytest.
+- Tests : 97 xUnit, 164 pytest.
 
 ### Points à valider
 1. **Première construction de l'installateur sous Windows** :
@@ -67,11 +72,9 @@ Version 2.0.0 : les huit lots du cahier des charges sont livrés. Documentation 
      `installer/prepare_third_party.ps1` ;
    - à la première construction, contrôlez les empreintes consignées dans `third_party/SHA256SUMS.txt` ;
    - testez ensuite l'installation, la démonstration et les écrans WPF (Trésorerie en consultation seule).
-2. **Écrans hérités du bureau** (portefeuille, tâches, bailleurs) : ils ne sont pas restreints par les rôles. À faire
-   si plusieurs personnes utilisent le même poste avec des droits différents.
-3. **Alertes par e-mail** : renseignez le SMTP et les destinataires (Paramètres › Notifications), puis faites un envoi
+2. **Alertes par e-mail** : renseignez le SMTP et les destinataires (Paramètres › Notifications), puis faites un envoi
    de test.
-4. Toujours en attente : vrais relevés anonymisés, modèle de l'expert-comptable (Q3, Q4), formats des bailleurs
+3. Toujours en attente : vrais relevés anonymisés, modèle de l'expert-comptable (Q3, Q4), formats des bailleurs
    (Q10), réponse à Q13 (identifiants réels dans `ngo_profile.json`, affichés en bas de la barre latérale).
 
 ## [2.0.0 — Lot 7 : Exports Word, PDF, Excel et paramètres avancés] — 11/11/2026

@@ -37,4 +37,34 @@ public class RoleServiceTests : IDisposable
         Assert.Equal("Lecteur", RoleService.CurrentRole(db, "inconnu"));
         Assert.False(RoleService.CanEditProjects("Lecteur"));
     }
+
+    [Fact]
+    public void SaveChanges_EnforcesTheRole_ForEveryScreen()
+    {
+        string role = "Chargé de projet";
+        using (var ctx = _db.Open())
+        {
+            ctx.WritePermission = area => RoleService.CanWrite(role, area);
+            ctx.Projects.Add(new Models.Project { Name = "Projet", Code = "P1" });
+            ctx.SaveChanges();                                                          // projets : permis
+            ctx.BankAccounts.Add(new Models.Finance.BankAccount { Title = "Compte", BankName = "B", Currency = "MAD" });
+            Assert.Throws<UnauthorizedAccessException>(() => ctx.SaveChanges());        // trésorerie : refusée
+        }
+        role = "Lecteur";
+        using (var ctx = _db.Open())
+        {
+            ctx.WritePermission = area => RoleService.CanWrite(role, area);
+            ctx.Projects.Add(new Models.Project { Name = "Autre", Code = "P2" });
+            Assert.Throws<UnauthorizedAccessException>(() => ctx.SaveChanges());
+        }
+        using (var ctx = _db.Open())
+        {
+            ctx.WritePermission = area => RoleService.CanWrite("Lecteur", area);
+            new SettingsService(ctx).Set(SettingKeys.BackupLastError, "erreur");       // écriture système : permise
+            Assert.Throws<UnauthorizedAccessException>(() => new SettingsService(ctx).Set(SettingKeys.AssociationName, "X"));
+        }
+        using var check = _db.Open();
+        Assert.Equal(1, check.Projects.Count());
+        Assert.Empty(check.BankAccounts);
+    }
 }

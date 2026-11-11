@@ -240,7 +240,8 @@ d'origine.
 | Lecteur | Consultation et exports. |
 
 Tant que la liste est vide, le poste est en mode mono-utilisateur, avec tous les droits. Un compte absent de la liste
-n'a qu'un accès en consultation.
+n'a qu'un accès en consultation. Les droits s'appliquent à toute l'application, bureau et Smart Office ; ils sont pris
+en compte au démarrage suivant de l'application de bureau.
 
 ---
 

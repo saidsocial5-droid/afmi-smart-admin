@@ -86,7 +86,7 @@ namespace AFMI_Gestion_projet.ViewModels.Treasury
                 if (success != null) StatusMessage = success;
             }
             catch (Exception ex) when (ex is FinanceRuleException or OperationValidationException or MissingExchangeRateException
-                                           or ArgumentException or InvalidOperationException or DbUpdateException or IOException)
+                                           or ArgumentException or InvalidOperationException or DbUpdateException or IOException or UnauthorizedAccessException)
             {
                 ErrorMessage = ex is DbUpdateException ? "Enregistrement refusé par la base : " + ex.GetBaseException().Message : ex.Message;
             }

@@ -42,6 +42,10 @@ namespace AFMI_Gestion_projet
             try
             {
                 using var db = new Data.AppDbContext();
+                // Rôles (Paramètres › Utilisateurs) : appliqués à tout enregistrement, pour tous les écrans
+                string? role = Services.RoleService.CurrentRole(db, Data.AuditContext.CurrentUser);
+                if (role != null)
+                    Data.AppDbContext.DefaultWritePermission = area => Services.RoleService.CanWrite(role, area);
             }
             catch (Exception ex)
             {

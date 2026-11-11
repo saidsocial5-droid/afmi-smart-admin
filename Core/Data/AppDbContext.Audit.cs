@@ -33,6 +33,7 @@ namespace AFMI_Gestion_projet.Data
         public override int SaveChanges(bool acceptAllChangesOnSuccess)
         {
             if (_writingAudit) return base.SaveChanges(acceptAllChangesOnSuccess);
+            EnforceWritePermission();
             var pending = PrepareChanges();
             if (pending.Count == 0) return base.SaveChanges(acceptAllChangesOnSuccess);
 
@@ -53,6 +54,7 @@ namespace AFMI_Gestion_projet.Data
         public override async Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default)
         {
             if (_writingAudit) return await base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
+            EnforceWritePermission();
             var pending = PrepareChanges();
             if (pending.Count == 0) return await base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
 

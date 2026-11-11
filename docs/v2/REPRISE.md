@@ -16,7 +16,7 @@
 | Lot 7 — Exports Word/PDF/Excel et paramètres avancés | Livré (voir CHANGELOG) |
 | Lot 8 — Finalisation, données de démonstration, installateur 2.0.0 | Livré : **version 2.0.0** |
 
-Tests au dernier commit : 96 xUnit (`Core.Tests`) et 164 pytest (1 sauté : vrais relevés absents), tous verts.
+Tests au dernier commit : 97 xUnit (`Core.Tests`) et 164 pytest (1 sauté : vrais relevés absents), tous verts.
 
 ## Reste à faire
 

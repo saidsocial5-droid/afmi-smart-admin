@@ -23,8 +23,8 @@ de l'AFMI. Avancement : **Lots 1 à 8 livrés — version 2.0.0** (voir [CHANGEL
   installé sur tout Windows 10/11, ou par Chrome/Chromium, en mode sans interface. **LibreOffice** est facultatif :
   s'il est installé, il produit le **PDF/A-2b** et des PDF avec notes en bas de page. Ni l'un ni l'autre n'est
   téléchargé par l'application.
-- **Rôles (Lots 7 et 8) :** les rôles protègent les écritures de l'API Smart Office et de la Trésorerie du bureau.
-  Les écrans hérités de la 1.3.0 (portefeuille, tâches, bailleurs) ne sont pas restreints.
+- **Rôles (Lots 7 et 8) :** les rôles protègent toutes les écritures : l'API Smart Office (middleware) et
+  l'application de bureau (contrôle dans `SaveChanges`, qui couvre aussi les écrans de la 1.3.0).
 - **Lot 8 (installateur) :** Tesseract et la police Amiri sont téléchargés une fois à la construction
   (`prepare_third_party.ps1`), puis vérifiés par empreinte. LibreOffice n'est pas embarqué (taille : plus de
   300 Mo) : il reste facultatif, pour le PDF/A.

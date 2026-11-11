@@ -40,6 +40,15 @@ namespace AFMI_Gestion_projet.Services
         /// <summary>Projets, documents, rapports : tous sauf lecteur.</summary>
         public static bool CanEditProjects(string? role) => role is null or Administrator or Accountant or ProjectOfficer;
 
+        /// <summary>Droit d'écriture par zone (identique à ALLOWED dans backend/core/roles.py).</summary>
+        public static bool CanWrite(string? role, Data.WriteArea area) => area switch
+        {
+            Data.WriteArea.System => true,
+            Data.WriteArea.Settings => role is null or Administrator,
+            Data.WriteArea.Finance => CanEditFinance(role),
+            _ => CanEditProjects(role),
+        };
+
         public static string Describe(string? role) => role ?? "poste mono-utilisateur";
     }
 }
