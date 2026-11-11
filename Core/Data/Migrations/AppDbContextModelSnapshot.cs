@@ -1644,12 +1644,29 @@ namespace AFMI_Gestion_projet.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
+                    b.Property<string>("Aggregation")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT")
+                        .HasDefaultValue("Somme");
+
+                    b.Property<double?>("BaselineValue")
+                        .HasColumnType("REAL");
+
                     b.Property<double>("CurrentValue")
                         .HasColumnType("REAL");
 
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasColumnType("TEXT");
+
+                    b.Property<string>("Level")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT")
+                        .HasDefaultValue("Extrant");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -1670,6 +1687,58 @@ namespace AFMI_Gestion_projet.Data.Migrations
                     b.HasIndex("ProjectId");
 
                     b.ToTable("Indicators");
+                });
+
+            modelBuilder.Entity("AFMI_Gestion_projet.Models.IndicatorMeasurement", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("AgeGroup")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("IndicatorId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Notes")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateOnly>("PeriodEnd")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Sex")
+                        .IsRequired()
+                        .HasMaxLength(1)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Source")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<double>("Value")
+                        .HasColumnType("REAL");
+
+                    b.Property<string>("Zone")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IndicatorId", "PeriodEnd");
+
+                    b.ToTable("IndicatorMeasurements", t =>
+                        {
+                            t.HasCheckConstraint("CK_IndicatorMeasurements_Sex", "Sex IN ('', 'F', 'M')");
+                        });
                 });
 
             modelBuilder.Entity("AFMI_Gestion_projet.Models.Project", b =>
@@ -2504,6 +2573,17 @@ namespace AFMI_Gestion_projet.Data.Migrations
                     b.Navigation("Project");
                 });
 
+            modelBuilder.Entity("AFMI_Gestion_projet.Models.IndicatorMeasurement", b =>
+                {
+                    b.HasOne("AFMI_Gestion_projet.Models.Indicator", "Indicator")
+                        .WithMany("Measurements")
+                        .HasForeignKey("IndicatorId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Indicator");
+                });
+
             modelBuilder.Entity("AFMI_Gestion_projet.Models.Project", b =>
                 {
                     b.HasOne("AFMI_Gestion_projet.Models.Funder", "Funder")
@@ -2626,6 +2706,11 @@ namespace AFMI_Gestion_projet.Data.Migrations
             modelBuilder.Entity("AFMI_Gestion_projet.Models.Funder", b =>
                 {
                     b.Navigation("Projects");
+                });
+
+            modelBuilder.Entity("AFMI_Gestion_projet.Models.Indicator", b =>
+                {
+                    b.Navigation("Measurements");
                 });
 
             modelBuilder.Entity("AFMI_Gestion_projet.Models.Project", b =>

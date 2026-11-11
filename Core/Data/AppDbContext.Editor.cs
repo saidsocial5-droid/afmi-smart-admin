@@ -1,3 +1,4 @@
+using AFMI_Gestion_projet.Models;
 using AFMI_Gestion_projet.Models.Editor;
 using Microsoft.EntityFrameworkCore;
 
@@ -11,6 +12,7 @@ namespace AFMI_Gestion_projet.Data
         public DbSet<DocumentVersion> DocumentVersions { get; set; } = null!;
         public DbSet<DocumentComment> DocumentComments { get; set; } = null!;
         public DbSet<Photo> Photos { get; set; } = null!;
+        public DbSet<IndicatorMeasurement> IndicatorMeasurements { get; set; } = null!;
 
         private static void ConfigureEditor(ModelBuilder b)
         {
@@ -42,6 +44,19 @@ namespace AFMI_Gestion_projet.Data
             {
                 e.HasOne(x => x.EditorDocument).WithMany(d => d.Comments).HasForeignKey(x => x.EditorDocumentId).OnDelete(DeleteBehavior.Restrict);
                 e.HasIndex(x => new { x.EditorDocumentId, x.AnchorId });
+            });
+
+            b.Entity<Indicator>(e =>
+            {
+                e.Property(x => x.Level).HasMaxLength(20).HasDefaultValue("Extrant");
+                e.Property(x => x.Aggregation).HasMaxLength(20).HasDefaultValue("Somme");
+            });
+
+            b.Entity<IndicatorMeasurement>(e =>
+            {
+                e.HasOne(x => x.Indicator).WithMany(i => i.Measurements).HasForeignKey(x => x.IndicatorId).OnDelete(DeleteBehavior.Restrict);
+                e.HasIndex(x => new { x.IndicatorId, x.PeriodEnd });
+                e.ToTable(t => t.HasCheckConstraint("CK_IndicatorMeasurements_Sex", "Sex IN ('', 'F', 'M')"));
             });
 
             b.Entity<Photo>(e =>

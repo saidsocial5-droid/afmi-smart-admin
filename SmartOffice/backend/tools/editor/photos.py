@@ -216,3 +216,29 @@ def select_for_report(project_id: int, date_from: Optional[str], date_to: Option
         if p not in chosen:
             chosen.append(p)
     return sorted(chosen, key=lambda p: p["taken_at"] or "")
+
+
+def import_legacy_activity_photos() -> Dict[str, Any]:
+    """
+    Reprise des photos des rapports d'activité de l'application de bureau (table ActivityReportPhotos, chemins locaux).
+    Le consentement n'étant pas connu, il est à confirmer : ces photos ne sont pas sélectionnées automatiquement avant.
+    Relancer la reprise ne crée pas de doublon (empreinte SHA-256).
+    """
+    imported, skipped, missing = 0, 0, []
+    with unified_db.connect() as conn:
+        rows = conn.execute("SELECT ph.*, r.ActivityDate, r.Location, t.ProjectId, t.Id AS TaskId FROM ActivityReportPhotos ph "
+                            "JOIN ActivityReports r ON r.Id = ph.ActivityReportId JOIN Tasks t ON t.Id = r.ProjectTaskId").fetchall()
+    for r in rows:
+        path = Path(r["LocalFilePath"] or "")
+        if not path.is_file() or path.suffix.lower() not in EXT:
+            missing.append(str(path))
+            continue
+        result = upload([(path.read_bytes(), path.name)], r["ProjectId"], r["TaskId"], r["ActivityReportId"], "", False)[0]
+        if "error" in result:
+            skipped += 1
+            continue
+        update(result["photo"]["id"], {"caption": r["Caption"] or "", "location": r["Location"] or "",
+                                       "caption_validated": bool(r["Caption"]),
+                                       **({} if result["photo"]["taken_at"] else {"taken_at": str(r["ActivityDate"])[:19]})})
+        imported += 1
+    return {"imported": imported, "skipped": skipped, "missing": missing[:20], "missing_count": len(missing)}

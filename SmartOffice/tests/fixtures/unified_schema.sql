@@ -989,5 +989,31 @@ CREATE INDEX "IX_Photos_StoredFileId" ON "Photos" ("StoredFileId");
 INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
 VALUES ('20261111100250_EditorChartsAndPhotos', '9.0.8');
 
+ALTER TABLE "Indicators" ADD "Aggregation" TEXT NOT NULL DEFAULT 'Somme';
+
+ALTER TABLE "Indicators" ADD "BaselineValue" REAL NULL;
+
+ALTER TABLE "Indicators" ADD "Level" TEXT NOT NULL DEFAULT 'Extrant';
+
+CREATE TABLE "IndicatorMeasurements" (
+    "Id" INTEGER NOT NULL CONSTRAINT "PK_IndicatorMeasurements" PRIMARY KEY AUTOINCREMENT,
+    "IndicatorId" INTEGER NOT NULL,
+    "PeriodEnd" TEXT NOT NULL,
+    "Value" REAL NOT NULL,
+    "Sex" TEXT NOT NULL,
+    "AgeGroup" TEXT NOT NULL,
+    "Zone" TEXT NOT NULL,
+    "Source" TEXT NOT NULL,
+    "Notes" TEXT NOT NULL,
+    "CreatedAtUtc" TEXT NOT NULL,
+    CONSTRAINT "CK_IndicatorMeasurements_Sex" CHECK (Sex IN ('', 'F', 'M')),
+    CONSTRAINT "FK_IndicatorMeasurements_Indicators_IndicatorId" FOREIGN KEY ("IndicatorId") REFERENCES "Indicators" ("Id") ON DELETE RESTRICT
+);
+
+CREATE INDEX "IX_IndicatorMeasurements_IndicatorId_PeriodEnd" ON "IndicatorMeasurements" ("IndicatorId", "PeriodEnd");
+
+INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+VALUES ('20261111102355_ResultsIndicators', '9.0.8');
+
 COMMIT;
 
