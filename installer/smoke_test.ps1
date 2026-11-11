@@ -37,7 +37,9 @@ try {
     npm init -y | Out-Null
     npm install --silent playwright@1.48.2 | Out-Null
     npx playwright install chromium | Out-Null
-    node (Join-Path $root "installer\smoke_page.cjs") "http://127.0.0.1:8765/?afmi_token=jeton-de-test" $out
+    # Le script est copié à côté de node_modules : Node résout les modules depuis le dossier du script
+    Copy-Item (Join-Path $root "installer\smoke_page.cjs") (Join-Path $out "smoke_page.cjs") -Force
+    node (Join-Path $out "smoke_page.cjs") "http://127.0.0.1:8765/?afmi_token=jeton-de-test" $out
     $code = $LASTEXITCODE
     Pop-Location
     if ($code -ne 0) { throw "L'interface Smart Office ne s'affiche pas (voir smart_office.png)." }
