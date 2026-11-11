@@ -1,5 +1,78 @@
 # Journal des modifications
 
+## [2.0.0 — Lot 5 : Rapports annuels moral et financier] — 11/11/2026
+
+Nouveaux menus Smart Office : **Rapports annuels** et **Indicateurs & bénéficiaires**. Le rapport est généré à partir de
+toutes les données de l'exercice, puis ouvert dans l'éditeur pour relecture et personnalisation.
+
+### Ajouté
+- **Assistant de génération** :
+  - exercice, périmètre (association entière, programme et ses sous-projets, projet, bailleur), type de rapport
+    (complet, moral, financier), langue (français, arabe en RTL, anglais), modèle de mise en page ;
+  - synthèse IA en option ;
+  - contrôles de cohérence affichés avant la génération.
+- **Contrôles de cohérence**, avec un niveau paramétrable par contrôle (`config/financial_report_layout.json`) :
+  - **bloquants** par défaut : opérations en brouillon sur l'exercice, virement interne incomplet, taux de change
+    manquant ;
+  - **avertissements** par défaut : écritures sans catégorie, comptes non rapprochés au 31/12, dépenses de 1 000 MAD
+    ou plus sans justificatif, indicateurs sans mesure datée.
+- **Rapport moral** :
+  - synthèse chiffrée établie à partir des données (toujours traçable) et, en option, synthèse rédigée par l'IA à
+    partir des seuls faits, avec la liste des chiffres absents des données ;
+  - projets de l'exercice (objectifs, bailleur, statut, période, avancement) ;
+  - activités ; indicateurs GAR (niveau, référence, cible, réalisé de l'exercice, taux) ; bénéficiaires par sexe,
+    tranche d'âge et zone ; partenaires ; faits marquants ; difficultés (rapports d'activité, leçons apprises) ;
+    perspectives ;
+  - galeries photos par projet sur la période (consentement obligatoire).
+- **Rapport financier** (présentation **provisoire**, en attendant le référentiel de l'expert-comptable) :
+  - **compte d'emploi des ressources** paramétrable : sections, catégories, détail des emplois par projet et des
+    subventions par bailleur ;
+  - recettes et dépenses par nature et par projet, fonctionnement compris ;
+  - exécution budgétaire (prévu, réalisé, écart, taux) par projet et par bailleur ;
+  - trésorerie au 31/12 par compte (contre-valeur MAD) avec l'état de rapprochement ;
+  - **fonds reçus non utilisés et reports** par convention (reçu et utilisé sur l'exercice et en cumul). Leur
+    traitement comptable reste à valider ;
+  - comparaison avec l'exercice N-1, graphique d'évolution, camemberts des ressources et des emplois ;
+  - rappel des contrôles en fin de rapport.
+- Les tableaux du rapport sont des **blocs dynamiques** (exercice, périmètre, langue) : ils se recalculent à chaque
+  ouverture. Chaque tableau porte un format par colonne, pour un affichage en format français à l'écran comme à
+  l'impression.
+- **Indicateurs GAR** :
+  - niveau (impact, effet, extrant), valeur de référence, mode de cumul (somme ou dernière mesure) ;
+  - **mesures datées et désagrégées** (sexe, tranche d'âge, zone, source) ;
+  - la valeur courante, affichée dans l'application de bureau, suit les mesures ;
+  - migration `ResultsIndicators`.
+- **Ventilation multiple** dans la Trésorerie (point 1 du Lot 2) :
+  - une opération peut être répartie sur plusieurs projets ou lignes budgétaires ;
+  - « Répartir selon les clés » utilise les liaisons du compte (projet unique ou pourcentages) et choisit la ligne de
+    la catégorie quand elle est unique ;
+  - le reste à ventiler s'affiche pendant la saisie.
+- **Reprise des photos des anciens rapports d'activité** (point 6 du Lot 4) : les photos sont reprises avec leur
+  légende ; le consentement est à confirmer, et relancer la reprise ne crée pas de doublon.
+- **Scénario commun .NET / Python** (`SharedTestCases/annual_scenario.json`) : multi-ventilations avec arrondis,
+  devise étrangère, restitution, avoir, virement interne, relevé et rapprochement. Les états Python et
+  `FinanceService` / `ReconciliationService` donnent exactement les mêmes totaux.
+- Tests : 77 xUnit, 112 pytest.
+
+### Vérifié dans un navigateur
+Assistant, contrôles, rapport annuel complet de 6 pages : 13 blocs alimentés, 2 camemberts, compte d'emploi juste
+(74 500 − 28 000 = 46 500 MAD). Rapport moral en arabe (RTL) pour un projet. Saisie des indicateurs. Corrigés au
+passage : titres en double, légende du graphique N-1, lignes vides de la comparaison, libellé du périmètre non
+traduit.
+
+### Points à valider
+1. **Référentiel comptable (Q3, Q4)** : le compte d'emploi des ressources et la présentation des états sont
+   provisoires. Avec le plan de comptes et le modèle de votre expert-comptable, il suffira de modifier
+   `financial_report_layout.json`, sans programmation.
+2. **Fonds dédiés** : le tableau « fonds reçus non utilisés » présente le reçu et l'utilisé par convention. La
+   comptabilisation en fonds dédiés ou en produits constatés d'avance est à confirmer.
+3. **Lignes budgétaires pluriannuelles** (sans exercice) : le réalisé présenté est cumulé depuis le début. Pour un
+   budget annuel, rattachez les lignes à l'exercice (exercices au Lot 7, paramètres).
+4. **Niveaux des contrôles** : faut-il garder les comptes non rapprochés en avertissement, ou les rendre bloquants
+   pour le rapport financier présenté à l'assemblée générale ?
+5. **Ventilation multiple (écran WPF)** : compilée et liaisons vérifiées par script, mais pas testée visuellement.
+   À essayer sous Windows.
+
 ## [2.0.0 — Lot 4 : Éditeur, chartes graphiques, photos] — 11/11/2026
 
 Trois nouveaux menus dans Smart Office : **Éditeur de documents**, **Chartes & modèles**, **Photos des activités**.

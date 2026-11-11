@@ -67,7 +67,7 @@ const setPath = (o, path, value) => {
   return out;
 };
 
-export default function DocumentEditor() {
+export default function DocumentEditor({ initialDocumentId = null }) {
   const [ctx, setCtx] = useState({ projects: [], funders: [], tasks: [], user: '' });
   const [docs, setDocs] = useState([]);
   const [templates, setTemplates] = useState([]);
@@ -135,6 +135,9 @@ export default function DocumentEditor() {
     if (cm.ok) setComments(await cm.json());
     if (vs.ok) setVersions(await vs.json());
   }, [editor, refreshChartAndFields]);
+
+  // Document à ouvrir dès l'arrivée (rapport annuel tout juste généré)
+  useEffect(() => { if (initialDocumentId && editor) { openDocument(initialDocumentId); loadLists(); } }, [initialDocumentId, editor]);
 
   const createDocument = async () => {
     const body = { title: form.title || 'Rapport d\'activité', project_id: form.project_id ? Number(form.project_id) : null, language: form.language };

@@ -1,5 +1,7 @@
 import React from 'react';
 import { 
+  FileBarChart2,
+  Target,
   FilePenLine,
   Palette,
   Images,
@@ -53,6 +55,22 @@ export default function Sidebar({ activeTab, setActiveTab }) {
       label_en: 'OCR & Financial Audit',
       icon: FileScan,
       badge: t('badgeOcr')
+    },
+    {
+      id: 'reports',
+      label_ar: 'التقارير السنوية',
+      label_fr: 'Rapports annuels',
+      label_en: 'Annual reports',
+      icon: FileBarChart2,
+      badge: 'AG'
+    },
+    {
+      id: 'indicators',
+      label_ar: 'المؤشرات والمستفيدون',
+      label_fr: 'Indicateurs & bénéficiaires',
+      label_en: 'Indicators & beneficiaries',
+      icon: Target,
+      badge: 'GAR'
     },
     {
       id: 'editor',

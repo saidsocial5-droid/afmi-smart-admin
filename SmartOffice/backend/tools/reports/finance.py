@@ -302,6 +302,8 @@ def comparison(conn, period: Period, scope: Scope, layout: Dict[str, Any], lang:
     rows = []
     for k in keys:
         n, p = cur_rows.get(k, 0), prev_rows.get(k, 0)
+        if n == 0 and p == 0:
+            continue
         rows.append([k, p, n, n - p, _pct(n - p, p) if p else None])
     tn, tp_ = totals(conn, period, scope), totals(conn, prev, scope)
     chart = {"type": "bars", "series": [{"label": t(lang, "resources"), "planned": tp_["income"] / 100, "actual": tn["income"] / 100},

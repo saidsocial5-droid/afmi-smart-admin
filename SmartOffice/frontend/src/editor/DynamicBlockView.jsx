@@ -4,10 +4,11 @@ import { RefreshCw, Settings2, ArrowUp, ArrowDown, X } from 'lucide-react';
 import { apiFetch } from '../apiClient';
 import { useDoc, fmtMad } from './context';
 import BarChart from './BarChart';
+import GenericTable from './GenericTable';
 
 export const BLOCK_LABELS = {
   budget: 'Tableau budgétaire', indicators: 'Indicateurs', activities: 'Liste des activités',
-  chart: 'Graphique', gallery: 'Galerie photos',
+  chart: 'Graphique', gallery: 'Galerie photos', annual: 'Tableau du rapport annuel',
 };
 
 /** Bloc alimenté par les données : relu depuis la base à l'ouverture et sur « Actualiser ». */
@@ -31,14 +32,22 @@ export default function DynamicBlockView({ node, updateAttributes, selected, edi
       q.set('limit', a.limit || 6);
       if (a.photoIds?.length) q.set('photo_ids', a.photoIds.join(','));
     }
+    if (a.kind === 'annual') {
+      q.delete('project_id');
+      q.set('year', a.year);
+      q.set('scope_type', a.scopeType || 'association');
+      if (a.scopeId) q.set('scope_id', a.scopeId);
+      q.set('lang', a.lang || 'fr');
+    }
     try {
-      const res = await apiFetch(`/api/editor/blocks/${a.kind}?${q}`);
+      const url = a.kind === 'annual' ? `/api/reports/table/${a.table}?${q}` : `/api/editor/blocks/${a.kind}?${q}`;
+      const res = await apiFetch(url);
       if (!res.ok) throw new Error((await res.json()).detail || res.status);
       setData(await res.json());
     } catch (e) {
       setError(`Données indisponibles : ${e.message}`);
     }
-  }, [a.kind, projectId, a.dateFrom, a.dateTo, a.chart, a.limit, JSON.stringify(a.photoIds)]);
+  }, [a.kind, projectId, a.dateFrom, a.dateTo, a.chart, a.limit, JSON.stringify(a.photoIds), a.table, a.year, a.scopeType, a.scopeId, a.lang]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -62,7 +71,9 @@ export default function DynamicBlockView({ node, updateAttributes, selected, edi
   let body = null;
   if (error) body = <div className="block-empty">{error}</div>;
   else if (!data) body = <div className="block-empty">Chargement…</div>;
-  else if (a.kind === 'budget') {
+  else if (a.kind === 'annual') {
+    body = <GenericTable data={data} style={doc.style} />;
+  } else if (a.kind === 'budget') {
     body = (
       <table className="data-table">
         <thead><tr style={thStyle}><th>Ligne</th><th>Prévu</th><th>Réalisé (MAD)</th><th>Écart</th><th>Taux</th></tr></thead>
@@ -127,7 +138,7 @@ export default function DynamicBlockView({ node, updateAttributes, selected, edi
       <div className="block-bar no-print">
         <span>{BLOCK_LABELS[a.kind] || a.kind} · données à jour{data?.source ? ` (${data.source})` : ''}</span>
         <button onClick={load} title="Actualiser depuis les données"><RefreshCw size={12} /></button>
-        {editable && <button onClick={() => setShowSettings((v) => !v)} title="Paramètres du bloc"><Settings2 size={12} /></button>}
+        {editable && a.kind !== 'annual' && <button onClick={() => setShowSettings((v) => !v)} title="Paramètres du bloc"><Settings2 size={12} /></button>}
       </div>
       {showSettings && editable && (
         <div className="block-settings no-print">

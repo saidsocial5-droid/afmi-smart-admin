@@ -14,6 +14,8 @@ import StatementsView from './views/StatementsView';
 import DocumentEditor from './editor/DocumentEditor';
 import ChartsTemplatesView from './views/ChartsTemplatesView';
 import PhotosView from './views/PhotosView';
+import AnnualReportsView from './views/AnnualReportsView';
+import IndicatorsView from './views/IndicatorsView';
 import { apiFetch } from './apiClient';
 import { useLanguage } from './context/LanguageContext';
 
@@ -29,6 +31,7 @@ export default function App() {
   const [financeSummary, setFinanceSummary] = useState({});
   const [llmConfig, setLlmConfig] = useState(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [editorDocumentId, setEditorDocumentId] = useState(null);   // document à ouvrir dans l'éditeur (rapports générés)
 
   const fetchGlobalData = async () => {
     setIsRefreshing(true);
@@ -116,7 +119,15 @@ export default function App() {
           )}
 
           {activeTab === "editor" && (
-            <DocumentEditor />
+            <DocumentEditor initialDocumentId={editorDocumentId} />
+          )}
+
+          {activeTab === "reports" && (
+            <AnnualReportsView onOpenDocument={(id) => { setEditorDocumentId(id); setActiveTab("editor"); }} />
+          )}
+
+          {activeTab === "indicators" && (
+            <IndicatorsView />
           )}
 
           {activeTab === "charts" && (

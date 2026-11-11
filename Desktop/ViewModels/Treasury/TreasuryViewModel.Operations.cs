@@ -22,7 +22,7 @@ namespace AFMI_Gestion_projet.ViewModels.Treasury
         public ObservableCollection<OperationRow> Operations { get; } = new();
         [ObservableProperty] private OperationRow? _selectedOperation;
 
-        // Formulaire d'opération (une ventilation : projet ou fonctionnement, ligne budgétaire, catégorie)
+        // Formulaire d'opération ; ventilation sur une ou plusieurs lignes (projet ou fonctionnement, ligne budgétaire, catégorie)
         [ObservableProperty] private DateTime? _opDate = DateTime.Today;
         [ObservableProperty] private string _opLabel = string.Empty;
         [ObservableProperty] private string _opReference = string.Empty;
@@ -30,11 +30,9 @@ namespace AFMI_Gestion_projet.ViewModels.Treasury
         [ObservableProperty] private Option<OperationNature>? _opNature;
         [ObservableProperty] private bool _opIsContra;
         [ObservableProperty] private string _opAmount = string.Empty;
-        [ObservableProperty] private Option<int?>? _opProject;
-        [ObservableProperty] private Option<int>? _opBudgetLine;
-        [ObservableProperty] private Option<int>? _opCategory;
-        public ObservableCollection<Option<int>> OpBudgetLineOptions { get; } = new();
         public ObservableCollection<Option<int>> OpCategoryOptions { get; } = new();
+        public ObservableCollection<AllocationRowViewModel> AllocationRows { get; } = new();
+        [ObservableProperty] private string _allocationSummary = string.Empty;
 
         // Virement interne
         [ObservableProperty] private Option<int>? _transferFrom;
@@ -44,7 +42,43 @@ namespace AFMI_Gestion_projet.ViewModels.Treasury
         [ObservableProperty] private string _transferReceived = string.Empty;
         [ObservableProperty] private string _transferLabel = "Virement interne";
 
-        private void InitOperationDefaults() => _opNature = NatureOptions[0];
+        private void InitOperationDefaults()
+        {
+            _opNature = NatureOptions[0];
+            AllocationRows.Add(NewRow(null));
+        }
+
+        private AllocationRowViewModel NewRow(Option<int?>? project)
+        {
+            var row = new AllocationRowViewModel(() => _allBudgetLines, project ?? ProjectOptions.FirstOrDefault());
+            row.Category = OpCategoryOptions.FirstOrDefault();
+            row.PropertyChanged += (_, e) => { if (e.PropertyName == nameof(AllocationRowViewModel.Amount)) UpdateAllocationSummary(); };
+            return row;
+        }
+
+        partial void OnOpAmountChanged(string value) => UpdateAllocationSummary();
+
+        private void UpdateAllocationSummary()
+        {
+            if (AllocationRows.Count <= 1 || !Money.TryParse(OpAmount, out long total)) { AllocationSummary = string.Empty; return; }
+            long sum = AllocationRows.Sum(r => Money.TryParse(r.Amount, out long a) ? a : 0);
+            AllocationSummary = sum == total ? "✔ Ventilation complète." : $"Reste à ventiler : {Money.Format(total - sum, SelectedAccount?.Account.Currency ?? "MAD")}";
+        }
+
+        [RelayCommand]
+        private void AddAllocationRow()
+        {
+            AllocationRows.Add(NewRow(null));
+            UpdateAllocationSummary();
+        }
+
+        [RelayCommand]
+        private void RemoveAllocationRow(AllocationRowViewModel? row)
+        {
+            if (row == null || AllocationRows.Count <= 1) return;
+            AllocationRows.Remove(row);
+            UpdateAllocationSummary();
+        }
 
         private void LoadReferenceData(AppDbContext db)
         {
@@ -54,22 +88,20 @@ namespace AFMI_Gestion_projet.ViewModels.Treasury
             RefreshOperationChoices();
         }
 
-        partial void OnOpProjectChanged(Option<int?>? value) => RefreshOperationChoices();
         partial void OnOpNatureChanged(Option<OperationNature>? value) => RefreshOperationChoices();
 
         private void RefreshOperationChoices()
         {
-            int? project = OpProject?.Value;
-            OpBudgetLineOptions.Clear();
-            foreach (var l in _allBudgetLines.Where(l => l.ProjectId == project))
-                OpBudgetLineOptions.Add(new Option<int>(l.Id, $"{l.Code} — {l.Label}"));
-            OpBudgetLine = OpBudgetLineOptions.FirstOrDefault();
-
             var kind = OpNature?.Value == OperationNature.Income ? CategoryKind.Income : CategoryKind.Expense;
             OpCategoryOptions.Clear();
             foreach (var c in _allCategories.Where(c => c.Kind == kind))
                 OpCategoryOptions.Add(new Option<int>(c.Id, c.Label));
-            OpCategory = OpCategoryOptions.FirstOrDefault();
+            foreach (var row in AllocationRows)
+            {
+                if (row.Category == null || !OpCategoryOptions.Contains(row.Category)) row.Category = OpCategoryOptions.FirstOrDefault();
+                if (row.Project == null || !ProjectOptions.Contains(row.Project)) row.Project = ProjectOptions.FirstOrDefault();
+                row.RefreshLines(row.Category?.Value);
+            }
         }
 
         private void LoadOperations()
@@ -89,25 +121,32 @@ namespace AFMI_Gestion_projet.ViewModels.Treasury
             }
         }
 
-        /// <summary>Pré-remplit le projet d'après les liaisons du compte (projet unique ou compte de fonctionnement).</summary>
+        /// <summary>
+        /// Propose la ventilation d'après les liaisons du compte : projet unique, répartition selon les clés (%),
+        /// ou fonctionnement. La ligne budgétaire retenue est celle de la catégorie choisie quand elle est unique.
+        /// </summary>
         [RelayCommand]
-        private void SuggestProject()
+        private void SplitByKeys()
         {
             if (SelectedAccount == null) return;
             Run(() =>
             {
                 using var db = new AppDbContext();
-                var amount = Money.TryParse(OpAmount, out long m) && m > 0 ? m : 1;
+                long amount = Money.TryParse(OpAmount, out long m) && m > 0 ? m : throw new FinanceRuleException("Saisissez d'abord le montant.");
                 var suggestion = new AccountService(db).SuggestAllocations(SelectedAccount.Account.Id, RequireDate(OpDate, "Date"), amount);
-                if (suggestion.Count == 1)
+                if (suggestion.Count == 0) { StatusMessage = "Aucune proposition : le compte n'est lié à aucun projet à cette date."; return; }
+                var category = AllocationRows.FirstOrDefault()?.Category;
+                AllocationRows.Clear();
+                foreach (var s in suggestion)
                 {
-                    OpProject = ProjectOptions.FirstOrDefault(p => p.Value == suggestion[0].ProjectId);
-                    StatusMessage = "Projet proposé d'après les liaisons du compte.";
+                    var row = NewRow(ProjectOptions.FirstOrDefault(p => p.Value == s.ProjectId));
+                    row.Category = category ?? OpCategoryOptions.FirstOrDefault();
+                    row.RefreshLines(row.Category?.Value);
+                    row.Amount = suggestion.Count == 1 ? string.Empty : Money.FromMinor(s.AmountMinor).ToString("0.00");
+                    AllocationRows.Add(row);
                 }
-                else if (suggestion.Count > 1)
-                    StatusMessage = "Ce compte est réparti entre plusieurs projets : saisissez une opération par projet (ventilation multiple au Lot 5).";
-                else
-                    StatusMessage = "Aucune proposition : le compte n'est lié à aucun projet à cette date.";
+                UpdateAllocationSummary();
+                StatusMessage = suggestion.Count == 1 ? "Imputation proposée d'après la liaison du compte." : $"Répartition selon les clés du compte sur {suggestion.Count} projets.";
             });
         }
 
@@ -127,11 +166,15 @@ namespace AFMI_Gestion_projet.ViewModels.Treasury
                 Direction = normalCredit ^ OpIsContra ? OperationDirection.Credit : OperationDirection.Debit,
                 AmountMinor = amount, Currency = SelectedAccount.Account.Currency,
             };
-            if (OpBudgetLine != null)
+            var rows = AllocationRows.Where(r => r.BudgetLine != null).ToList();
+            foreach (var row in rows)
+            {
+                long part = rows.Count == 1 && string.IsNullOrWhiteSpace(row.Amount) ? amount : ParseAmount(row.Amount, "Montant de la ventilation");
                 op.Allocations.Add(new OperationAllocation
                 {
-                    ProjectId = OpProject?.Value, BudgetLineId = OpBudgetLine.Value, CategoryId = OpCategory?.Value, AmountMinor = amount,
+                    ProjectId = row.Project?.Value, BudgetLineId = row.BudgetLine!.Value, CategoryId = row.Category?.Value, AmountMinor = part,
                 });
+            }
             return op;
         }
 
@@ -215,6 +258,8 @@ namespace AFMI_Gestion_projet.ViewModels.Treasury
         {
             OpLabel = OpReference = OpThirdParty = OpAmount = string.Empty;
             OpIsContra = false;
+            while (AllocationRows.Count > 1) AllocationRows.RemoveAt(AllocationRows.Count - 1);
+            if (AllocationRows.Count == 1) AllocationRows[0].Amount = string.Empty;
         }
 
         private void AfterOperationChange()

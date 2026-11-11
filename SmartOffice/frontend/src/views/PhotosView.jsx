@@ -104,6 +104,13 @@ export default function PhotosView() {
           <button className="bg-afmi-forest text-white rounded px-3 py-1.5 flex items-center gap-1" onClick={doUpload}><Upload size={14} />Importer{filter.project_id ? ' dans le projet' : ''}</button>
         </span>
       </section>
+      <button className="text-xs text-afmi-forest underline" onClick={async () => {
+        const res = await apiFetch('/api/photos/import-legacy', { method: 'POST' });
+        const r = await res.json();
+        setMsg(res.ok ? { kind: 'ok', text: `${r.imported} photo(s) reprise(s) des anciens rapports d'activité${r.missing_count ? `, ${r.missing_count} fichier(s) introuvable(s)` : ''}. Confirmez le consentement de chacune avant usage.` }
+          : { kind: 'error', text: r.detail });
+        load();
+      }}>Reprendre les photos des anciens rapports d'activité (application de bureau)</button>
       {photos.length === 0 && <p className="text-sm text-slate-500">Aucune photo.</p>}
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
         {photos.map((p) => (

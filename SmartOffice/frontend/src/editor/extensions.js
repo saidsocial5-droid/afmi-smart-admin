@@ -153,6 +153,12 @@ export const DynamicBlock = Node.create({
       photoIds: { default: null },
       limit: { default: 6 },
       title: { default: '' },
+      // Blocs des rapports annuels : tableau, exercice, périmètre, langue
+      table: { default: null },
+      year: { default: null },
+      scopeType: { default: 'association' },
+      scopeId: { default: null },
+      lang: { default: 'fr' },
     };
   },
   parseHTML() {

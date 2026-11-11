@@ -17,6 +17,7 @@ T = {
         "women": "Femmes", "men": "Hommes", "unspecified": "Non précisé", "age": "Tranche d'âge", "zone": "Zone", "source": "Source",
         "no_data": "Aucune donnée pour ce périmètre et cet exercice.", "provisional": "Présentation provisoire, à valider par l'expert-comptable.",
         "verify": "Chiffres à vérifier (absents des données) : {numbers}", "status": "Statut", "funder": "Bailleur",
+        "scope_association": "Association (tous projets et fonctionnement)", "scope_programme": "Programme", "scope_project": "Projet", "scope_funder": "Bailleur",
     },
     "en": {
         "moral_title": "Annual activity report {year}", "financial_title": "Financial report {year}", "annual_title": "Annual report {year}",
@@ -35,6 +36,7 @@ T = {
         "women": "Women", "men": "Men", "unspecified": "Not specified", "age": "Age group", "zone": "Area", "source": "Source",
         "no_data": "No data for this scope and year.", "provisional": "Provisional presentation, to be validated by the accountant.",
         "verify": "Figures to check (not found in the data): {numbers}", "status": "Status", "funder": "Donor",
+        "scope_association": "Association (all projects and operating costs)", "scope_programme": "Programme", "scope_project": "Project", "scope_funder": "Donor",
     },
     "ar": {
         "moral_title": "التقرير الأدبي لسنة {year}", "financial_title": "التقرير المالي لسنة {year}", "annual_title": "التقرير السنوي لسنة {year}",
@@ -53,6 +55,7 @@ T = {
         "women": "نساء", "men": "رجال", "unspecified": "غير محدد", "age": "الفئة العمرية", "zone": "المنطقة", "source": "المصدر",
         "no_data": "لا توجد معطيات لهذا النطاق وهذه السنة.", "provisional": "عرض مؤقت، في انتظار مصادقة الخبير المحاسب.",
         "verify": "أرقام يجب التحقق منها (غير موجودة في المعطيات): {numbers}", "status": "الحالة", "funder": "الممول",
+        "scope_association": "الجمعية (جميع المشاريع ومصاريف التسيير)", "scope_programme": "البرنامج", "scope_project": "المشروع", "scope_funder": "الممول",
     },
 }
 

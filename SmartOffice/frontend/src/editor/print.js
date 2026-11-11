@@ -117,5 +117,12 @@ ${chartCss(eff, eff)}
 .doc-body .chart-title { font-weight: bold; font-size: 10pt; }
 .doc-body .block-empty { color: #6B7280; font-style: italic; }
 .footnotes { font-size: 8.5pt; margin-top: 10mm; }
+.doc-body .data-table .subtotal td { background: #f1f5f9; }
+.doc-body .table-note { font-size: 8pt; color: #6b7280; font-style: italic; }
+.doc-body .pies { display: grid; grid-template-columns: 1fr 1fr; gap: 6mm; }
+.doc-body .pie-row { display: flex; gap: 4mm; align-items: center; } .doc-body .pie-svg { width: 38mm; height: 38mm; flex: none; }
+.doc-body .pie-legend { font-size: 8pt; border-collapse: collapse; width: auto; } .doc-body .pie-legend td { padding: 1px 3px; border: 0 !important; }
+.doc-body .pie-swatch { display: inline-block; width: 9px; height: 9px; }
+.doc-body .dynamic-block-view { break-inside: auto; }
 </style></head><body><main class="doc-body">${clone.innerHTML}${notesHtml}</main></body></html>`;
 }

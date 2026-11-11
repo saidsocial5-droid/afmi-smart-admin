@@ -1,7 +1,7 @@
 import React from 'react';
 
 // Graphique en barres horizontales « prévu / réalisé » en SVG (aucune bibliothèque) : s'imprime et s'exporte tel quel.
-export default function BarChart({ series, colors, unit = '' }) {
+export default function BarChart({ series, colors, unit = '', legend = ['Prévu', 'Réalisé'] }) {
   if (!series?.length) return <div className="block-empty">Aucune donnée à représenter.</div>;
   const max = Math.max(...series.flatMap((s) => [s.planned || 0, s.actual || 0]), 1);
   const rowH = 34, labelW = 210, width = 640, barW = width - labelW - 90;
@@ -23,8 +23,8 @@ export default function BarChart({ series, colors, unit = '' }) {
         );
       })}
       <g transform={`translate(${labelW}, ${height - 12})`} fontSize="10" fill="#374151">
-        <rect width="10" height="8" fill={secondary} opacity="0.55" /><text x="14" y="8">Prévu</text>
-        <rect x="70" width="10" height="8" fill={primary} /><text x="84" y="8">Réalisé</text>
+        <rect width="10" height="8" fill={secondary} opacity="0.55" /><text x="14" y="8">{legend[0]}</text>
+        <rect x="70" width="10" height="8" fill={primary} /><text x="84" y="8">{legend[1]}</text>
       </g>
     </svg>
   );

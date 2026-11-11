@@ -1,6 +1,6 @@
 # AFMI Smart Admin 2.0 — Architecture
 
-*Mis à jour à la fin de chaque lot. État actuel : **Lot 4 (éditeur, chartes, photos)**.*
+*Mis à jour à la fin de chaque lot. État actuel : **Lot 5 (rapports annuels)**.*
 
 ## 1. Vue d'ensemble
 
@@ -232,6 +232,28 @@ budgétaires cohérentes, reste dans `Core/Finance`. Aucune règle financière n
 - `/api/templates`, `/api/documents` (versions, commentaires) ;
 - `/api/editor/blocks/{budget|indicators|activities|chart|gallery}`, `/api/editor/fields`, `/api/editor/assistant` ;
 - `/api/photos` (import, image allégée, mise à jour, légende proposée).
+
+### 2.8 Rapports annuels (Lot 5)
+
+| Module (`SmartOffice/backend/tools/reports/`) | Rôle |
+|---|---|
+| `context.py` | Exercice : table `FiscalYears`, sinon mois de début du paramètre `association.fiscal_year_start_month`. Périmètre : association, programme (avec ses sous-projets récursivement), projet ou bailleur (projets financés ou sous convention), et comptes liés. Présentation des états : `config/financial_report_layout.json`. |
+| `finance.py` | Ventilations des opérations validées de la période. La contre-valeur MAD est répartie au plus fort reste (`split_minor`, identique à `AllocationSplitter`). Calcul du compte d'emploi des ressources, de la matrice nature × projet, de l'exécution budgétaire (par projet ou par bailleur), de la trésorerie avec l'état de rapprochement (même formule que `ReconciliationService`), des reports par convention, de la comparaison N-1 et des graphiques. |
+| `moral.py` | Projets actifs sur l'exercice (dates, activités ou opérations), activités, indicateurs (cumul des mesures selon le mode, désagrégations), bénéficiaires, partenaires, faits chiffrés et synthèse déterministe trilingue. |
+| `checks.py` | Contrôles de cohérence, avec leur niveau tiré de la configuration. |
+| `generator.py` | Construction du document de l'éditeur : titres, textes et blocs `dynamicBlock` de type `annual`. Le RTL est appliqué aux paragraphes arabes ; la synthèse IA est facultative. |
+| `i18n.py` | Libellés en français, arabe et anglais. |
+
+**Concordance .NET / Python** : `SharedTestCases/annual_scenario.json` est exécuté par `AnnualScenarioTests` (C#) et
+`test_lot5_reports.py`. Les totaux de recettes et de dépenses, les soldes et l'écart de rapprochement doivent être
+identiques.
+
+**API** :
+- `/api/reports/context`, `/api/reports/checks` ;
+- `/api/reports/generate` (409 avec la liste des contrôles en cas de blocage) ;
+- `/api/reports/table/{cer|income_expense|budget_project|budget_funder|treasury|carry_forward|comparison|charts|activities|indicators|beneficiaries}` ;
+- `/api/indicators` et leurs mesures ;
+- `/api/photos/import-legacy`.
 
 ## 3. Sécurité et confidentialité
 

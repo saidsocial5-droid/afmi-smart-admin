@@ -44,6 +44,14 @@ def run_checks(year: int, scope_type: str, scope_id: Optional[int]) -> Dict[str,
         return result
 
 
+def scope_label(s, lang: str) -> str:
+    """Libellé du périmètre dans la langue du rapport (le nom du projet ou du bailleur reste tel quel)."""
+    if s.type == "association":
+        return t(lang, "scope_association")
+    name = s.label.split(" : ", 1)[1] if " : " in s.label else s.label
+    return f"{t(lang, 'scope_' + s.type)} : {name}"
+
+
 # --- Construction du document (JSON TipTap) ------------------------------------------------------------------
 
 def _text(s: str, bold: bool = False) -> Dict[str, Any]:
@@ -112,6 +120,7 @@ async def generate(year: int, scope_type: str, scope_id: Optional[int], language
         partners = moral.partners(conn, projs)
         project_row = conn.execute("SELECT FunderId FROM Projects WHERE Id = ?", (scope_id,)).fetchone() if scope_type in ("project", "programme") else None
 
+    s.label = scope_label(s, language)
     title_key = {"moral": "moral_title", "financial": "financial_title", "both": "annual_title"}[kind]
     title = t(language, title_key, year=year) + ("" if scope_type == "association" else f" — {s.label}")
     content: List[Dict[str, Any]] = [

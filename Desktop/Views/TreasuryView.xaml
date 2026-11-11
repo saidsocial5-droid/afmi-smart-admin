@@ -303,16 +303,36 @@
                                             <TextBox Text="{Binding OpThirdParty, UpdateSourceTrigger=PropertyChanged}"/>
                                         </StackPanel>
                                     </Grid>
-                                    <DockPanel Margin="0,6,0,2">
-                                        <Button DockPanel.Dock="Right" Content="Proposer" Command="{Binding SuggestProjectCommand}" Style="{StaticResource SecondaryAction}" Margin="0"
-                                                ToolTip="D'après les projets liés au compte"/>
-                                        <TextBlock Text="Imputation : projet ou fonctionnement" Foreground="#6B7280" VerticalAlignment="Center"/>
+                                    <DockPanel Margin="0,8,0,2">
+                                        <Button DockPanel.Dock="Right" Content="Répartir selon les clés" Command="{Binding SplitByKeysCommand}" Style="{StaticResource SecondaryAction}" Margin="0"
+                                                ToolTip="Projet lié au compte, ou répartition selon les clés (%) des liaisons"/>
+                                        <TextBlock Text="Ventilation : projet ou fonctionnement, ligne, catégorie, montant" Foreground="#6B7280" VerticalAlignment="Center" TextWrapping="Wrap"/>
                                     </DockPanel>
-                                    <ComboBox ItemsSource="{Binding ProjectOptions}" SelectedItem="{Binding OpProject}" DisplayMemberPath="Label"/>
-                                    <TextBlock Text="Ligne budgétaire" Style="{StaticResource FieldLabel}"/>
-                                    <ComboBox ItemsSource="{Binding OpBudgetLineOptions}" SelectedItem="{Binding OpBudgetLine}" DisplayMemberPath="Label"/>
-                                    <TextBlock Text="Catégorie" Style="{StaticResource FieldLabel}"/>
-                                    <ComboBox ItemsSource="{Binding OpCategoryOptions}" SelectedItem="{Binding OpCategory}" DisplayMemberPath="Label"/>
+                                    <ItemsControl ItemsSource="{Binding AllocationRows}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Border BorderBrush="#E5E7EB" BorderThickness="1" CornerRadius="6" Padding="6" Margin="0,4,0,0">
+                                                    <StackPanel>
+                                                        <ComboBox ItemsSource="{Binding DataContext.ProjectOptions, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                                  SelectedItem="{Binding Project}" DisplayMemberPath="Label" ToolTip="Projet ou fonctionnement"/>
+                                                        <ComboBox ItemsSource="{Binding BudgetLineOptions}" SelectedItem="{Binding BudgetLine}" DisplayMemberPath="Label" Margin="0,4,0,0" ToolTip="Ligne budgétaire"/>
+                                                        <DockPanel Margin="0,4,0,0">
+                                                            <Button DockPanel.Dock="Right" Content="✕" ToolTip="Retirer cette ligne" Style="{StaticResource SecondaryAction}" Margin="4,0,0,0"
+                                                                    Command="{Binding DataContext.RemoveAllocationRowCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}"/>
+                                                            <TextBox DockPanel.Dock="Right" Width="90" Text="{Binding Amount, UpdateSourceTrigger=PropertyChanged}" Margin="4,0,0,0"
+                                                                     ToolTip="Montant de cette ligne (vide sur une ligne unique = montant total)"/>
+                                                            <ComboBox ItemsSource="{Binding DataContext.OpCategoryOptions, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                                      SelectedItem="{Binding Category}" DisplayMemberPath="Label" ToolTip="Catégorie"/>
+                                                        </DockPanel>
+                                                    </StackPanel>
+                                                </Border>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                    <DockPanel Margin="0,4,0,0">
+                                        <Button DockPanel.Dock="Left" Content="+ Ligne de ventilation" Command="{Binding AddAllocationRowCommand}" Style="{StaticResource SecondaryAction}"/>
+                                        <TextBlock Text="{Binding AllocationSummary}" VerticalAlignment="Center" Foreground="#6B7280" TextWrapping="Wrap"/>
+                                    </DockPanel>
                                     <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
                                         <Button Content="Enregistrer et valider" Command="{Binding SaveAndValidateCommand}" Style="{StaticResource Action}"/>
                                         <Button Content="Brouillon" Command="{Binding SaveDraftCommand}" Style="{StaticResource SecondaryAction}"/>
