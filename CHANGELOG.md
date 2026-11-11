@@ -1,5 +1,75 @@
 # Journal des modifications
 
+## [2.0.0 — Lot 6 : GED et cycle de vie des projets] — 11/11/2026
+
+Nouveau menu Smart Office : **Documents & cycle de vie**. La GED reprend la table de documents de l'application de
+bureau : il n'y a qu'un seul dossier documentaire par projet, partagé entre les deux interfaces.
+
+### Ajouté
+- **Import et analyse** : PDF natif ou scanné (OCR local), Word .docx, Excel, texte, images, à l'unité ou par lot.
+  Chaque document est :
+  - archivé (empreinte SHA-256 ; un même fichier ne peut pas être importé deux fois dans un projet) ;
+  - **classé** par type (convention, avenant, budget, cadre logique, termes de référence, document de projet, étude,
+    rapport narratif, financier, final ou d'évaluation, procès-verbal, facture, contrat, liste de présence,
+    correspondance), avec une confiance affichée ; un type peu sûr est surligné et le type reste modifiable ;
+  - **rattaché à une phase** : identification, formulation, contractualisation, mise en œuvre, suivi, clôture,
+    évaluation ;
+  - **analysé** : dates (numériques et en toutes lettres), montants et devises, parties (« ci-après dénommé »),
+    durée, dates de début, de fin et de signature, langue.
+- **Obligations de reporting** déduites des conventions :
+  - phrases mentionnant des rapports et des échéances, dates explicites, périodicité (trimestrielle, semestrielle,
+    annuelle) avec délai (« dans les 30 jours »), rapport final ;
+  - proposées avec la **phrase source**, puis confirmées, saisies ou supprimées par l'utilisateur ;
+  - un rapport importé solde la prochaine échéance confirmée du même type, ou l'échéance est soldée explicitement par
+    un document choisi.
+- **Frise du cycle de vie** : phases atteintes (déduites du statut, des dates et des documents), jalons (saisis),
+  rapports dus (remis, à venir, en retard, proposés), tranches de financement, fin de convention, documents, repère
+  « aujourd'hui ».
+- **Documents attendus par phase** (configurables dans `config/lifecycle_config.json`), avec la liste des documents
+  reçus et manquants.
+- **Alertes** : rapport en retard, rapport à remettre sous 30 jours, échéances à confirmer, document attendu absent,
+  convention ou contrat arrivant à échéance sous 60 jours.
+- **Recherche** :
+  - plein texte (SQLite FTS5, insensible aux accents, extraits surlignés) ;
+  - **sémantique** quand un modèle d'embeddings est disponible : Ollama local (`nomic-embed-text`), ou Gemini si
+    l'IA externe est autorisée, avec masquage ;
+  - fusion des deux classements.
+- **Questions en langage naturel** sur les documents d'un projet. Chaque réponse cite ses sources [n] (document, page,
+  extrait). Sans modèle d'IA, la réponse est extractive : les passages pertinents sont cités tels quels.
+- **Documents existants** (importés dans l'application de bureau) : bouton « Analyser les documents existants »
+  (texte relu, classement, métadonnées, index). La migration reclasse aussi leurs anciennes catégories et phases.
+- **Mémoire institutionnelle** : les agents IA reçoivent le résumé des documents de référence (conventions, rapports
+  finaux, évaluations).
+- **Migration `DocumentManagement`** :
+  - colonnes de GED et suppression logique sur `Documents` (une suppression depuis l'application de bureau est
+    désormais logique) ;
+  - tables `ReportingObligations`, `ProjectMilestones`, `DocumentChunks` et index FTS5 synchronisé par
+    déclencheurs ;
+  - testée sur une base 1.3.0.
+- Tests : 80 xUnit, 120 pytest.
+
+### Vérifié dans un navigateur
+- Import de 3 documents :
+  - convention PDF → « Convention », 4 échéances proposées (30/07/2026, 30/01/2027, 30/07/2027, rapport final le
+    29/08/2027) ;
+  - rapport Word → « Rapport narratif » ;
+  - procès-verbal **scanné** → « Procès-verbal », grâce à l'OCR.
+- Phase atteinte « Suivi », alertes, confirmation d'une échéance, frise.
+- Recherche « plantation mars » (trouve le PV scanné) et question citant la convention.
+
+Ces essais ont fait apparaître deux défauts, corrigés : un calcul d'échéance décalé d'un mois, et l'impossibilité de
+solder une échéance par un rapport importé avant sa confirmation.
+
+### Points à valider
+1. **Documents attendus par phase** : la liste par défaut est une proposition. À ajuster avec vos procédures et les
+   exigences de vos bailleurs (`lifecycle_config.json`).
+2. **Obligations de reporting** : elles sont déduites par règles des formulations courantes des conventions. Une
+   formulation inhabituelle peut échapper à l'analyse ; vérifiez toujours avec la convention (la phrase source est
+   affichée).
+3. **Recherche sémantique** : elle nécessite Ollama avec `nomic-embed-text` sur le poste (ou l'IA externe autorisée).
+   Sinon, seule la recherche plein texte fonctionne.
+4. **Ancien format Word (.doc)** : il n'est pas analysé ; convertissez-le en .docx ou en PDF.
+
 ## [2.0.0 — Lot 5 : Rapports annuels moral et financier] — 11/11/2026
 
 Nouveaux menus Smart Office : **Rapports annuels** et **Indicateurs & bénéficiaires**. Le rapport est généré à partir de

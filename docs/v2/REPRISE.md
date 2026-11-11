@@ -12,10 +12,11 @@
 | Lot 3 — Relevés scannés (OCR, validation, catégorisation, anomalies) | Livré (voir CHANGELOG) |
 | Lot 4 — Éditeur, chartes, galerie photos | Livré (voir CHANGELOG) |
 | Lot 5 — Rapports annuels moral et financier | Livré (voir CHANGELOG) |
-| Lot 6 — GED et cycle de vie des projets | **Prochaine étape** |
-| Lots 7 et 8 | À faire (voir `ANALYSE.md` § 7) |
+| Lot 6 — GED et cycle de vie des projets | Livré (voir CHANGELOG) |
+| Lot 7 — Exports Word/PDF/Excel et paramètres avancés | **Prochaine étape** |
+| Lot 8 — Finalisation, données de démonstration, installateur 2.0.0 | À faire |
 
-Tests au dernier commit : 77 xUnit (`Core.Tests`) et 112 pytest (1 sauté : vrais relevés absents), tous verts.
+Tests au dernier commit : 80 xUnit (`Core.Tests`) et 120 pytest (1 sauté : vrais relevés absents), tous verts.
 
 ## En attente de l'AFMI
 

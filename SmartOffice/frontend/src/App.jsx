@@ -16,6 +16,7 @@ import ChartsTemplatesView from './views/ChartsTemplatesView';
 import PhotosView from './views/PhotosView';
 import AnnualReportsView from './views/AnnualReportsView';
 import IndicatorsView from './views/IndicatorsView';
+import ProjectDocumentsView from './views/ProjectDocumentsView';
 import { apiFetch } from './apiClient';
 import { useLanguage } from './context/LanguageContext';
 
@@ -128,6 +129,10 @@ export default function App() {
 
           {activeTab === "indicators" && (
             <IndicatorsView />
+          )}
+
+          {activeTab === "ged" && (
+            <ProjectDocumentsView />
           )}
 
           {activeTab === "charts" && (

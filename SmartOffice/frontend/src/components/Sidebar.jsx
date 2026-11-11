@@ -1,5 +1,6 @@
 import React from 'react';
 import { 
+  FolderKanban,
   FileBarChart2,
   Target,
   FilePenLine,
@@ -55,6 +56,14 @@ export default function Sidebar({ activeTab, setActiveTab }) {
       label_en: 'OCR & Financial Audit',
       icon: FileScan,
       badge: t('badgeOcr')
+    },
+    {
+      id: 'ged',
+      label_ar: 'وثائق المشاريع ودورة حياتها',
+      label_fr: 'Documents & cycle de vie',
+      label_en: 'Documents & lifecycle',
+      icon: FolderKanban,
+      badge: 'GED'
     },
     {
       id: 'reports',

@@ -1,6 +1,6 @@
 # AFMI Smart Admin 2.0 — Architecture
 
-*Mis à jour à la fin de chaque lot. État actuel : **Lot 5 (rapports annuels)**.*
+*Mis à jour à la fin de chaque lot. État actuel : **Lot 6 (GED et cycle de vie)**.*
 
 ## 1. Vue d'ensemble
 
@@ -254,6 +254,29 @@ identiques.
 - `/api/reports/table/{cer|income_expense|budget_project|budget_funder|treasury|carry_forward|comparison|charts|activities|indicators|beneficiaries}` ;
 - `/api/indicators` et leurs mesures ;
 - `/api/photos/import-legacy`.
+
+### 2.9 GED et cycle de vie (Lot 6)
+
+**Données** (migration `DocumentManagement`) :
+- `Documents` (table de l'application de bureau) : `DocType`, `LifecyclePhase`, `ClassificationConfidence`,
+  `MetadataJson`, `StoredFileId`, `Language`, `IndexedAtUtc`, suppression logique ;
+- `ReportingObligations` (avec `SourceExcerpt` pour la traçabilité, et `DeliveredDocumentId`) ;
+- `ProjectMilestones` ;
+- `DocumentChunks` (passages d'environ 900 caractères, vecteur float32 facultatif) et table virtuelle FTS5
+  `DocumentChunksFts`, tenue à jour par déclencheurs.
+
+| Module (`SmartOffice/backend/tools/ged/`) | Rôle |
+|---|---|
+| `textract.py` | Texte par page : PDF natif, OCR des pages scannées (pipeline du Lot 3), docx, xlsx, texte, images. |
+| `analyze.py` | Classification par mots-clés pondérés (titre ×3), métadonnées, échéances de rapports (dates explicites ou périodicité + délai), langue. |
+| `index.py` | Découpage, index FTS5, embeddings (`llm_router.embed` : Ollama, puis Gemini si autorisé), recherche plein texte (requête en ET, puis en OU), sémantique (cosinus) et hybride (fusion par rang réciproque). |
+| `qa.py` | Questions-réponses avec citations ; réponse extractive sans modèle. |
+| `lifecycle.py` | Phase atteinte, documents attendus, frise, alertes. |
+| `service.py` | Import, mise à jour, suppression, analyse de l'existant, obligations et jalons. |
+
+Configuration : `config/lifecycle_config.json` (phases, types et mots-clés, documents attendus, seuils d'alerte).
+
+API : `/api/ged/{config, documents, documents/{id}/file, reindex, obligations, milestones, timeline/{id}, alerts, search, ask}`.
 
 ## 3. Sécurité et confidentialité
 
