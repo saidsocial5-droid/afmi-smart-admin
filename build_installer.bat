@@ -16,7 +16,12 @@ echo [1/8] Tests de l'application de bureau...
 dotnet test "AFMI Smart Admin.sln" --nologo -v q || goto :error
 
 echo [2/8] Tests du backend Smart Office...
-python -m pytest SmartOffice\tests -q -p no:cacheprovider || goto :error
+python -m pip install --quiet -r SmartOffice\requirements.txt pytest || goto :error
+rem Tests de lecture des relevés avec le Tesseract qui sera livré
+set "AFMI_TESSERACT=%~dp0third_party\tesseract\tesseract.exe"
+pushd SmartOffice
+python -m pytest tests -q -p no:cacheprovider || (popd & goto :error)
+popd
 
 echo [3/8] Compilation de l'interface Smart Office...
 pushd SmartOffice\frontend
