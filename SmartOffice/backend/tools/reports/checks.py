@@ -8,7 +8,9 @@ from .context import Period, Scope
 
 def run(conn, period: Period, scope: Scope, layout: Dict[str, Any]) -> Dict[str, Any]:
     levels = layout.get("checks", {})
-    threshold = int(layout.get("receipt_threshold_mad", 1000) * 100)
+    from backend.core import unified_db
+    # Seuil commun aux relevés et aux rapports (Paramètres › Comptabilité), sinon celui du fichier de présentation
+    threshold = int(round(float(unified_db.get_setting("accounting.receipt_threshold_mad", None) or layout.get("receipt_threshold_mad", 1000)) * 100))
     found: List[Dict[str, Any]] = []
 
     def add(code: str, message: str, items: List[str]):

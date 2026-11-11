@@ -178,11 +178,12 @@ async def suggest_caption(photo_id: int) -> Dict[str, Any]:
     img.thumbnail((1024, 1024))
     buf = io.BytesIO()
     img.save(buf, "JPEG", quality=80)
-    prompt = ("Décris cette photo d'activité d'une association de gestion forestière en UNE phrase factuelle de légende "
-              "(moins de 25 mots), en français, sans inventer de nom de personne ni de lieu.")
+    from backend.core import ai_config
+    prompt = ai_config.prompt("photos.caption")
     if r["ProjectName"]:
         prompt += f" Projet : {r['ProjectName']}."
-    text, engine = await llm_router.generate_with_meta(prompt, images_b64=[base64.b64encode(buf.getvalue()).decode()], temperature=0.2)
+    text, engine = await llm_router.generate_with_meta(prompt, images_b64=[base64.b64encode(buf.getvalue()).decode()], temperature=0.2,
+                                                         task="captions")
     if engine == "heuristic":
         return {"photo": _row(r), "engine": engine,
                 "message": "Aucun modèle de vision disponible (activez Ollama avec un modèle de vision, ou l'IA externe) : saisissez la légende."}

@@ -4,7 +4,7 @@
 
 **Statut : validé le 10/11/2026.** Les recommandations des décisions D1 à D5 et des questions Q1, Q2, Q6 à Q9,
 Q11, Q12 et Q14 sont retenues. Les questions Q3, Q4, Q5, Q10 et Q13 attendent des documents ou des réponses
-de l'AFMI. Avancement : **Lots 1 à 6 livrés** (voir [CHANGELOG](../../CHANGELOG.md) et [ARCHITECTURE](ARCHITECTURE.md)).
+de l'AFMI. Avancement : **Lots 1 à 7 livrés** (voir [CHANGELOG](../../CHANGELOG.md) et [ARCHITECTURE](ARCHITECTURE.md)).
 
 Écarts entre ce plan et sa réalisation, à ce stade :
 
@@ -18,6 +18,16 @@ de l'AFMI. Avancement : **Lots 1 à 6 livrés** (voir [CHANGELOG](../../CHANGELO
   sauvegarde).
 - **D1 :** les champs hérités (`BudgetGlobal`, `CostEntry`…) restent en `double`, mais en clair. Les flux réels
   utilisent les nouvelles opérations, en centimes.
+- **Lot 7 (dépendances) :** aucune nouvelle bibliothèque. Word et Excel reposent sur python-docx et openpyxl, déjà
+  présents ; les graphiques sont dessinés avec Pillow (pas de matplotlib). Le PDF est imprimé par **Microsoft Edge**,
+  installé sur tout Windows 10/11, ou par Chrome/Chromium, en mode sans interface. **LibreOffice** est facultatif :
+  s'il est installé, il produit le **PDF/A-2b** et des PDF avec notes en bas de page. Ni l'un ni l'autre n'est
+  téléchargé par l'application.
+- **Lot 7 (rôles) :** les rôles protègent les écritures de l'API Smart Office. Les écrans WPF (Trésorerie,
+  projets) ne sont pas encore restreints : l'application de bureau reste un poste de confiance.
+- **Lot 7 (sauvegardes) :** l'ancienne sauvegarde automatique du Desktop (copie du fichier ouvert, 5 exemplaires)
+  est remplacée par `BackupService` : copie cohérente par l'API SQLite, fréquence et conservation paramétrables,
+  restauration différée au démarrage.
 
 ---
 

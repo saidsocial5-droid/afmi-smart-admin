@@ -13,8 +13,8 @@ import Subscript from '@tiptap/extension-subscript';
 import Superscript from '@tiptap/extension-superscript';
 import Table from '@tiptap/extension-table';
 import TableRow from '@tiptap/extension-table-row';
-import { FilePlus2, Save, History, MessageSquare, Sparkles, Printer, LayoutTemplate, Palette, Trash2, BookmarkPlus } from 'lucide-react';
-import { apiFetch } from '../apiClient';
+import { FilePlus2, Save, History, MessageSquare, Sparkles, Printer, LayoutTemplate, Palette, Trash2, BookmarkPlus, Download } from 'lucide-react';
+import { apiFetch, apiDownload } from '../apiClient';
 import {
   FontSize, TextDirection, ShadedTableCell, ShadedTableHeader, PageBreak, Columns, Footnote, TableOfContents, Field,
   DynamicBlock, Comment, Insertion, Deletion, TrackChanges, markRanges,
@@ -264,6 +264,20 @@ export default function DocumentEditor({ initialDocumentId = null }) {
     setPreview(html);
   };
 
+  // Export côté serveur : le document enregistré est relu, ses blocs recalculés depuis les données.
+  const exportDocument = async (format) => {
+    if (!doc || !format) return;
+    try {
+      if (dirty) await save();
+      setStatus({ kind: 'info', text: 'Export en cours…' });
+      const [fmt, pdfa] = format === 'pdfa' ? ['pdf', true] : [format, false];
+      const name = await apiDownload(`/api/exports/document/${doc.id}?format=${fmt}&pdfa=${pdfa}`);
+      setStatus({ kind: 'ok', text: `Fichier exporté : ${name}` });
+    } catch (e) {
+      setStatus({ kind: 'error', text: `Export impossible : ${e.message}` });
+    }
+  };
+
   const saveAsTemplate = async () => {
     const name = window.prompt('Nom du modèle :', doc?.title);
     if (!name) return;
@@ -347,6 +361,15 @@ export default function DocumentEditor({ initialDocumentId = null }) {
                   <button className="tb-text" onClick={() => { const n = window.prompt('Note de version :', 'Relecture'); if (n !== null) save(n); }}><History size={14} /> Version</button>
                   <button className="tb-text" onClick={saveAsTemplate}><BookmarkPlus size={14} /> Modèle</button>
                   <button className="tb-text" onClick={openPreview}><Printer size={14} /> Aperçu paginé</button>
+                  <label className="tb-text cursor-pointer" title="Exporter le document enregistré">
+                    <Download size={14} />
+                    <select aria-label="Exporter le document" className="bg-transparent outline-none" value="" onChange={(e) => exportDocument(e.target.value)}>
+                      <option value="">Exporter…</option>
+                      <option value="docx">Word (.docx)</option>
+                      <option value="pdf">PDF</option>
+                      <option value="pdfa">PDF/A (archivage)</option>
+                    </select>
+                  </label>
                   <button className="tb-text text-red-700" onClick={deleteDocument}><Trash2 size={14} /></button>
                 </span>
               </div>

@@ -7,7 +7,7 @@ est facultative et ses chiffres absents des données sont signalés dans le docu
 from datetime import date
 from typing import Any, Dict, List, Optional
 
-from backend.core import unified_db
+from backend.core import ai_config, unified_db
 from backend.core.llm_router import llm_router
 from backend.tools.editor import assistant, documents
 from . import checks as checks_mod, finance, moral
@@ -92,8 +92,8 @@ async def _ai_synthesis(f: Dict[str, Any], lang: str) -> Optional[Dict[str, Any]
     """Synthèse rédigée par l'IA à partir des seuls faits ; None si aucun modèle n'est disponible."""
     text, engine = await llm_router.generate_with_meta(
         f"Rédige en 2 paragraphes la synthèse de l'exercice, en {assistant.LANG.get(lang, 'français')}, à partir de ces faits "
-        f"UNIQUEMENT (n'invente aucun chiffre, nom ou date) :\n{f}", system_prompt=assistant.ACTIONS["complete"].format(lang=assistant.LANG.get(lang, "français")),
-        temperature=0.2)
+        f"UNIQUEMENT (n'invente aucun chiffre, nom ou date) :\n{f}", system_prompt=ai_config.prompt("reports.synthesis", lang=assistant.LANG.get(lang, "français")),
+        temperature=0.2, task="reports")
     if engine == "heuristic":
         return None
     return {"text": text.strip(), "engine": engine, "unverified": assistant.numbers_not_in_facts(text, f)}

@@ -14,6 +14,10 @@ namespace AFMI_Gestion_projet.Services
         public const string DefaultLanguage = "association.default_language";
         public const string AiOfflineMode = "ai.offline_mode";
         public const string AiMaskSensitiveData = "ai.mask_sensitive_data";
+        public const string ReconciliationToleranceDays = "bank.reconciliation_tolerance_days";
+        public const string BackupFolder = "backup.folder";
+        public const string BackupFrequency = "backup.frequency";
+        public const string BackupRetention = "backup.retention";
     }
 
     /// <summary>Lecture/écriture typée des paramètres (JSON). Les secrets sont protégés par DPAPI (Windows).</summary>
@@ -29,6 +33,11 @@ namespace AFMI_Gestion_projet.Services
             // Local-first : l'IA externe est désactivée tant que l'utilisateur ne l'a pas activée.
             [SettingKeys.AiOfflineMode] = true,
             [SettingKeys.AiMaskSensitiveData] = true,
+            // Lot 7 : mêmes valeurs par défaut que le registre des paramètres (backend/core/settings_registry.py)
+            [SettingKeys.ReconciliationToleranceDays] = 3,
+            [SettingKeys.BackupFolder] = "",
+            [SettingKeys.BackupFrequency] = "daily",
+            [SettingKeys.BackupRetention] = 30,
         };
 
         public T Get<T>(string key)

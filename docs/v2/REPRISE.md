@@ -13,10 +13,10 @@
 | Lot 4 — Éditeur, chartes, galerie photos | Livré (voir CHANGELOG) |
 | Lot 5 — Rapports annuels moral et financier | Livré (voir CHANGELOG) |
 | Lot 6 — GED et cycle de vie des projets | Livré (voir CHANGELOG) |
-| Lot 7 — Exports Word/PDF/Excel et paramètres avancés | **Prochaine étape** |
-| Lot 8 — Finalisation, données de démonstration, installateur 2.0.0 | À faire |
+| Lot 7 — Exports Word/PDF/Excel et paramètres avancés | Livré (voir CHANGELOG) |
+| Lot 8 — Finalisation, données de démonstration, installateur 2.0.0 | **Prochaine étape** |
 
-Tests au dernier commit : 80 xUnit (`Core.Tests`) et 120 pytest (1 sauté : vrais relevés absents), tous verts.
+Tests au dernier commit : 91 xUnit (`Core.Tests`) et 157 pytest (1 sauté : vrais relevés absents), tous verts.
 
 ## En attente de l'AFMI
 
@@ -59,4 +59,5 @@ cd SmartOffice && pip install -r requirements.txt pytest && python -m pytest tes
 - Frontend : `cd SmartOffice/frontend && npm ci && npm run build`. Les paquets `@tiptap/*` sont figés et alignés par
   `overrides` dans `package.json` : les mettre à jour tous ensemble.
 - Le Desktop compile hors Windows avec `-p:EnableWindowsTargeting=true` ; ses tests ne tournent que sous Windows.
+- Exports PDF : un navigateur Chromium (Edge sous Windows) est nécessaire ; LibreOffice (facultatif) pour le PDF/A.
 - Après toute migration, régénérer `SmartOffice/tests/fixtures/unified_schema.sql` (voir `ARCHITECTURE.md` § 2.1).

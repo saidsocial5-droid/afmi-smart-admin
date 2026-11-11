@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { FileBarChart2, ShieldCheck, Loader2, XCircle, AlertTriangle, CheckCircle2 } from 'lucide-react';
-import { apiFetch } from '../apiClient';
+import { FileBarChart2, ShieldCheck, Loader2, XCircle, AlertTriangle, CheckCircle2, FileSpreadsheet, Package } from 'lucide-react';
+import { apiFetch, apiDownload } from '../apiClient';
 
 // Assistant de génération des rapports annuels moral et financier (Lot 5).
 
@@ -12,6 +12,9 @@ export default function AnnualReportsView({ onOpenDocument }) {
   const [checks, setChecks] = useState(null);
   const [busy, setBusy] = useState('');
   const [error, setError] = useState('');
+  const [info, setInfo] = useState('');
+  const [annexes, setAnnexes] = useState([]);
+  const [pack, setPack] = useState({ annex_ids: [], pdfa: false, formats: ['pdf', 'docx', 'xlsx'] });
 
   useEffect(() => {
     apiFetch('/api/reports/context').then((r) => r.json()).then((c) => {
@@ -40,6 +43,29 @@ export default function AnnualReportsView({ onOpenDocument }) {
     if (!res.ok) { setError(typeof data.detail === 'string' ? data.detail : 'Génération impossible.'); return; }
     onOpenDocument?.(data.document.id);
   };
+
+  // Annexes proposées : documents de la GED du projet choisi (ou de tous les projets pour l'association)
+  useEffect(() => {
+    const pid = form.scope_type === 'project' || form.scope_type === 'programme' ? form.scope_id : '';
+    apiFetch(`/api/ged/documents${pid ? `?project_id=${pid}` : ''}`).then((r) => (r.ok ? r.json() : [])).then((d) => setAnnexes((d || []).filter((x) => x.has_file)))
+      .catch(() => setAnnexes([]));
+    setPack((p) => ({ ...p, annex_ids: [] }));
+  }, [form.scope_type, form.scope_id]);
+
+  const download = async (kind) => {
+    setBusy(kind); setError(''); setInfo('');
+    try {
+      const p = payload();
+      const name = kind === 'xlsx'
+        ? await apiDownload(`/api/exports/statements?year=${p.year}&scope_type=${p.scope_type}${p.scope_id ? `&scope_id=${p.scope_id}` : ''}&lang=${p.language}`)
+        : await apiDownload('/api/exports/annual-package', json({ year: p.year, scope_type: p.scope_type, scope_id: p.scope_id, language: p.language, ...pack }));
+      setInfo(`Fichier exporté : ${name}${kind === 'package' ? ' (les rapports générés pour le dossier sont aussi disponibles dans l\'éditeur)' : ''}`);
+    } catch (e) {
+      setError(`Export impossible : ${e.message}`);
+    }
+    setBusy('');
+  };
+  const toggle = (list, value) => (list.includes(value) ? list.filter((x) => x !== value) : [...list, value]);
 
   const needsId = form.scope_type !== 'association';
   const scopeOptions = form.scope_type === 'funder' ? ctx.funders.map((f) => ({ id: f.id, label: f.name }))
@@ -101,6 +127,39 @@ export default function AnnualReportsView({ onOpenDocument }) {
         </div>
       </section>
 
+      {info && <div role="status" className="bg-emerald-50 text-emerald-800 rounded px-3 py-2 text-sm">{info}</div>}
+      <section className="bg-white border rounded-xl p-4 text-sm space-y-3" aria-label="Exports">
+        <h2 className="font-semibold">Exports de l'exercice {form.year}</h2>
+        <div className="flex flex-wrap gap-2">
+          <button className="bg-slate-100 rounded px-4 py-2 flex items-center gap-2" disabled={!!busy || (needsId && !form.scope_id)} onClick={() => download('xlsx')}>
+            {busy === 'xlsx' ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileSpreadsheet className="w-4 h-4" />} États financiers (Excel, avec formules)
+          </button>
+          <button className="bg-afmi-forest text-white rounded px-4 py-2 flex items-center gap-2 disabled:opacity-50" disabled={!!busy || (needsId && !form.scope_id)} onClick={() => download('package')}>
+            {busy === 'package' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Package className="w-4 h-4" />} Dossier annuel complet (ZIP)
+          </button>
+        </div>
+        <p className="text-xs text-slate-500">
+          Le dossier contient le rapport moral et le rapport financier (Word et PDF), les états financiers Excel, les annexes choisies
+          et un PDF unique « rapport annuel complet » (moral + financier + annexes, avec signets), plus la liste des empreintes SHA-256.
+        </p>
+        <div className="flex flex-wrap gap-4 text-xs">
+          {['pdf', 'docx', 'xlsx'].map((f) => (
+            <label key={f} className="flex items-center gap-1"><input type="checkbox" checked={pack.formats.includes(f)} onChange={() => setPack({ ...pack, formats: toggle(pack.formats, f) })} />{f.toUpperCase()}</label>
+          ))}
+          <label className="flex items-center gap-1"><input type="checkbox" checked={pack.pdfa} onChange={(e) => setPack({ ...pack, pdfa: e.target.checked })} />PDF/A pour l'archivage (nécessite LibreOffice)</label>
+        </div>
+        <details>
+          <summary className="cursor-pointer">Annexes ({pack.annex_ids.length} / {annexes.length} documents de la GED)</summary>
+          <ul className="max-h-48 overflow-auto mt-2 space-y-1">
+            {annexes.map((a) => (
+              <li key={a.id}><label className="flex items-center gap-2"><input type="checkbox" checked={pack.annex_ids.includes(a.id)} onChange={() => setPack({ ...pack, annex_ids: toggle(pack.annex_ids, a.id) })} />
+                {a.title} <span className="text-slate-400">({a.doc_type}, {a.file_name})</span></label></li>
+            ))}
+            {annexes.length === 0 && <li className="text-slate-400">Aucun document avec fichier dans la GED pour ce périmètre.</li>}
+          </ul>
+        </details>
+      </section>
+
       {checks && (
         <section className="bg-white border rounded-xl p-4 text-sm space-y-2" aria-label="Contrôles de cohérence">
           <h2 className="font-semibold">Contrôles de cohérence {checks.period ? `(${checks.period.start} → ${checks.period.end})` : ''}</h2>
@@ -112,7 +171,7 @@ export default function AnnualReportsView({ onOpenDocument }) {
               <ul className="list-disc ps-6 text-xs mt-1">{c.items.map((i, k) => <li key={k}>{i}</li>)}</ul>
             </details>
           ))}
-          <p className="text-xs text-slate-500">Le niveau de chaque contrôle (bloquant, avertissement, ignoré) se règle dans financial_report_layout.json (paramètres avancés au Lot 7).</p>
+          <p className="text-xs text-slate-500">Le niveau de chaque contrôle (bloquant, avertissement, ignoré) se règle dans financial_report_layout.json (Paramètres › Rapports).</p>
         </section>
       )}
     </div>

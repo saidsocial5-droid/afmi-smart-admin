@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { FileUp, CheckCircle2, AlertTriangle, XCircle, Save, ShieldCheck, ArrowRightLeft, Trash2, Plus, Loader2 } from 'lucide-react';
-import { apiFetch } from '../apiClient';
+import { FileUp, CheckCircle2, AlertTriangle, XCircle, Save, ShieldCheck, ArrowRightLeft, Trash2, Plus, Loader2, FileSpreadsheet } from 'lucide-react';
+import { apiFetch, apiDownload } from '../apiClient';
 
 // Relevés bancaires (Lot 3) : import, lecture OCR, validation ligne à ligne à côté de l'image, intégration en brouillons.
 // Aucune opération n'est créée sans validation explicite ; les brouillons se valident ensuite dans la Trésorerie (bureau).
@@ -174,6 +174,14 @@ export default function StatementsView() {
   const budgetLinesFor = (l) => (ctx?.budget_lines || []).filter((b) => (b.project_id ?? null) === (l.project_id ?? null));
   const low = (l, field) => (l.confidence?.[field] ?? 100) < LOW;
   const active = activeLine !== null ? lines[activeLine] : null;
+  const excel = async (url) => {
+    try {
+      const name = await apiDownload(url);
+      setMessage({ kind: 'ok', text: `Fichier exporté : ${name}` });
+    } catch (e) {
+      setMessage({ kind: 'error', text: `Export impossible : ${e.message}` });
+    }
+  };
 
   return (
     <div className="space-y-4" dir="auto">
@@ -255,6 +263,16 @@ export default function StatementsView() {
               ))}
             </select>
           )}
+          <div className="flex flex-wrap gap-2 mt-3 text-sm">
+            <button className="bg-slate-100 rounded px-3 py-1.5 flex items-center gap-2" onClick={() => excel('/api/exports/operations')}>
+              <FileSpreadsheet className="w-4 h-4" />Opérations bancaires (Excel)
+            </button>
+            {selectedId && (
+              <button className="bg-slate-100 rounded px-3 py-1.5 flex items-center gap-2" onClick={() => excel(`/api/exports/reconciliation/${selectedId}`)}>
+                <FileSpreadsheet className="w-4 h-4" />État de rapprochement de ce relevé (Excel)
+              </button>
+            )}
+          </div>
         </section>
 
         {/* Validation */}

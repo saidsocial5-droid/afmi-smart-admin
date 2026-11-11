@@ -21,6 +21,22 @@ namespace AFMI_Gestion_projet
                 args.Handled = true; // Keep app alive
             };
 
+            // Restauration demandée depuis Paramètres › Sauvegardes : appliquée avant toute ouverture de la base,
+            // après une sauvegarde de sécurité de la base courante.
+            try
+            {
+                string db = Data.DatabasePaths.GetDatabasePath();
+                string? restored = Services.BackupService.ApplyPendingRestore(db, Services.BackupService.FolderFromDatabase(db));
+                if (restored != null)
+                    MessageBox.Show($"La sauvegarde {System.IO.Path.GetFileName(restored)} a été restaurée.\nLa base précédente a été conservée (motif « avant_restauration »).",
+                        "AFMI Smart Admin — restauration", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Restauration annulée : {ex.Message}\nLa base actuelle est inchangée.", "AFMI Smart Admin — restauration",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+
             // Mise à jour du schéma avant toute fenêtre : sauvegarde automatique puis migrations EF Core.
             // En cas d'échec, la transaction est annulée et l'application s'arrête au lieu de travailler sur une base incohérente.
             try

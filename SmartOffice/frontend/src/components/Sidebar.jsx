@@ -17,7 +17,8 @@ import {
   Workflow,
   Landmark,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Settings
 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 
@@ -144,6 +145,13 @@ export default function Sidebar({ activeTab, setActiveTab }) {
       label_en: 'Studio & Plugins',
       icon: Sliders,
       badge: t('badgeStudio')
+    },
+    {
+      id: 'settings',
+      label_ar: 'الإعدادات المتقدمة',
+      label_fr: 'Paramètres',
+      label_en: 'Settings',
+      icon: Settings
     },
     {
       id: 'memory',

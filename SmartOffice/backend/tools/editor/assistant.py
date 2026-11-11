@@ -8,17 +8,13 @@ import json
 import re
 from typing import Any, Dict, Optional
 
+from backend.core import ai_config
 from backend.core.llm_router import llm_router
 from . import blocks
 
 LANG = {"fr": "français", "ar": "arabe standard (فصحى)", "en": "anglais"}
-ACTIONS = {
-    "reformulate": "Reformule le texte suivant dans un style institutionnel clair et précis, sans changer le sens ni les chiffres.",
-    "summarize": "Résume le texte suivant en quelques phrases, en conservant les chiffres exacts.",
-    "translate": "Traduis fidèlement le texte suivant en {lang}, sans rien ajouter.",
-    "complete": "Rédige la section demandée pour un rapport d'activité d'association, en {lang}. N'utilise QUE les faits fournis ; "
-                "n'invente aucun chiffre, nom ou date ; si une information manque, écris [à compléter].",
-}
+# Prompts modifiables dans Paramètres › IA (ai_config.PROMPTS « editor.* ») ; valeurs par défaut ci-dessous.
+ACTIONS = {a: ai_config.PROMPTS[f"editor.{a}"]["text"] for a in ("reformulate", "summarize", "translate", "complete")}
 
 
 def project_facts(project_id: Optional[int]) -> Dict[str, Any]:
@@ -54,14 +50,14 @@ async def run(action: str, text: str, language: str = "fr", project_id: Optional
     if action not in ACTIONS:
         raise ValueError("Action inconnue : reformulate, summarize, translate ou complete.")
     lang = LANG.get(language, "français")
-    system = ACTIONS[action].format(lang=lang)
+    system = ai_config.prompt(f"editor.{action}", lang=lang)
     facts = project_facts(project_id) if action == "complete" else {}
     prompt = (text or "").strip()
     if action == "complete":
         prompt = f"Section à rédiger : {instruction or prompt}\nFaits disponibles (JSON) :\n{json.dumps(facts, ensure_ascii=False)}"
     if not prompt:
         raise ValueError("Sélectionnez un texte ou décrivez la section à rédiger.")
-    result, engine = await llm_router.generate_with_meta(prompt, system_prompt=system, temperature=0.3)
+    result, engine = await llm_router.generate_with_meta(prompt, system_prompt=system, temperature=0.3, task="redaction")
     return {"text": result.strip(), "engine": engine, "facts": facts,
             "unverified_numbers": numbers_not_in_facts(result, facts) if action == "complete" else [],
             "offline": engine == "heuristic"}

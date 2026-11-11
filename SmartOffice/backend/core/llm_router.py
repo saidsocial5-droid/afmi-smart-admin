@@ -73,11 +73,12 @@ class LLMRouter:
         model_name: Optional[str] = None,
         temperature: float = 0.4,
         images_b64: Optional[List[str]] = None,
-        response_json: bool = False
+        response_json: bool = False,
+        task: Optional[str] = None
     ) -> str:
         """Route generation request to Gemini, Ollama, or intelligent fallback."""
         text, _engine = await self.generate_with_meta(
-            prompt, system_prompt, provider, model_name, temperature, images_b64, response_json
+            prompt, system_prompt, provider, model_name, temperature, images_b64, response_json, task
         )
         return text
 
@@ -89,10 +90,25 @@ class LLMRouter:
         model_name: Optional[str] = None,
         temperature: float = 0.4,
         images_b64: Optional[List[str]] = None,
-        response_json: bool = False
+        response_json: bool = False,
+        task: Optional[str] = None
     ) -> Tuple[str, str]:
         """Same as generate(), also returns the engine that actually answered ("gemini:<model>",
-        "ollama:<model>" or "heuristic") so the UI never claims a model that was not used."""
+        "ollama:<model>" or "heuristic") so the UI never claims a model that was not used.
+
+        Avec ``task`` (redaction, reports, extraction, qa, captions), le fournisseur choisi pour cette tâche dans les
+        paramètres est utilisé en premier ; en cas de refus (hors ligne, plafond, masquage d'image) ou d'erreur, la
+        chaîne locale habituelle prend le relais. Une tâche réglée sur « moteur local » ne sort jamais du poste."""
+        if task:
+            from backend.core import ai_config, ai_providers
+            cfg = ai_config.task_config(task)
+            if cfg["provider"] == "heuristic":
+                return self._generate_heuristic_response(prompt, system_prompt, response_json, images_b64), "heuristic"
+            result = await ai_providers.run_task(task, prompt, system_prompt, temperature, images_b64, response_json)
+            if result is not None:
+                return result
+            if cfg["provider"] not in ("auto", "", None):
+                provider = "ollama"            # fournisseur choisi indisponible ou refusé : repli local uniquement
         target_provider = (provider or self.default_provider).lower()
         requested = target_provider
 

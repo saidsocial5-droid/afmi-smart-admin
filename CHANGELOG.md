@@ -1,5 +1,109 @@
 # Journal des modifications
 
+## [2.0.0 — Lot 7 : Exports Word, PDF, Excel et paramètres avancés] — 11/11/2026
+
+### Ajouté — exports
+- **Word (.docx)** depuis l'éditeur (menu « Exporter… ») : fidèle à l'éditeur et à la charte.
+  - Styles Word natifs : Normal, Titre 1 à 3, Citation, listes. Le volet de navigation de Word fonctionne.
+  - **Table des matières** en champ Word : pré-remplie, Word la met à jour à l'ouverture.
+  - **Vraies notes de bas de page** Word.
+  - En-têtes et pieds de page : première page distincte, pages paires et impaires, logos, mentions obligatoires,
+    « Page X / Y ».
+  - Tableaux (en-tête répété à chaque page, cellules fusionnées, trames), images, graphiques, galeries photo
+    légendées et numérotées.
+  - Arabe de droite à gauche.
+  - Les blocs de données sont recalculés depuis la base au moment de l'export.
+- **PDF** de qualité impression :
+  - polices intégrées, signets tirés des titres, métadonnées (titre, auteur, langue) ;
+  - imprimé par Microsoft Edge, présent sur tout Windows 10/11 (ou Chrome/Chromium) ;
+  - option **PDF/A-2b** (archivage) si LibreOffice est installé.
+- **Excel avec de vraies formules** (Rapports annuels → « États financiers ») :
+  - une feuille par état : CER, recettes et dépenses, budget par projet et par bailleur, trésorerie, reports,
+    comparaison N-1 ;
+  - sous-totaux, totaux, écarts, taux et résultats en formules ; une formule n'est écrite que si elle redonne
+    exactement le chiffre du rapport ;
+  - feuille « Ventilations » (détail des opérations validées) et feuille « Contrôles » qui recalcule les totaux
+    par SOMME.SI.ENS (écarts attendus : 0) ;
+  - couleurs de la charte, impression paysage, volets figés.
+- **Opérations bancaires** (Excel) : une feuille par compte, solde progressif en formule à partir du solde
+  d'ouverture.
+- **État de rapprochement** d'un relevé (Excel, depuis « Relevés bancaires ») : solde du relevé, opérations absentes,
+  lignes non comptabilisées et écart en formules.
+- **Dossier annuel complet** (Rapports annuels → ZIP), qui contient :
+  - le rapport moral et le rapport financier en Word et en PDF ;
+  - les états financiers Excel ;
+  - les annexes choisies dans la GED ;
+  - un **PDF unique** moral + financier + annexes, avec signets par partie ;
+  - la liste des empreintes SHA-256.
+- **Nommage configurable** des fichiers, par exemple `AFMI_RapportFinancier_2026_FR.pdf`.
+- Chaque export est inscrit au journal d'audit, avec l'empreinte du fichier.
+
+### Ajouté — panneau « Paramètres » (nouveau menu)
+- Onze sections. On peut **rechercher** un paramètre, **exporter et importer** les réglages en JSON (sans les clés
+  d'API ; un import invalide ne modifie rien), et **restaurer les valeurs par défaut** par paramètre, par section ou
+  en totalité. Toute modification est validée par le serveur et tracée dans le journal d'audit.
+- **Association** : nom, sigle, adresse, premier mois de l'exercice, devise, langue.
+- **Comptabilité** : seuil de justificatif obligatoire, apprentissage des règles de classement.
+- **Banques** :
+  - **tolérance du rapprochement** (3 jours par défaut), reprise par l'écran Trésorerie et par les relevés ;
+  - seuil des frais bancaires inhabituels ;
+  - gabarits de relevés (éditeur JSON validé).
+- **Exports** : modèles de nom, moteur PDF, moteurs détectés sur le poste.
+- **IA** :
+  - **fournisseur par tâche** (rédaction, synthèse des rapports, lecture des relevés, questions sur la GED, légendes
+    des photos) : Anthropic, OpenAI, Gemini, Mistral, Ollama, serveur compatible OpenAI ou moteur local ;
+  - clé chiffrée par DPAPI, modèle, température, limite de jetons ;
+  - « **Tester la connexion** », qui liste les modèles disponibles ;
+  - **plafond de coût mensuel** et consommation du mois ;
+  - mode hors ligne et masquage ;
+  - **prompts système modifiables**, avec retour au texte d'origine.
+- **Notifications** : messagerie SMTP (mot de passe DPAPI), e-mail de test, alertes à envoyer.
+- **Utilisateurs et rôles** : Administrateur, Comptable, Chargé de projet, Lecteur.
+- **Sauvegardes** :
+  - dossier, fréquence (démarrage, quotidienne, hebdomadaire, manuelle), nombre de sauvegardes conservées ;
+  - « Sauvegarder maintenant » ;
+  - **restauration** appliquée au prochain démarrage, après une sauvegarde de sécurité.
+- **Apparence** : langue de l'interface, taille du texte, couleur principale.
+- **Rapports et cycle de vie** : niveau de chaque contrôle des rapports (bloquant, avertissement, ignoré),
+  documents attendus par phase.
+
+### Modifié
+- Sauvegarde automatique du Desktop : l'ancienne copie du fichier de base ouvert (risque de copie incohérente,
+  5 exemplaires) est remplacée par `BackupService` : copie par l'API de sauvegarde SQLite, planification et
+  conservation paramétrables.
+- Le backend exige désormais la dernière migration (`DocumentManagement`) et l'indique clairement si la base
+  n'est pas à jour.
+- Le journal d'audit écrit par Python masque les colonnes secrètes (mot de passe SMTP), comme côté .NET.
+- Tests : 91 xUnit, 157 pytest. Les formules Excel ont été vérifiées par recalcul ; un PDF, un PDF/A et la
+  conversion Word → PDF ont été produits avec un vrai moteur.
+
+### Vérifié dans un navigateur
+- Paramètres :
+  - recherche « toler » ;
+  - enregistrement de la tolérance ;
+  - choix d'Ollama pour les questions sur la GED ;
+  - test de connexion refusé en mode hors ligne ;
+  - ajout d'un utilisateur Comptable ;
+  - sauvegarde manuelle ;
+  - niveaux des contrôles et documents attendus.
+- Exports :
+  - Word et PDF depuis l'éditeur ;
+  - états financiers Excel et dossier annuel ZIP depuis les rapports annuels.
+- Rendu des fichiers Word (FR et AR) et PDF contrôlé page par page.
+
+### Points à valider
+1. **Moteur PDF sous Windows** : vérifier qu'Edge imprime correctement sur le poste de l'AFMI. Pour le
+   **PDF/A**, installer LibreOffice (gratuit), ou indiquer s'il faut un autre outil (Ghostscript, par exemple).
+2. **Notes de bas de page dans le PDF** : avec le moteur navigateur, elles sont regroupées en fin de document. Elles
+   sont en bas de page dans Word et dans le PDF produit par LibreOffice.
+3. **Rôles** : ils protègent les modules Smart Office. Les écrans de l'application de bureau (Trésorerie…) ne sont
+   pas encore restreints. Faut-il le faire au Lot 8 ?
+4. **Prix de l'IA** : le plafond de coût n'agit que si vous saisissez les prix par million de jetons de chaque
+   fournisseur. Aucun prix n'est préréglé.
+5. **Alertes par e-mail** : les préférences sont enregistrées, mais l'envoi automatique des alertes (échéances,
+   trésorerie) reste à brancher au Lot 8. Les rapports programmés existants (SMTP) sont inchangés.
+6. **Tableaux Excel** : la présentation du CER reste provisoire, en attente du modèle de l'expert-comptable (Q3, Q4).
+
 ## [2.0.0 — Lot 6 : GED et cycle de vie des projets] — 11/11/2026
 
 Nouveau menu Smart Office : **Documents & cycle de vie**. La GED reprend la table de documents de l'application de

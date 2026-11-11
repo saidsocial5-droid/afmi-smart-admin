@@ -23,6 +23,7 @@ from backend.api.routes_statements import router as statements_router
 from backend.api.routes_editor import router as editor_router
 from backend.api.routes_reports import router as reports_router
 from backend.api.routes_ged import router as ged_router
+from backend.api.routes_exports import router as exports_router
 from backend.core.orchestrator import mark_interrupted_runs
 
 
@@ -39,6 +40,16 @@ TOKEN_HEADER = "X-AFMI-Token"
 TOKEN_COOKIE = "afmi_session"
 TOKEN_QUERY = "afmi_token"
 LOCAL_HOST_REGEX = re.compile(r"^(127\.0\.0\.1|localhost)(:\d+)?$", re.IGNORECASE)
+
+@app.middleware("http")
+async def role_guard(request: Request, call_next):
+    # Rôles (Paramètres › Utilisateurs) : déclaré avant local_origin_guard, donc exécuté après le contrôle du jeton.
+    from backend.core import roles
+    refusal = roles.check(request.method, request.url.path)
+    if refusal:
+        return JSONResponse(status_code=403, content={"detail": refusal})
+    return await call_next(request)
+
 
 @app.middleware("http")
 async def local_origin_guard(request: Request, call_next):
@@ -98,6 +109,7 @@ app.include_router(payroll_router)
 app.include_router(statements_router)
 app.include_router(reports_router)
 app.include_router(ged_router)
+app.include_router(exports_router)
 app.include_router(editor_router)
 
 

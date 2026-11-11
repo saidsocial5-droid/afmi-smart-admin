@@ -21,7 +21,21 @@ namespace AFMI_Gestion_projet.ViewModels.Treasury
 
         [ObservableProperty] private string _importOpening = string.Empty;
         [ObservableProperty] private string _importClosing = string.Empty;
-        [ObservableProperty] private string _toleranceDays = ReconciliationService.DefaultToleranceDays.ToString();
+        // Valeur initiale : Paramètres › Banques (modifiable ponctuellement à l'écran)
+        [ObservableProperty] private string _toleranceDays = ReadToleranceDays().ToString();
+
+        private static int ReadToleranceDays()
+        {
+            try
+            {
+                using var db = new AppDbContext();
+                return new SettingsService(db).Get<int>(SettingKeys.ReconciliationToleranceDays);
+            }
+            catch (Exception)
+            {
+                return ReconciliationService.DefaultToleranceDays;
+            }
+        }
         [ObservableProperty] private string _statementCheckText = string.Empty;
         [ObservableProperty] private string _reconciliationSummary = string.Empty;
 

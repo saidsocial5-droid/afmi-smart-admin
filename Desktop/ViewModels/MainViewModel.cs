@@ -159,39 +159,33 @@ namespace AFMI_Gestion_projet.ViewModels
             }
         }
 
-        private void AutoBackupDatabase()
+        private System.Windows.Threading.DispatcherTimer? _backupTimer;
+
+        /// <summary>
+        /// Sauvegarde planifiée selon Paramètres › Sauvegardes (dossier, fréquence, conservation) : copie cohérente par
+        /// l'API SQLite au démarrage puis vérifiée toutes les heures. Remplace l'ancienne copie de fichier (non sûre
+        /// pendant l'utilisation de la base) limitée à 5 exemplaires.
+        /// </summary>
+        private void AutoBackupDatabase(bool atStartup = true)
         {
             try
             {
                 string dbPath = DatabasePaths.GetDatabasePath();
-                string folder = Path.GetDirectoryName(dbPath)!;
-                
-                if (File.Exists(dbPath))
-                {
-                    string backupFolder = Path.Combine(folder, "Backups");
-                    if (!Directory.Exists(backupFolder))
-                    {
-                        Directory.CreateDirectory(backupFolder);
-                    }
-                    
-                    // Maintain last 5 rolling backups
-                    string backupPath = Path.Combine(backupFolder, $"database_backup_{DateTime.Now:yyyyMMdd_HHmmss}.db");
-                    File.Copy(dbPath, backupPath, true);
-                    
-                    var files = Directory.GetFiles(backupFolder, "database_backup_*.db")
-                                         .OrderBy(f => File.GetCreationTime(f))
-                                         .ToList();
-                                         
-                    while (files.Count > 5)
-                    {
-                        File.Delete(files[0]);
-                        files.RemoveAt(0);
-                    }
-                }
+                using var db = new AppDbContext();
+                var settings = new Services.SettingsService(db);
+                string folder = Services.BackupService.ResolveFolder(dbPath, settings.Get<string>(Services.SettingKeys.BackupFolder));
+                Services.BackupService.RunScheduled(dbPath, folder, settings.Get<string>(Services.SettingKeys.BackupFrequency) ?? "daily",
+                    settings.Get<int>(Services.SettingKeys.BackupRetention), atStartup);
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Auto backup failed: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Sauvegarde automatique impossible : {ex.Message}");
+            }
+            if (_backupTimer == null)
+            {
+                _backupTimer = new System.Windows.Threading.DispatcherTimer { Interval = TimeSpan.FromHours(1) };
+                _backupTimer.Tick += (_, _) => AutoBackupDatabase(atStartup: false);
+                _backupTimer.Start();
             }
         }
 

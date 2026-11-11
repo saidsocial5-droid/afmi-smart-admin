@@ -9,7 +9,8 @@ export default {
       colors: {
         afmi: {
           dark: '#081C15',
-          forest: '#1B4332',
+          // Couleur principale réglable (Paramètres › Apparence) : variable CSS posée par App.jsx
+          forest: 'rgb(var(--afmi-forest-rgb, 27 67 50) / <alpha-value>)',
           emerald: '#2D6A4F',
           sage: '#40916C',
           mint: '#52B788',

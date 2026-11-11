@@ -1,7 +1,7 @@
 """Questions en langage naturel sur les documents d'un projet : réponse appuyée sur des passages cités."""
 from typing import Any, Dict, Optional
 
-from backend.core import unified_db
+from backend.core import ai_config, unified_db
 from backend.core.llm_router import llm_router
 from . import index
 
@@ -19,7 +19,7 @@ async def ask(question: str, project_id: Optional[int]) -> Dict[str, Any]:
     prompt = (f"Question : {question}\n\nPassages des documents du projet :\n{context}\n\n"
               "Réponds en français, uniquement à partir de ces passages, en citant la source entre crochets [n] après chaque "
               "affirmation. Si les passages ne permettent pas de répondre, dis-le.")
-    text, engine = await llm_router.generate_with_meta(prompt, system_prompt="Tu es l'assistant documentaire de l'association. Tu ne réponds qu'avec les documents fournis.", temperature=0.1)
+    text, engine = await llm_router.generate_with_meta(prompt, system_prompt=ai_config.prompt("ged.qa"), temperature=0.1, task="qa")
     if engine == "heuristic":
         # Pas de modèle disponible : réponse extractive (les passages les plus pertinents, tels quels).
         text = "Passages les plus pertinents (aucun modèle d'IA disponible pour rédiger une réponse) :\n" + \

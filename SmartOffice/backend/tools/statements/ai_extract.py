@@ -9,16 +9,12 @@ import json
 import re
 from typing import List, Optional
 
+from backend.core import ai_config
 from backend.core.llm_router import llm_router
 from .extract import parse_date
 from .model import ExtractedLine, ExtractedStatement
 
-PROMPT = """Tu lis un relevé bancaire marocain. Réponds UNIQUEMENT par un objet JSON :
-{"opening": "solde initial", "closing": "solde final", "lines": [{"date": "jj/mm/aaaa", "value_date": "jj/mm/aaaa ou vide",
-"label": "libellé", "debit": "montant ou vide", "credit": "montant ou vide"}]}
-Recopie les montants exactement (virgule décimale). N'invente aucune ligne.
-Texte lu par OCR (peut contenir des erreurs) :
-"""
+PROMPT = ai_config.PROMPTS["statements.extract"]["text"]     # modifiable dans Paramètres › IA
 
 
 def _cents(value) -> Optional[int]:
@@ -38,7 +34,8 @@ def _cents(value) -> Optional[int]:
 
 async def extract_with_ai(ocr_text: str, page_images: List[bytes], base: ExtractedStatement) -> Optional[ExtractedStatement]:
     images = [base64.b64encode(p).decode("ascii") for p in page_images[:4]]
-    text, engine = await llm_router.generate_with_meta(PROMPT + ocr_text[:12000], images_b64=images or None, response_json=True, temperature=0.0)
+    text, engine = await llm_router.generate_with_meta(ai_config.prompt("statements.extract") + ocr_text[:12000], images_b64=images or None,
+                                                         response_json=True, temperature=0.0, task="extraction")
     if engine == "heuristic":
         return None  # aucun modèle disponible : on ne fabrique pas de relevé
     try:

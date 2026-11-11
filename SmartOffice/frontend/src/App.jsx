@@ -17,6 +17,7 @@ import PhotosView from './views/PhotosView';
 import AnnualReportsView from './views/AnnualReportsView';
 import IndicatorsView from './views/IndicatorsView';
 import ProjectDocumentsView from './views/ProjectDocumentsView';
+import SettingsView, { applyAppearance } from './views/SettingsView';
 import { apiFetch } from './apiClient';
 import { useLanguage } from './context/LanguageContext';
 
@@ -59,6 +60,12 @@ export default function App() {
 
   useEffect(() => {
     fetchGlobalData();
+    // Apparence enregistrée (Paramètres › Apparence) : taille du texte, couleur principale
+    apiFetch('/api/settings/registry').then((r) => (r.ok ? r.json() : null)).then((snap) => {
+      if (!snap) return;
+      const values = Object.fromEntries(snap.sections.flatMap((s) => s.fields).filter((f) => f.key.startsWith('ui.')).map((f) => [f.key, f.value]));
+      applyAppearance(values);
+    }).catch(() => {});
   }, []);
 
   const { language, dir, isRtl } = useLanguage();
@@ -173,6 +180,10 @@ export default function App() {
 
           {activeTab === "studio" && (
             <AgentStudioView />
+          )}
+
+          {activeTab === "settings" && (
+            <SettingsView onNavigate={setActiveTab} />
           )}
 
           {activeTab === "memory" && (

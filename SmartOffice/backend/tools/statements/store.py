@@ -20,9 +20,30 @@ from .model import LOW_CONFIDENCE
 from .pipeline import PipelineResult
 
 ARCHIVE_DIR = "archives/releves"
-FEE_MIN_THRESHOLD = 50_000          # 500 MAD : seuil des frais « inhabituels » sans historique
-RECEIPT_THRESHOLD = 100_000         # 1 000 MAD : dépense pour laquelle un justificatif est attendu
+FEE_MIN_THRESHOLD = 50_000          # 500 MAD : seuil des frais « inhabituels » sans historique (par défaut)
+RECEIPT_THRESHOLD = 100_000         # 1 000 MAD : dépense pour laquelle un justificatif est attendu (par défaut)
 MATCH_DAYS = 3
+
+
+def _setting_minor(key: str, default_minor: int) -> int:
+    """Seuil réglé dans Paramètres (en MAD), converti en centimes."""
+    value = unified_db.get_setting(key, None)
+    return default_minor if value is None else int(round(float(value) * 100))
+
+
+def fee_threshold() -> int:
+    return _setting_minor("bank.fee_alert_min_mad", FEE_MIN_THRESHOLD)
+
+
+def receipt_threshold() -> int:
+    return _setting_minor("accounting.receipt_threshold_mad", RECEIPT_THRESHOLD)
+
+
+def match_days() -> int:
+    """Tolérance de date pour retrouver l'opération d'une ligne (même réglage que le rapprochement)."""
+    value = unified_db.get_setting("bank.reconciliation_tolerance_days", None)
+    return MATCH_DAYS if value is None else int(value)
+
 
 
 class StatementError(ValueError):
@@ -158,7 +179,8 @@ def checks_and_anomalies(conn, st, lines) -> Dict[str, List[Dict[str, Any]]]:
             "SELECT l.DebitMinor FROM StatementLines l JOIN BankStatements s ON s.Id = l.BankStatementId "
             "WHERE s.BankAccountId = ? AND s.Id <> ? AND s.IsDeleted = 0 AND l.SuggestedCategoryId = ? AND l.DebitMinor > 0",
             (st["BankAccountId"], st["Id"], fee_cat[0]))]
-        limit = max(FEE_MIN_THRESHOLD, 3 * median(history)) if len(history) >= 3 else FEE_MIN_THRESHOLD
+        fee_min = fee_threshold()
+        limit = max(fee_min, 3 * median(history)) if len(history) >= 3 else fee_min
         for l in lines:
             if l["SuggestedCategoryId"] == fee_cat[0] and l["DebitMinor"] > limit:
                 anomalies.append({"code": "UNUSUAL_FEE", "line_id": l["Id"],
@@ -182,13 +204,14 @@ def checks_and_anomalies(conn, st, lines) -> Dict[str, List[Dict[str, Any]]]:
                     anomalies.append({"code": "OVER_BUDGET", "line_id": l["Id"],
                                       "message": f"Dépassement de la ligne « {bl['Code']} {bl['Label']} » à partir du {l['OperationDate']} : "
                                                  f"{consumed[bl['Id']] / 100:.2f} imputés pour {bl['PlannedMinor'] / 100:.2f} prévus."})
+    receipt_min, days = receipt_threshold(), match_days()
     for l in lines:
-        if l["DebitMinor"] >= RECEIPT_THRESHOLD:
+        if l["DebitMinor"] >= receipt_min:
             op = conn.execute(
                 "SELECT o.Id, (SELECT COUNT(*) FROM OperationAttachments t WHERE t.OperationId = o.Id) AS n FROM Operations o "
                 "WHERE o.BankAccountId = ? AND o.IsDeleted = 0 AND o.Direction = 'Debit' AND o.AmountMinor = ? "
-                "AND o.OperationDate BETWEEN date(?, '-3 day') AND date(?, '+3 day')",
-                (st["BankAccountId"], l["DebitMinor"], l["OperationDate"], l["OperationDate"])).fetchone()
+                "AND o.OperationDate BETWEEN date(?, ?) AND date(?, ?)",
+                (st["BankAccountId"], l["DebitMinor"], l["OperationDate"], f"-{days} day", l["OperationDate"], f"+{days} day")).fetchone()
             if op is None or op["n"] == 0:
                 anomalies.append({"code": "NO_RECEIPT", "line_id": l["Id"],
                                   "message": f"Dépense de {l['DebitMinor'] / 100:.2f} sans justificatif enregistré ({l['Label']})."})
@@ -259,7 +282,7 @@ def save_corrections(statement_id: int, payload: Dict[str, Any]) -> Dict[str, An
                 category_changed = (values["SuggestedCategoryId"], values["SuggestedProjectId"], values["SuggestedBudgetLineId"]) != \
                                    (old["SuggestedCategoryId"], old["SuggestedProjectId"], old["SuggestedBudgetLineId"])
                 unified_db.update(conn, "StatementLines", "StatementLine", item["id"], values)
-                if category_changed and learn(conn, values["Label"], "credit" if credit else "debit", values["SuggestedCategoryId"],
+                if category_changed and unified_db.get_setting("accounting.auto_learn_rules", True) and learn(conn, values["Label"], "credit" if credit else "debit", values["SuggestedCategoryId"],
                                               values["SuggestedProjectId"], values["SuggestedBudgetLineId"]):
                     learned += 1
             else:
@@ -309,6 +332,7 @@ def integrate(statement_id: int) -> Dict[str, Any]:
         if account["Status"] != "Active":
             raise StatementError("Compte clôturé : intégration impossible.")
         categories = {r["Id"]: r["Kind"] for r in conn.execute("SELECT Id, Kind FROM Categories")}
+        days = match_days()
         for l in _lines(conn, statement_id):
             ref = f"REL-{l['Id']}"
             if conn.execute("SELECT 1 FROM Operations WHERE Reference = ? AND IsDeleted = 0", (ref,)).fetchone():
@@ -318,9 +342,10 @@ def integrate(statement_id: int) -> Dict[str, Any]:
             amount = l["CreditMinor"] or l["DebitMinor"]
             duplicate = conn.execute(
                 "SELECT 1 FROM Operations o WHERE o.BankAccountId = ? AND o.IsDeleted = 0 AND o.AmountMinor = ? AND o.Direction = ? "
-                "AND o.OperationDate BETWEEN date(?, '-3 day') AND date(?, '+3 day') "
+                "AND o.OperationDate BETWEEN date(?, ?) AND date(?, ?) "
                 "AND NOT EXISTS (SELECT 1 FROM ReconciliationMatches m WHERE m.OperationId = o.Id)",
-                (account["Id"], amount, "Credit" if is_credit else "Debit", l["OperationDate"], l["OperationDate"])).fetchone()
+                (account["Id"], amount, "Credit" if is_credit else "Debit", l["OperationDate"], f"-{days} day",
+                 l["OperationDate"], f"+{days} day")).fetchone()
             if duplicate:
                 skipped_existing += 1
                 continue

@@ -18,10 +18,11 @@ from typing import Any, Dict, Iterator, Optional
 from backend.core import dpapi
 
 DESKTOP_DB_ENV = "AFMI_DESKTOP_DB"
-REQUIRED_MIGRATION_SUFFIX = "_FinanceFoundation"
+REQUIRED_MIGRATION_SUFFIX = "_DocumentManagement"   # dernière migration dont dépend le backend (Lot 6)
 
 ACTION_CREATE = "Création"
 ACTION_UPDATE = "Modification"
+ACTION_DELETE = "Suppression"
 
 
 class UnifiedDbUnavailable(RuntimeError):
@@ -134,6 +135,8 @@ def now_ef() -> str:
 
 
 MAX_AUDITED_TEXT = 2000
+# Colonnes secrètes : jamais recopiées dans le journal (comme AppDbContext.Audit côté .NET)
+SECRET_COLUMNS = {("SmtpSettings", "Password"), ("AiSettings", "CloudApiKey")}
 
 
 def _audit_value(v: Any) -> Any:
@@ -152,7 +155,8 @@ def insert(conn: sqlite3.Connection, table: str, entity_type: str, values: Dict[
     marks = ", ".join("?" for _ in values)
     cur = conn.execute(f"INSERT INTO {table} ({cols}) VALUES ({marks})", tuple(values.values()))
     new_id = cur.lastrowid
-    append_audit(conn, entity_type, str(new_id), ACTION_CREATE, {k: {"new": _audit_value(v)} for k, v in values.items()})
+    append_audit(conn, entity_type, str(new_id), ACTION_CREATE,
+                 {k: {"new": "***" if (table, k) in SECRET_COLUMNS else _audit_value(v)} for k, v in values.items()})
     return new_id
 
 
@@ -167,7 +171,8 @@ def update(conn: sqlite3.Connection, table: str, entity_type: str, row_id: int, 
     sets = ", ".join(f"{k} = ?" for k in changes)
     conn.execute(f"UPDATE {table} SET {sets} WHERE Id = ?", (*changes.values(), row_id))
     append_audit(conn, entity_type, str(row_id), ACTION_UPDATE,
-                 {k: {"old": _audit_value(old[k]), "new": _audit_value(v)} for k, v in changes.items()})
+                 {k: ({"old": "***", "new": "***"} if (table, k) in SECRET_COLUMNS else {"old": _audit_value(old[k]), "new": _audit_value(v)})
+                  for k, v in changes.items()})
     return True
 
 

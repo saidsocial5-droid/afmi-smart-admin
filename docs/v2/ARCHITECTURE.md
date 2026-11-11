@@ -278,6 +278,43 @@ Configuration : `config/lifecycle_config.json` (phases, types et mots-clés, doc
 
 API : `/api/ged/{config, documents, documents/{id}/file, reindex, obligations, milestones, timeline/{id}, alerts, search, ask}`.
 
+### 2.10 Exports et paramètres avancés (Lot 7)
+
+**Exports** (`SmartOffice/backend/tools/exports/`) — un document de l'éditeur est d'abord *préparé*, puis rendu :
+
+| Module | Rôle |
+|---|---|
+| `resolve.py` | Relit le document enregistré. Recalcule chaque bloc dynamique depuis la base en nœuds neutres (`x-table`, `x-bars`, `x-pies`, `x-gallery`, `x-note`). Remplit les champs et garde la version finale (révisions acceptées, commentaires retirés). Calcule la charte effective et la liste des titres. Les images distantes ne sont jamais téléchargées. |
+| `docx_writer.py` | Word natif : styles Titre 1 à 3, champ TOC, vraie partie `footnotes.xml`, en-têtes et pieds de page (première page, paires et impaires, champs PAGE et NUMPAGES), tableaux (en-tête répété, cellules fusionnées, trames), RTL (`w:bidi`, `w:rtl`, `w:bidiVisual`). Une passe `normalize` remet les propriétés dans l'ordre du schéma OOXML. |
+| `html_writer.py` | HTML autonome (images en data URI), même présentation que `print.js` (boîtes de marge `@page`). |
+| `graphics.py` | Barres et camemberts en SVG (HTML) ou en PNG 200 dpi (Word) ; texte arabe mis en forme par Pillow et raqm. |
+| `pdf.py` | Moteur « navigateur » (Edge/Chrome/Chromium sans interface, `--print-to-pdf`, signets) ou « LibreOffice » (docx → PDF, PDF/A-2b). Ajoute ensuite les métadonnées (titre, auteur, `/Lang`) et des signets reconstruits à partir des titres. |
+| `xlsx_writer.py` | États financiers (une feuille par état) avec formules pour les sous-totaux, totaux, écarts, taux et résultats. Une formule n'est écrite que si elle redonne exactement le montant de l'application. Feuilles « Ventilations » et « Contrôles » (SOMME.SI.ENS, écart attendu 0). Classeur des opérations par compte, avec solde progressif en formule. État de rapprochement. |
+| `naming.py` | Modèles `exports.naming.report` et `exports.naming.document` (variables {org} {type} {year} {lang} {title} {project} {date}). |
+| `service.py` | Façade : export d'un document ou d'un état, dossier annuel ZIP (rapports Word et PDF, états Excel, annexes de la GED, PDF complet fusionné avec signets par partie, empreintes SHA-256). Chaque export est journalisé dans l'audit, avec l'empreinte du fichier. |
+
+API : `/api/exports/{engines, naming-preview, document/{id}?format=docx|pdf&pdfa=, statements, operations, reconciliation/{id}, annual-package}`.
+
+**Paramètres** (`SmartOffice/backend/core/`) :
+
+| Module | Rôle |
+|---|---|
+| `settings_registry.py` | Registre unique des paramètres : section, type, valeur par défaut, bornes, aide. Il sert à la fois à l'écran, à la validation (tout ou rien), à la recherche, à l'import et l'export JSON (secrets exclus) et au retour aux valeurs par défaut (suppression de la ligne `AppSettings`, tracée dans l'audit). |
+| `config_files.py` | `financial_report_layout`, `lifecycle_config` et `bank_templates`. La version personnalisée est validée, écrite dans le dossier de données de l'utilisateur, avec une copie datée de la précédente. Le fichier livré n'est jamais modifié. |
+| `ai_config.py`, `ai_providers.py` | IA par tâche : rédaction, rapports, extraction, questions sur la GED, légendes. Fournisseurs : Anthropic, OpenAI, Gemini, Mistral, Ollama, serveur compatible OpenAI ou moteur local. Clés chiffrées par DPAPI (`ai.keys.*`), prompts modifiables (`ai.prompts.*`), consommation mensuelle (`ai.usage.AAAA-MM`) et plafond de coût. `llm_router.generate_with_meta(task=…)` essaie d'abord le fournisseur de la tâche, puis la chaîne locale. |
+| `roles.py` | Rôles Administrateur, Comptable, Chargé de projet et Lecteur. Le middleware `role_guard` filtre les écritures selon la zone de l'URL. Liste vide : tous les droits. |
+| `backups.py` | « Sauvegarder maintenant », liste et restauration programmée (`restore.pending`). Format identique à `Core/Services/BackupService.cs`, qui fait les sauvegardes planifiées (démarrage, puis toutes les heures) et applique la restauration au démarrage, avant EF Core, après une sauvegarde de sécurité. |
+| `smtp.py` | Table `SmtpSettings` partagée (mot de passe DPAPI) et e-mail de test (STARTTLS ou SSL). |
+
+Paramètres lus ailleurs :
+- `bank.reconciliation_tolerance_days` : écran Trésorerie, doublons et justificatifs des relevés ;
+- `accounting.receipt_threshold_mad` : anomalies des relevés et contrôle MISSING_RECEIPT des rapports ;
+- `bank.fee_alert_min_mad` et `accounting.auto_learn_rules` : relevés ;
+- `backup.*` : Desktop ;
+- `ui.*` : interface React.
+
+Écran : `SmartOffice/frontend/src/views/SettingsView.jsx` (menu « Paramètres »).
+
 ## 3. Sécurité et confidentialité
 
 | Sujet | Mesure |
@@ -286,6 +323,9 @@ API : `/api/ged/{config, documents, documents/{id}/file, reindex, obligations, m
 | Secrets | DPAPI (compte Windows) des deux côtés, au même format `dpapi:` et avec la même entropie. Hors Windows, aucun secret n'est stocké. |
 | IA externe | Désactivée par défaut (`ai.offline_mode`). Une fois activée, le masquage (`ai.mask_sensitive_data`, actif par défaut) remplace RIB, IBAN, ICE, IF, CIN, n° CNSS et salaires par des marqueurs (`backend/core/privacy.py`). Les images ne sont jamais envoyées quand le masquage est actif. |
 | Données au repos | Montants en clair (décision D2-a). Protection par le profil Windows et BitLocker. Le chiffrement de la base entière (SQLCipher) reste à évaluer. |
+| Rôles (Lot 7) | Écritures de l'API Smart Office filtrées par rôle. Compte Windows inconnu : lecture seule. Impossible d'enregistrer une liste qui retirerait ses propres droits d'administrateur. |
+| Journal | Les colonnes secrètes (`SmtpSettings.Password`, `AiSettings.CloudApiKey`) sont masquées (`***`) dans les entrées d'audit écrites par Python, comme côté .NET. |
+| IA par tâche (Lot 7) | Avant tout appel externe : mode hors ligne désactivé, plafond de coût non atteint, masquage du prompt, image refusée si le masquage est actif. « Tester la connexion » n'envoie aucune donnée et reste refusé en mode hors ligne. |
 | Isolation des tests | `AFMI_DESKTOP_DB` pointe vers une base jetable dans `Desktop.Tests`, `Core.Tests` et `pytest`. |
 
 ## 4. Variables d'environnement
@@ -296,6 +336,8 @@ API : `/api/ged/{config, documents, documents/{id}/file, reindex, obligations, m
 | `AFMI_API_TOKEN` | Desktop → backend | Jeton de session de l'API |
 | `AFMI_AUDIT_USER` | Desktop → backend | Utilisateur inscrit dans le journal d'audit |
 | `AFMI_DATA_DIR` | Desktop → backend (version installée) | Données propres au backend |
+| `AFMI_PDF_BROWSER` | Facultatif | Chemin d'Edge, de Chrome ou de Chromium pour l'impression PDF |
+| `AFMI_SOFFICE` | Facultatif | Chemin de `soffice` (LibreOffice), pour le PDF/A |
 
 ## 5. Tests et intégration continue
 
