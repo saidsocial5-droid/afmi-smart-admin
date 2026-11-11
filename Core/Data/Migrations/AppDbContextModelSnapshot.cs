@@ -298,6 +298,346 @@ namespace AFMI_Gestion_projet.Data.Migrations
                     b.ToTable("CostEntries");
                 });
 
+            modelBuilder.Entity("AFMI_Gestion_projet.Models.Editor.DocumentComment", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("AnchorId")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Author")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("EditorDocumentId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("ParentId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("QuotedText")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("ResolvedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Text")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EditorDocumentId", "AnchorId");
+
+                    b.ToTable("DocumentComments");
+                });
+
+            modelBuilder.Entity("AFMI_Gestion_projet.Models.Editor.DocumentTemplate", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("ContentJson")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("DeletedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(false);
+
+                    b.Property<bool>("IsShared")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("LayoutJson")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("UpdatedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("DocumentTemplates");
+                });
+
+            modelBuilder.Entity("AFMI_Gestion_projet.Models.Editor.DocumentVersion", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("ContentJson")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("EditorDocumentId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("LayoutJson")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Note")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Number")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EditorDocumentId", "Number")
+                        .IsUnique();
+
+                    b.ToTable("DocumentVersions");
+                });
+
+            modelBuilder.Entity("AFMI_Gestion_projet.Models.Editor.EditorDocument", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("ContentJson")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("CurrentVersion")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("DeletedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("FunderId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(false);
+
+                    b.Property<string>("Language")
+                        .IsRequired()
+                        .HasMaxLength(5)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("LayoutJson")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("ProjectId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("TemplateId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(250)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("UpdatedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FunderId");
+
+                    b.HasIndex("ProjectId");
+
+                    b.HasIndex("TemplateId");
+
+                    b.ToTable("EditorDocuments");
+                });
+
+            modelBuilder.Entity("AFMI_Gestion_projet.Models.Editor.GraphicChart", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("DeletedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("FunderId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(false);
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("ProjectId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Scope")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("StyleJson")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("UpdatedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FunderId");
+
+                    b.HasIndex("ProjectId");
+
+                    b.ToTable("GraphicCharts", t =>
+                        {
+                            t.HasCheckConstraint("CK_GraphicCharts_Scope", "(Scope = 'Association' AND FunderId IS NULL AND ProjectId IS NULL) OR (Scope = 'Funder' AND FunderId IS NOT NULL AND ProjectId IS NULL) OR (Scope = 'Project' AND ProjectId IS NOT NULL AND FunderId IS NULL)");
+                        });
+                });
+
+            modelBuilder.Entity("AFMI_Gestion_projet.Models.Editor.Photo", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("ActivityReportId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Caption")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("CaptionValidated")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("ConsentGiven")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Credit")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("DeletedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Height")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("ImportedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(false);
+
+                    b.Property<double?>("Latitude")
+                        .HasColumnType("REAL");
+
+                    b.Property<string>("Location")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<double?>("Longitude")
+                        .HasColumnType("REAL");
+
+                    b.Property<int?>("ProjectId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("ProjectTaskId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("StoredFileId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("SuggestedCaption")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("TakenAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Width")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ActivityReportId");
+
+                    b.HasIndex("ProjectTaskId");
+
+                    b.HasIndex("StoredFileId");
+
+                    b.HasIndex("ProjectId", "TakenAt");
+
+                    b.ToTable("Photos");
+                });
+
             modelBuilder.Entity("AFMI_Gestion_projet.Models.Finance.AccountProjectLink", b =>
                 {
                     b.Property<int>("Id")
@@ -1818,6 +2158,101 @@ namespace AFMI_Gestion_projet.Data.Migrations
                     b.Navigation("Project");
                 });
 
+            modelBuilder.Entity("AFMI_Gestion_projet.Models.Editor.DocumentComment", b =>
+                {
+                    b.HasOne("AFMI_Gestion_projet.Models.Editor.EditorDocument", "EditorDocument")
+                        .WithMany("Comments")
+                        .HasForeignKey("EditorDocumentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("EditorDocument");
+                });
+
+            modelBuilder.Entity("AFMI_Gestion_projet.Models.Editor.DocumentVersion", b =>
+                {
+                    b.HasOne("AFMI_Gestion_projet.Models.Editor.EditorDocument", "EditorDocument")
+                        .WithMany("Versions")
+                        .HasForeignKey("EditorDocumentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("EditorDocument");
+                });
+
+            modelBuilder.Entity("AFMI_Gestion_projet.Models.Editor.EditorDocument", b =>
+                {
+                    b.HasOne("AFMI_Gestion_projet.Models.Funder", "Funder")
+                        .WithMany()
+                        .HasForeignKey("FunderId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("AFMI_Gestion_projet.Models.Project", "Project")
+                        .WithMany()
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("AFMI_Gestion_projet.Models.Editor.DocumentTemplate", "Template")
+                        .WithMany()
+                        .HasForeignKey("TemplateId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("Funder");
+
+                    b.Navigation("Project");
+
+                    b.Navigation("Template");
+                });
+
+            modelBuilder.Entity("AFMI_Gestion_projet.Models.Editor.GraphicChart", b =>
+                {
+                    b.HasOne("AFMI_Gestion_projet.Models.Funder", "Funder")
+                        .WithMany()
+                        .HasForeignKey("FunderId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("AFMI_Gestion_projet.Models.Project", "Project")
+                        .WithMany()
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("Funder");
+
+                    b.Navigation("Project");
+                });
+
+            modelBuilder.Entity("AFMI_Gestion_projet.Models.Editor.Photo", b =>
+                {
+                    b.HasOne("AFMI_Gestion_projet.Models.ActivityReport", "ActivityReport")
+                        .WithMany()
+                        .HasForeignKey("ActivityReportId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("AFMI_Gestion_projet.Models.Project", "Project")
+                        .WithMany()
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("AFMI_Gestion_projet.Models.ProjectTask", "ProjectTask")
+                        .WithMany()
+                        .HasForeignKey("ProjectTaskId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("AFMI_Gestion_projet.Models.Finance.StoredFile", "StoredFile")
+                        .WithMany()
+                        .HasForeignKey("StoredFileId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("ActivityReport");
+
+                    b.Navigation("Project");
+
+                    b.Navigation("ProjectTask");
+
+                    b.Navigation("StoredFile");
+                });
+
             modelBuilder.Entity("AFMI_Gestion_projet.Models.Finance.AccountProjectLink", b =>
                 {
                     b.HasOne("AFMI_Gestion_projet.Models.Finance.BankAccount", "BankAccount")
@@ -2150,6 +2585,13 @@ namespace AFMI_Gestion_projet.Data.Migrations
             modelBuilder.Entity("AFMI_Gestion_projet.Models.ActivityReport", b =>
                 {
                     b.Navigation("Photos");
+                });
+
+            modelBuilder.Entity("AFMI_Gestion_projet.Models.Editor.EditorDocument", b =>
+                {
+                    b.Navigation("Comments");
+
+                    b.Navigation("Versions");
                 });
 
             modelBuilder.Entity("AFMI_Gestion_projet.Models.Finance.BankAccount", b =>

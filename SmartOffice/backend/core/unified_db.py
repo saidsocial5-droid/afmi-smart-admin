@@ -133,8 +133,17 @@ def now_ef() -> str:
     return _ef_datetime(datetime.now(timezone.utc).replace(tzinfo=None))
 
 
+MAX_AUDITED_TEXT = 2000
+
+
 def _audit_value(v: Any) -> Any:
-    return None if v is None else str(v)
+    """Comme AppDbContext : les textes longs (contenu de document, image) sont résumés dans le journal."""
+    if v is None:
+        return None
+    if isinstance(v, (bytes, bytearray)):
+        return f"[données binaires de {len(v)} octets]"
+    text = str(v)
+    return text if len(text) <= MAX_AUDITED_TEXT else f"[texte de {len(text)} caractères]"
 
 
 def insert(conn: sqlite3.Connection, table: str, entity_type: str, values: Dict[str, Any]) -> int:

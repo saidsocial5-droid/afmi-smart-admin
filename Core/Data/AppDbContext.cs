@@ -145,6 +145,7 @@ namespace AFMI_Gestion_projet.Data
                 .HasConversion(secretConverter);
 
             ConfigureFinance(modelBuilder);
+            ConfigureEditor(modelBuilder);
             ConfigureSoftDelete(modelBuilder);
         }
     }

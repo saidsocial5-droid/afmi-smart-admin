@@ -20,6 +20,7 @@ from backend.api.routes_rss import router as rss_router
 from backend.api.routes_workflows import router as workflows_router
 from backend.api.routes_payroll import router as payroll_router
 from backend.api.routes_statements import router as statements_router
+from backend.api.routes_editor import router as editor_router
 from backend.core.orchestrator import mark_interrupted_runs
 
 
@@ -93,6 +94,7 @@ app.include_router(rss_router)
 app.include_router(workflows_router)
 app.include_router(payroll_router)
 app.include_router(statements_router)
+app.include_router(editor_router)
 
 
 # Mount exports directory for downloads

@@ -863,5 +863,131 @@ CREATE INDEX "IX_StatementLines_BankStatementId" ON "StatementLines" ("BankState
 INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
 VALUES ('20261110222259_BankingAndReconciliation', '9.0.8');
 
+CREATE TABLE "DocumentTemplates" (
+    "Id" INTEGER NOT NULL CONSTRAINT "PK_DocumentTemplates" PRIMARY KEY AUTOINCREMENT,
+    "Name" TEXT NOT NULL,
+    "Description" TEXT NOT NULL,
+    "Kind" TEXT NOT NULL,
+    "ContentJson" TEXT NOT NULL,
+    "LayoutJson" TEXT NOT NULL,
+    "IsShared" INTEGER NOT NULL,
+    "CreatedBy" TEXT NOT NULL,
+    "UpdatedAtUtc" TEXT NOT NULL,
+    "IsDeleted" INTEGER NOT NULL DEFAULT 0,
+    "DeletedAtUtc" TEXT NULL
+);
+
+CREATE TABLE "GraphicCharts" (
+    "Id" INTEGER NOT NULL CONSTRAINT "PK_GraphicCharts" PRIMARY KEY AUTOINCREMENT,
+    "Name" TEXT NOT NULL,
+    "Scope" TEXT NOT NULL,
+    "FunderId" INTEGER NULL,
+    "ProjectId" INTEGER NULL,
+    "StyleJson" TEXT NOT NULL,
+    "UpdatedAtUtc" TEXT NOT NULL,
+    "IsDeleted" INTEGER NOT NULL DEFAULT 0,
+    "DeletedAtUtc" TEXT NULL,
+    CONSTRAINT "CK_GraphicCharts_Scope" CHECK ((Scope = 'Association' AND FunderId IS NULL AND ProjectId IS NULL) OR (Scope = 'Funder' AND FunderId IS NOT NULL AND ProjectId IS NULL) OR (Scope = 'Project' AND ProjectId IS NOT NULL AND FunderId IS NULL)),
+    CONSTRAINT "FK_GraphicCharts_Funders_FunderId" FOREIGN KEY ("FunderId") REFERENCES "Funders" ("Id") ON DELETE RESTRICT,
+    CONSTRAINT "FK_GraphicCharts_Projects_ProjectId" FOREIGN KEY ("ProjectId") REFERENCES "Projects" ("Id") ON DELETE RESTRICT
+);
+
+CREATE TABLE "Photos" (
+    "Id" INTEGER NOT NULL CONSTRAINT "PK_Photos" PRIMARY KEY AUTOINCREMENT,
+    "StoredFileId" INTEGER NOT NULL,
+    "ProjectId" INTEGER NULL,
+    "ProjectTaskId" INTEGER NULL,
+    "ActivityReportId" INTEGER NULL,
+    "TakenAt" TEXT NULL,
+    "Location" TEXT NOT NULL,
+    "Latitude" REAL NULL,
+    "Longitude" REAL NULL,
+    "Caption" TEXT NOT NULL,
+    "SuggestedCaption" TEXT NOT NULL,
+    "CaptionValidated" INTEGER NOT NULL,
+    "Credit" TEXT NOT NULL,
+    "ConsentGiven" INTEGER NOT NULL,
+    "Width" INTEGER NOT NULL,
+    "Height" INTEGER NOT NULL,
+    "ImportedAtUtc" TEXT NOT NULL,
+    "IsDeleted" INTEGER NOT NULL DEFAULT 0,
+    "DeletedAtUtc" TEXT NULL,
+    CONSTRAINT "FK_Photos_ActivityReports_ActivityReportId" FOREIGN KEY ("ActivityReportId") REFERENCES "ActivityReports" ("Id") ON DELETE RESTRICT,
+    CONSTRAINT "FK_Photos_Projects_ProjectId" FOREIGN KEY ("ProjectId") REFERENCES "Projects" ("Id") ON DELETE RESTRICT,
+    CONSTRAINT "FK_Photos_StoredFiles_StoredFileId" FOREIGN KEY ("StoredFileId") REFERENCES "StoredFiles" ("Id") ON DELETE RESTRICT,
+    CONSTRAINT "FK_Photos_Tasks_ProjectTaskId" FOREIGN KEY ("ProjectTaskId") REFERENCES "Tasks" ("Id") ON DELETE RESTRICT
+);
+
+CREATE TABLE "EditorDocuments" (
+    "Id" INTEGER NOT NULL CONSTRAINT "PK_EditorDocuments" PRIMARY KEY AUTOINCREMENT,
+    "Title" TEXT NOT NULL,
+    "ProjectId" INTEGER NULL,
+    "FunderId" INTEGER NULL,
+    "TemplateId" INTEGER NULL,
+    "Language" TEXT NOT NULL,
+    "ContentJson" TEXT NOT NULL,
+    "LayoutJson" TEXT NOT NULL,
+    "CurrentVersion" INTEGER NOT NULL,
+    "Status" TEXT NOT NULL,
+    "CreatedBy" TEXT NOT NULL,
+    "CreatedAtUtc" TEXT NOT NULL,
+    "UpdatedAtUtc" TEXT NOT NULL,
+    "IsDeleted" INTEGER NOT NULL DEFAULT 0,
+    "DeletedAtUtc" TEXT NULL,
+    CONSTRAINT "FK_EditorDocuments_DocumentTemplates_TemplateId" FOREIGN KEY ("TemplateId") REFERENCES "DocumentTemplates" ("Id") ON DELETE RESTRICT,
+    CONSTRAINT "FK_EditorDocuments_Funders_FunderId" FOREIGN KEY ("FunderId") REFERENCES "Funders" ("Id") ON DELETE RESTRICT,
+    CONSTRAINT "FK_EditorDocuments_Projects_ProjectId" FOREIGN KEY ("ProjectId") REFERENCES "Projects" ("Id") ON DELETE RESTRICT
+);
+
+CREATE TABLE "DocumentComments" (
+    "Id" INTEGER NOT NULL CONSTRAINT "PK_DocumentComments" PRIMARY KEY AUTOINCREMENT,
+    "EditorDocumentId" INTEGER NOT NULL,
+    "AnchorId" TEXT NOT NULL,
+    "ParentId" INTEGER NULL,
+    "Text" TEXT NOT NULL,
+    "QuotedText" TEXT NOT NULL,
+    "Author" TEXT NOT NULL,
+    "CreatedAtUtc" TEXT NOT NULL,
+    "ResolvedAtUtc" TEXT NULL,
+    CONSTRAINT "FK_DocumentComments_EditorDocuments_EditorDocumentId" FOREIGN KEY ("EditorDocumentId") REFERENCES "EditorDocuments" ("Id") ON DELETE RESTRICT
+);
+
+CREATE TABLE "DocumentVersions" (
+    "Id" INTEGER NOT NULL CONSTRAINT "PK_DocumentVersions" PRIMARY KEY AUTOINCREMENT,
+    "EditorDocumentId" INTEGER NOT NULL,
+    "Number" INTEGER NOT NULL,
+    "ContentJson" TEXT NOT NULL,
+    "LayoutJson" TEXT NOT NULL,
+    "Note" TEXT NOT NULL,
+    "CreatedBy" TEXT NOT NULL,
+    "CreatedAtUtc" TEXT NOT NULL,
+    CONSTRAINT "FK_DocumentVersions_EditorDocuments_EditorDocumentId" FOREIGN KEY ("EditorDocumentId") REFERENCES "EditorDocuments" ("Id") ON DELETE RESTRICT
+);
+
+CREATE INDEX "IX_DocumentComments_EditorDocumentId_AnchorId" ON "DocumentComments" ("EditorDocumentId", "AnchorId");
+
+CREATE UNIQUE INDEX "IX_DocumentVersions_EditorDocumentId_Number" ON "DocumentVersions" ("EditorDocumentId", "Number");
+
+CREATE INDEX "IX_EditorDocuments_FunderId" ON "EditorDocuments" ("FunderId");
+
+CREATE INDEX "IX_EditorDocuments_ProjectId" ON "EditorDocuments" ("ProjectId");
+
+CREATE INDEX "IX_EditorDocuments_TemplateId" ON "EditorDocuments" ("TemplateId");
+
+CREATE INDEX "IX_GraphicCharts_FunderId" ON "GraphicCharts" ("FunderId");
+
+CREATE INDEX "IX_GraphicCharts_ProjectId" ON "GraphicCharts" ("ProjectId");
+
+CREATE INDEX "IX_Photos_ActivityReportId" ON "Photos" ("ActivityReportId");
+
+CREATE INDEX "IX_Photos_ProjectId_TakenAt" ON "Photos" ("ProjectId", "TakenAt");
+
+CREATE INDEX "IX_Photos_ProjectTaskId" ON "Photos" ("ProjectTaskId");
+
+CREATE INDEX "IX_Photos_StoredFileId" ON "Photos" ("StoredFileId");
+
+INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+VALUES ('20261111100250_EditorChartsAndPhotos', '9.0.8');
+
 COMMIT;
 
