@@ -16,6 +16,11 @@ namespace AFMI_Gestion_projet.Data
         public DbSet<ReportingObligation> ReportingObligations { get; set; } = null!;
         public DbSet<ProjectMilestone> ProjectMilestones { get; set; } = null!;
         public DbSet<DocumentChunk> DocumentChunks { get; set; } = null!;
+        public DbSet<Meeting> Meetings { get; set; } = null!;
+        public DbSet<MeetingParticipant> MeetingParticipants { get; set; } = null!;
+        public DbSet<MeetingResolution> MeetingResolutions { get; set; } = null!;
+        public DbSet<MeetingAction> MeetingActions { get; set; } = null!;
+        public DbSet<DocumentFolder> DocumentFolders { get; set; } = null!;
 
         private static void ConfigureEditor(ModelBuilder b)
         {
@@ -66,6 +71,35 @@ namespace AFMI_Gestion_projet.Data
                 e.HasOne(x => x.SourceDocument).WithMany().HasForeignKey(x => x.SourceDocumentId).OnDelete(DeleteBehavior.Restrict);
                 e.HasIndex(x => new { x.ProjectId, x.DueDate });
             });
+
+            b.Entity<Meeting>(e =>
+            {
+                e.HasOne(x => x.Project).WithMany().HasForeignKey(x => x.ProjectId).OnDelete(DeleteBehavior.Restrict);
+                e.HasOne(x => x.ProjectTask).WithMany().HasForeignKey(x => x.ProjectTaskId).OnDelete(DeleteBehavior.SetNull);
+                e.HasOne(x => x.ActivityReport).WithMany().HasForeignKey(x => x.ActivityReportId).OnDelete(DeleteBehavior.SetNull);
+                e.HasOne(x => x.EditorDocument).WithMany().HasForeignKey(x => x.EditorDocumentId).OnDelete(DeleteBehavior.Restrict);
+                e.HasOne(x => x.ArchivedDocument).WithMany().HasForeignKey(x => x.ArchivedDocumentId).OnDelete(DeleteBehavior.Restrict);
+                e.HasIndex(x => new { x.ProjectId, x.Date });
+                e.ToTable(t => t.HasCheckConstraint("CK_Meetings_Kind", "Kind IN ('Réunion', 'COPIL', 'AG', 'CA', 'Rencontre', 'Visite', 'Activité')"));
+            });
+            b.Entity<MeetingParticipant>(e =>
+            {
+                e.HasOne(x => x.Meeting).WithMany(m => m.Participants).HasForeignKey(x => x.MeetingId).OnDelete(DeleteBehavior.Cascade);
+                e.ToTable(t => t.HasCheckConstraint("CK_MeetingParticipants_Sex", "Sex IN ('', 'F', 'M')"));
+            });
+            b.Entity<MeetingResolution>(e => e.HasOne(x => x.Meeting).WithMany(m => m.Decisions).HasForeignKey(x => x.MeetingId).OnDelete(DeleteBehavior.Cascade));
+            b.Entity<MeetingAction>(e =>
+            {
+                e.HasOne(x => x.Meeting).WithMany(m => m.Actions).HasForeignKey(x => x.MeetingId).OnDelete(DeleteBehavior.Cascade);
+                e.HasOne(x => x.ProjectTask).WithMany().HasForeignKey(x => x.ProjectTaskId).OnDelete(DeleteBehavior.SetNull);
+                e.HasIndex(x => new { x.Status, x.DueDate });
+            });
+            b.Entity<DocumentFolder>(e =>
+            {
+                e.HasOne(x => x.Parent).WithMany().HasForeignKey(x => x.ParentId).OnDelete(DeleteBehavior.Restrict);
+                e.HasOne(x => x.Project).WithMany().HasForeignKey(x => x.ProjectId).OnDelete(DeleteBehavior.Restrict);
+            });
+            b.Entity<ProjectDocument>().HasOne(x => x.Folder).WithMany().HasForeignKey(x => x.FolderId).OnDelete(DeleteBehavior.SetNull);
 
             b.Entity<ProjectMilestone>(e =>
             {

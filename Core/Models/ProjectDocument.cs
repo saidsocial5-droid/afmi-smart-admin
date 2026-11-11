@@ -5,6 +5,9 @@ namespace AFMI_Gestion_projet.Models
     public class ProjectDocument : ISoftDeletable
     {
         public int Id { get; set; }
+        /// <summary>Dossier personnalisé (Lot 9) ; sans dossier, le document est classé par année, projet et type.</summary>
+        public int? FolderId { get; set; }
+        public DocumentFolder? Folder { get; set; }
         public int ProjectId { get; set; }
         public Project Project { get; set; } = null!;
 

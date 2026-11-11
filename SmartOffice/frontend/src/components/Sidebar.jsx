@@ -18,7 +18,8 @@ import {
   Landmark,
   ChevronLeft,
   ChevronRight,
-  Settings
+  Settings,
+  ClipboardList
 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 
@@ -81,6 +82,14 @@ export default function Sidebar({ activeTab, setActiveTab }) {
       label_en: 'Indicators & beneficiaries',
       icon: Target,
       badge: 'GAR'
+    },
+    {
+      id: 'meetings',
+      label_ar: 'المحاضر وتقارير الأنشطة',
+      label_fr: 'Comptes rendus & PV',
+      label_en: 'Minutes & activity reports',
+      icon: ClipboardList,
+      badge: 'PV'
     },
     {
       id: 'editor',

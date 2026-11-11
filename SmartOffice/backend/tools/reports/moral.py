@@ -168,3 +168,17 @@ def table_beneficiaries(conn, period, scope, lang):
     notes = [] if rows else [t(lang, "no_data") + " Saisissez des mesures désagrégées (sexe, âge, zone) dans « Indicateurs »."]
     return {"title": t(lang, "beneficiaries"), "columns": ["", "Nombre"], "rows": rows, "total": None, "notes": notes,
             "source": "Mesures désagrégées des indicateurs", "chart": None, "formats": ["text", "number"]}
+
+
+def table_meetings(conn, period, scope, lang):
+    """Réunions et instances de l'exercice (comptes rendus validés, Lot 9), par type, avec les décisions."""
+    from backend.tools.meetings import service as meetings
+    summary = meetings.summary_for_year(conn, period.year, scope.project_ids)
+    rows = [[f"**{meetings.KINDS.get(k, {}).get('label', k)}**", n] for k, n in sorted(summary["by_kind"].items())]
+    for m in summary["meetings"]:
+        rows.append([f"    {m['date']} — {m['title']}", None])
+    notes = [f"Décision du {d['date']} ({d['meeting']}) : {d['text']}" for d in summary["decisions"][:20]]
+    if not rows:
+        notes = [t(lang, "no_data") + " Les comptes rendus validés de l'exercice apparaissent ici (menu « Comptes rendus & PV »)."]
+    return {"title": "Réunions et instances", "columns": ["", "Nombre"], "rows": rows, "total": ["Total", summary["count"]] if rows else None,
+            "notes": notes, "source": "Comptes rendus et PV validés", "chart": None, "formats": ["text", "number"]}

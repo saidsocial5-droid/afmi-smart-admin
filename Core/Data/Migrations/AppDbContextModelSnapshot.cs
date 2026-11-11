@@ -332,6 +332,43 @@ namespace AFMI_Gestion_projet.Data.Migrations
                     b.ToTable("DocumentChunks");
                 });
 
+            modelBuilder.Entity("AFMI_Gestion_projet.Models.DocumentFolder", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("DeletedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(false);
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("ParentId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("ProjectId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("Year")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ParentId");
+
+                    b.HasIndex("ProjectId");
+
+                    b.ToTable("DocumentFolders");
+                });
+
             modelBuilder.Entity("AFMI_Gestion_projet.Models.Editor.DocumentComment", b =>
                 {
                     b.Property<int>("Id")
@@ -1775,6 +1812,223 @@ namespace AFMI_Gestion_projet.Data.Migrations
                         });
                 });
 
+            modelBuilder.Entity("AFMI_Gestion_projet.Models.Meeting", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("ActivityReportId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Agenda")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("ArchivedDocumentId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateOnly>("Date")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("DeletedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("EditorDocumentId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(false);
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Location")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Organizer")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("ProjectId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("ProjectTaskId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Secretary")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("StartTime")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Summary")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(250)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("UpdatedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ActivityReportId");
+
+                    b.HasIndex("ArchivedDocumentId");
+
+                    b.HasIndex("EditorDocumentId");
+
+                    b.HasIndex("ProjectTaskId");
+
+                    b.HasIndex("ProjectId", "Date");
+
+                    b.ToTable("Meetings", t =>
+                        {
+                            t.HasCheckConstraint("CK_Meetings_Kind", "Kind IN ('Réunion', 'COPIL', 'AG', 'CA', 'Rencontre', 'Visite', 'Activité')");
+                        });
+                });
+
+            modelBuilder.Entity("AFMI_Gestion_projet.Models.MeetingAction", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateOnly?>("DoneDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateOnly?>("DueDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("MeetingId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("ProjectTaskId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Responsible")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Text")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MeetingId");
+
+                    b.HasIndex("ProjectTaskId");
+
+                    b.HasIndex("Status", "DueDate");
+
+                    b.ToTable("MeetingActions");
+                });
+
+            modelBuilder.Entity("AFMI_Gestion_projet.Models.MeetingParticipant", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("MeetingId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Organization")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("Present")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Role")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Sex")
+                        .IsRequired()
+                        .HasMaxLength(1)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MeetingId");
+
+                    b.ToTable("MeetingParticipants", t =>
+                        {
+                            t.HasCheckConstraint("CK_MeetingParticipants_Sex", "Sex IN ('', 'F', 'M')");
+                        });
+                });
+
+            modelBuilder.Entity("AFMI_Gestion_projet.Models.MeetingResolution", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("MeetingId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Number")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Responsible")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Text")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MeetingId");
+
+                    b.ToTable("MeetingResolutions");
+                });
+
             modelBuilder.Entity("AFMI_Gestion_projet.Models.Project", b =>
                 {
                     b.Property<int>("Id")
@@ -1992,6 +2246,9 @@ namespace AFMI_Gestion_projet.Data.Migrations
                     b.Property<long>("FileSize")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int?>("FolderId")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("FullExtractedText")
                         .IsRequired()
                         .HasColumnType("TEXT");
@@ -2060,6 +2317,8 @@ namespace AFMI_Gestion_projet.Data.Migrations
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("FolderId");
 
                     b.HasIndex("ProjectId");
 
@@ -2428,6 +2687,23 @@ namespace AFMI_Gestion_projet.Data.Migrations
                     b.Navigation("Document");
                 });
 
+            modelBuilder.Entity("AFMI_Gestion_projet.Models.DocumentFolder", b =>
+                {
+                    b.HasOne("AFMI_Gestion_projet.Models.DocumentFolder", "Parent")
+                        .WithMany()
+                        .HasForeignKey("ParentId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("AFMI_Gestion_projet.Models.Project", "Project")
+                        .WithMany()
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("Parent");
+
+                    b.Navigation("Project");
+                });
+
             modelBuilder.Entity("AFMI_Gestion_projet.Models.Editor.DocumentComment", b =>
                 {
                     b.HasOne("AFMI_Gestion_projet.Models.Editor.EditorDocument", "EditorDocument")
@@ -2785,6 +3061,84 @@ namespace AFMI_Gestion_projet.Data.Migrations
                     b.Navigation("Indicator");
                 });
 
+            modelBuilder.Entity("AFMI_Gestion_projet.Models.Meeting", b =>
+                {
+                    b.HasOne("AFMI_Gestion_projet.Models.ActivityReport", "ActivityReport")
+                        .WithMany()
+                        .HasForeignKey("ActivityReportId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("AFMI_Gestion_projet.Models.ProjectDocument", "ArchivedDocument")
+                        .WithMany()
+                        .HasForeignKey("ArchivedDocumentId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("AFMI_Gestion_projet.Models.Editor.EditorDocument", "EditorDocument")
+                        .WithMany()
+                        .HasForeignKey("EditorDocumentId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("AFMI_Gestion_projet.Models.Project", "Project")
+                        .WithMany()
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("AFMI_Gestion_projet.Models.ProjectTask", "ProjectTask")
+                        .WithMany()
+                        .HasForeignKey("ProjectTaskId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("ActivityReport");
+
+                    b.Navigation("ArchivedDocument");
+
+                    b.Navigation("EditorDocument");
+
+                    b.Navigation("Project");
+
+                    b.Navigation("ProjectTask");
+                });
+
+            modelBuilder.Entity("AFMI_Gestion_projet.Models.MeetingAction", b =>
+                {
+                    b.HasOne("AFMI_Gestion_projet.Models.Meeting", "Meeting")
+                        .WithMany("Actions")
+                        .HasForeignKey("MeetingId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("AFMI_Gestion_projet.Models.ProjectTask", "ProjectTask")
+                        .WithMany()
+                        .HasForeignKey("ProjectTaskId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Meeting");
+
+                    b.Navigation("ProjectTask");
+                });
+
+            modelBuilder.Entity("AFMI_Gestion_projet.Models.MeetingParticipant", b =>
+                {
+                    b.HasOne("AFMI_Gestion_projet.Models.Meeting", "Meeting")
+                        .WithMany("Participants")
+                        .HasForeignKey("MeetingId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Meeting");
+                });
+
+            modelBuilder.Entity("AFMI_Gestion_projet.Models.MeetingResolution", b =>
+                {
+                    b.HasOne("AFMI_Gestion_projet.Models.Meeting", "Meeting")
+                        .WithMany("Decisions")
+                        .HasForeignKey("MeetingId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Meeting");
+                });
+
             modelBuilder.Entity("AFMI_Gestion_projet.Models.Project", b =>
                 {
                     b.HasOne("AFMI_Gestion_projet.Models.Funder", "Funder")
@@ -2814,6 +3168,11 @@ namespace AFMI_Gestion_projet.Data.Migrations
 
             modelBuilder.Entity("AFMI_Gestion_projet.Models.ProjectDocument", b =>
                 {
+                    b.HasOne("AFMI_Gestion_projet.Models.DocumentFolder", "Folder")
+                        .WithMany()
+                        .HasForeignKey("FolderId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.HasOne("AFMI_Gestion_projet.Models.Project", "Project")
                         .WithMany("Documents")
                         .HasForeignKey("ProjectId")
@@ -2824,6 +3183,8 @@ namespace AFMI_Gestion_projet.Data.Migrations
                         .WithMany()
                         .HasForeignKey("StoredFileId")
                         .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("Folder");
 
                     b.Navigation("Project");
 
@@ -2969,6 +3330,15 @@ namespace AFMI_Gestion_projet.Data.Migrations
             modelBuilder.Entity("AFMI_Gestion_projet.Models.Indicator", b =>
                 {
                     b.Navigation("Measurements");
+                });
+
+            modelBuilder.Entity("AFMI_Gestion_projet.Models.Meeting", b =>
+                {
+                    b.Navigation("Actions");
+
+                    b.Navigation("Decisions");
+
+                    b.Navigation("Participants");
                 });
 
             modelBuilder.Entity("AFMI_Gestion_projet.Models.Project", b =>

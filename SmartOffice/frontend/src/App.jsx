@@ -18,6 +18,7 @@ import AnnualReportsView from './views/AnnualReportsView';
 import IndicatorsView from './views/IndicatorsView';
 import ProjectDocumentsView from './views/ProjectDocumentsView';
 import SettingsView, { applyAppearance } from './views/SettingsView';
+import MeetingsView from './views/MeetingsView';
 import { apiFetch } from './apiClient';
 import { useLanguage } from './context/LanguageContext';
 
@@ -89,6 +90,14 @@ export default function App() {
   };
 
   // Mode intégré (#editor-embed/<id>) : l'application de bureau affiche l'éditeur seul dans l'onglet Projet › Rapports
+  const meetingsEmbed = activeTab.match(/^meetings-embed\/(\d+)/);
+  if (meetingsEmbed) {
+    return (
+      <div dir={dir} className={`min-h-screen bg-afmi-slate p-3 ${isRtl ? 'font-arabic' : 'font-sans'} text-slate-800`}>
+        <MeetingsView fixedProjectId={Number(meetingsEmbed[1])} embedded />
+      </div>
+    );
+  }
   const embed = activeTab.match(/^editor-embed\/(\d+)/);
   if (embed) {
     return (
@@ -122,7 +131,7 @@ export default function App() {
         />
 
         {/* Main Content Area */}
-        <main className={`flex-1 p-4 md:p-6 lg:p-8 mx-auto w-full overflow-y-auto ${["statements", "editor"].includes(activeTab) ? "max-w-none min-w-0" : "max-w-7xl"}`}>
+        <main className={`flex-1 p-4 md:p-6 lg:p-8 mx-auto w-full overflow-y-auto ${["statements", "editor", "meetings"].includes(activeTab) ? "max-w-none min-w-0" : "max-w-7xl"}`}>
           {activeTab === "dashboard" && (
             <DashboardView 
               projects={projects}
@@ -203,6 +212,10 @@ export default function App() {
 
           {activeTab === "studio" && (
             <AgentStudioView />
+          )}
+
+          {activeTab === "meetings" && (
+            <MeetingsView />
           )}
 
           {activeTab === "settings" && (

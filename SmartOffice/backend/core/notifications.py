@@ -25,7 +25,7 @@ def collect() -> List[Dict[str, Any]]:
     out: List[Dict[str, Any]] = []
     if events.get("obligations"):
         for a in lifecycle.alerts():
-            if a["code"] in ("REPORT_LATE", "REPORT_DUE", "AGREEMENT_ENDING"):
+            if a["code"] in ("REPORT_LATE", "REPORT_DUE", "AGREEMENT_ENDING", "MEETING_ACTION_LATE", "MEETING_ACTION_DUE"):
                 out.append({"kind": "Échéances", "message": a["message"]})
     today = date.today().isoformat()
     with unified_db.connect() as conn:

@@ -103,5 +103,21 @@ def alerts(project_id: Optional[int] = None) -> List[Dict[str, Any]]:
                 if today <= d <= today + timedelta(days=days_end):
                     out.append({"level": "warning", "code": "AGREEMENT_ENDING", "project": p["Code"], "date": end,
                                 "message": f"{p['Code']} : {what} arrive à échéance le {d:%d/%m/%Y}."})
+        # Actions décidées en réunion (comptes rendus, Lot 9) : en retard ou à échéance proche
+        meeting_sql = ("SELECT a.Text, a.DueDate, a.Responsible, m.Title, m.ProjectId FROM MeetingActions a JOIN Meetings m ON m.Id = a.MeetingId "
+                       "WHERE m.IsDeleted = 0 AND a.Status IN ('À faire', 'En cours') AND a.DueDate IS NOT NULL")
+        codes = {p["Id"]: p["Code"] for p in projects}
+        for a in conn.execute(meeting_sql):
+            if project_id and a["ProjectId"] != project_id:
+                continue
+            due = date.fromisoformat(a["DueDate"])
+            who = f" ({a['Responsible']})" if a["Responsible"] else ""
+            label = codes.get(a["ProjectId"], "Association")
+            if due < today:
+                out.append({"level": "critical", "code": "MEETING_ACTION_LATE", "project": label, "date": a["DueDate"],
+                            "message": f"{label} : action « {a['Text'][:80]} »{who} décidée en « {a['Title']} », en retard (due le {due:%d/%m/%Y})."})
+            elif due <= today + timedelta(days=days_report):
+                out.append({"level": "warning", "code": "MEETING_ACTION_DUE", "project": label, "date": a["DueDate"],
+                            "message": f"{label} : action « {a['Text'][:80]} »{who} à réaliser avant le {due:%d/%m/%Y}."})
     order = {"critical": 0, "warning": 1, "info": 2}
     return sorted(out, key=lambda a: (order[a["level"]], a["date"] or "9999"))

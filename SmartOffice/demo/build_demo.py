@@ -314,6 +314,47 @@ def build(out: Path) -> dict:
     for code, name, data in docs:
         asyncio.run(ged.import_document(ids["projects"][code], data, name))
 
+    # --- Comptes rendus et PV (Lot 9) : COPIL avec décisions et actions, atelier (compte rendu d'activité), AG
+    from backend.tools.meetings import service as meetings
+    with unified_db.connect() as conn:
+        atelier_task = conn.execute("SELECT Id FROM Tasks WHERE ProjectId = ? AND Name = 'Formation des coopératives'", (ids["projects"]["P-CEDRE"],)).fetchone()[0]
+    copil = meetings.save({
+        "kind": "COPIL", "title": "Comité de pilotage n° 1 — P-CEDRE", "date": "2026-03-10", "start_time": "10:00", "location": "Azrou",
+        "project_id": ids["projects"]["P-CEDRE"], "organizer": "Salma Idrissi (fictive)", "secretary": "Youssef Alaoui (fictif)",
+        "agenda": "Bilan des plantations du trimestre\nAvancement financier\nProgramme du printemps",
+        "summary": "Le comité constate l'avancement des plantations (5 500 plants) et le retard de livraison de la pépinière.",
+        "participants": [{"name": "Salma Idrissi", "organization": "ACA", "role": "Cheffe de projet", "sex": "F"},
+                         {"name": "Représentant du Fonds Vert", "organization": "Fonds Vert (fictif)", "role": "Chargé de portefeuille", "sex": "M"},
+                         {"name": "Présidente de la coopérative", "organization": "Coopérative de Timahdite", "sex": "F"},
+                         {"name": "Agent des Eaux et Forêts", "organization": "DREF", "sex": "M", "present": False}],
+        "decisions": [{"text": "Valider le programme de plantation du printemps (6 000 plants)."},
+                      {"text": "Commander les plants trois mois à l'avance auprès de la pépinière."}],
+        "actions": [{"text": "Passer la commande de plants du printemps", "responsible": "Salma Idrissi", "due_date": "2026-04-15", "status": "Fait"},
+                    {"text": "Transmettre le rapport semestriel au Fonds Vert", "responsible": "Youssef Alaoui", "due_date": "2026-07-30"},
+                    {"text": "Organiser une visite de terrain avec la DREF", "responsible": "Salma Idrissi", "due_date": "2026-05-31"}]})
+    meetings.write_document(copil["id"])
+    asyncio.run(meetings.validate(copil["id"]))
+    meetings.create_task(copil["actions"][1]["id"])
+    atelier = meetings.save({
+        "kind": "Activité", "title": "Atelier pépinière avec la coopérative", "date": "2026-03-18", "location": "Timahdite",
+        "project_id": ids["projects"]["P-CEDRE"], "task_id": atelier_task, "organizer": "Salma Idrissi (fictive)",
+        "agenda": "Former les pépiniéristes au semis du cèdre\nPréparer la production de 6 000 plants",
+        "summary": "22 pépiniéristes formés au semis du cèdre ; un calendrier de production a été établi.",
+        "participants": [{"name": f"Pépiniériste {i + 1}", "organization": "Coopérative de Timahdite", "sex": "F" if i % 3 else "M"} for i in range(22)]})
+    meetings.write_document(atelier["id"])
+    asyncio.run(meetings.validate(atelier["id"]))
+    ag = meetings.save({
+        "kind": "AG", "title": "Assemblée générale ordinaire 2026", "date": "2026-04-25", "start_time": "15:00", "location": "Siège, Azrou",
+        "organizer": "Présidente de l'association (fictive)", "secretary": "Secrétaire général (fictif)",
+        "agenda": "Rapport moral 2025\nRapport financier 2025\nQuitus au bureau\nProgramme 2026",
+        "summary": "L'assemblée a approuvé les rapports de l'exercice 2025 et le programme 2026.",
+        "participants": [{"name": f"Membre {i + 1}", "sex": "F" if i % 2 else "M"} for i in range(31)],
+        "decisions": [{"text": "Approuver le rapport moral 2025."}, {"text": "Approuver les comptes 2025 et donner quitus au bureau."},
+                      {"text": "Fixer la cotisation annuelle à 200 MAD (valeur de démonstration)."}],
+        "actions": [{"text": "Déposer le PV de l'AG auprès des autorités", "responsible": "Secrétaire général", "due_date": "2026-05-25"}]})
+    meetings.write_document(ag["id"])
+    asyncio.run(meetings.validate(ag["id"]))
+
     # --- Rapport annuel (moral + financier) généré par l'assistant, ouvert dans l'éditeur
     report = asyncio.run(generator.generate(YEAR, "association", None, "fr", "both"))
 

@@ -139,7 +139,7 @@
         </Border>
 
         <!-- MAIN TABS CONTROL -->
-        <TabControl Grid.Row="1" Margin="10">
+        <TabControl Grid.Row="1" Margin="10" SelectionChanged="OnProjectTabChanged">
             <!-- TAB 1: SYNTHESE & EVM -->
             <TabItem Header="Synthèse &amp; EVM">
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
@@ -644,6 +644,15 @@
                             </TabItem>
                         </TabControl>
                     </Border>
+                </Grid>
+            </TabItem>
+
+            <!-- Comptes rendus et PV du projet (Lot 9) : écran Smart Office filtré sur le projet -->
+            <TabItem Header="Comptes rendus &amp; PV" x:Name="MeetingsTab">
+                <Grid>
+                    <wv2:WebView2 x:Name="MeetingsBrowser"/>
+                    <TextBlock x:Name="MeetingsStatus" Text="Chargement des comptes rendus…" Foreground="{StaticResource TextMutedBrush}"
+                               HorizontalAlignment="Center" VerticalAlignment="Center" TextWrapping="Wrap" Margin="20"/>
                 </Grid>
             </TabItem>
 

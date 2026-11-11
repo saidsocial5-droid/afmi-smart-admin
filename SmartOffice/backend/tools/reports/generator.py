@@ -26,6 +26,7 @@ TABLES = {
     "activities": lambda c, p, s, lay, lang: moral.table_activities(c, p, s, lang),
     "indicators": lambda c, p, s, lay, lang: moral.table_indicators(c, p, s, lang),
     "beneficiaries": lambda c, p, s, lay, lang: moral.table_beneficiaries(c, p, s, lang),
+    "meetings": lambda c, p, s, lay, lang: moral.table_meetings(c, p, s, lang),
 }
 
 
@@ -159,6 +160,7 @@ async def generate(year: int, scope_type: str, scope_id: Optional[int], language
         content += [_h(2, t(language, "activities")), blk("activities"), _h(2, t(language, "indicators")), blk("indicators"),
                     _h(2, t(language, "beneficiaries")), blk("beneficiaries")]
         content += [_h(2, t(language, "partners")), _bullets(partners) if partners else _p(t(language, "no_data"))]
+        content += [_h(2, {"ar": "الاجتماعات والهيئات", "en": "Meetings and governance"}.get(language, "Réunions et instances")), blk("meetings")]
         highlights = [f"{a['date']} — {a['title']} ({a['location']}, {a['participants']} participants)" + (f" : {a['narrative'].split('.')[0]}." if a["narrative"] else "")
                       for a in sorted(acts, key=lambda a: -a["participants"])[:8]]
         content += [_h(2, t(language, "highlights")), _bullets(highlights) if highlights else _p(t(language, "no_data"))]

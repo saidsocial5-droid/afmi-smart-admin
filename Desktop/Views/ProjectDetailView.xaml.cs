@@ -40,6 +40,27 @@ namespace AFMI_Gestion_projet.Views
             if (e.PropertyName == nameof(ProjectDetailViewModel.ReportEditorUri)) ApplyEditorUri();
         }
 
+        private bool _meetingsLoaded;
+
+        /// <summary>Onglet « Comptes rendus & PV » : chargé à la première ouverture (démarre Smart Office si besoin).</summary>
+        private async void OnProjectTabChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (e.OriginalSource != sender || _meetingsLoaded || !ReferenceEquals(((TabControl)sender).SelectedItem, MeetingsTab) || _vm == null) return;
+            _meetingsLoaded = true;
+            try
+            {
+                await MeetingsBrowser.EnsureCoreWebView2Async(await Services.WebViewEnvironment.GetAsync());
+                string url = await Services.SmartOfficeHostService.Instance.EnsureStartedAsync();
+                MeetingsBrowser.Source = new System.Uri($"{url}/?afmi_token={Services.SmartOfficeHostService.Instance.SessionToken}#meetings-embed/{_vm.Project.Id}");
+                MeetingsStatus.Visibility = Visibility.Collapsed;
+            }
+            catch (System.Exception ex)
+            {
+                _meetingsLoaded = false;
+                MeetingsStatus.Text = "Comptes rendus indisponibles : " + ex.Message;
+            }
+        }
+
         /// <summary>Le document n'est chargé qu'une fois WebView2 initialisé avec le profil de l'application.</summary>
         private void ApplyEditorUri()
         {

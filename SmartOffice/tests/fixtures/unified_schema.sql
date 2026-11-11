@@ -1181,3 +1181,176 @@ COMMIT;
 INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
 VALUES ('20261111105158_DocumentManagement', '9.0.8');
 
+BEGIN TRANSACTION;
+ALTER TABLE "Documents" ADD "FolderId" INTEGER NULL;
+
+CREATE TABLE "DocumentFolders" (
+    "Id" INTEGER NOT NULL CONSTRAINT "PK_DocumentFolders" PRIMARY KEY AUTOINCREMENT,
+    "ParentId" INTEGER NULL,
+    "ProjectId" INTEGER NULL,
+    "Year" INTEGER NULL,
+    "Name" TEXT NOT NULL,
+    "IsDeleted" INTEGER NOT NULL DEFAULT 0,
+    "DeletedAtUtc" TEXT NULL,
+    CONSTRAINT "FK_DocumentFolders_DocumentFolders_ParentId" FOREIGN KEY ("ParentId") REFERENCES "DocumentFolders" ("Id") ON DELETE RESTRICT,
+    CONSTRAINT "FK_DocumentFolders_Projects_ProjectId" FOREIGN KEY ("ProjectId") REFERENCES "Projects" ("Id") ON DELETE RESTRICT
+);
+
+CREATE TABLE "Meetings" (
+    "Id" INTEGER NOT NULL CONSTRAINT "PK_Meetings" PRIMARY KEY AUTOINCREMENT,
+    "Kind" TEXT NOT NULL,
+    "Title" TEXT NOT NULL,
+    "Date" TEXT NOT NULL,
+    "StartTime" TEXT NOT NULL,
+    "Location" TEXT NOT NULL,
+    "ProjectId" INTEGER NULL,
+    "ProjectTaskId" INTEGER NULL,
+    "ActivityReportId" INTEGER NULL,
+    "EditorDocumentId" INTEGER NULL,
+    "ArchivedDocumentId" INTEGER NULL,
+    "Organizer" TEXT NOT NULL,
+    "Secretary" TEXT NOT NULL,
+    "Agenda" TEXT NOT NULL,
+    "Summary" TEXT NOT NULL,
+    "Status" TEXT NOT NULL,
+    "CreatedBy" TEXT NOT NULL,
+    "CreatedAtUtc" TEXT NOT NULL,
+    "UpdatedAtUtc" TEXT NOT NULL,
+    "IsDeleted" INTEGER NOT NULL DEFAULT 0,
+    "DeletedAtUtc" TEXT NULL,
+    CONSTRAINT "CK_Meetings_Kind" CHECK (Kind IN ('Réunion', 'COPIL', 'AG', 'CA', 'Rencontre', 'Visite', 'Activité')),
+    CONSTRAINT "FK_Meetings_ActivityReports_ActivityReportId" FOREIGN KEY ("ActivityReportId") REFERENCES "ActivityReports" ("Id") ON DELETE SET NULL,
+    CONSTRAINT "FK_Meetings_Documents_ArchivedDocumentId" FOREIGN KEY ("ArchivedDocumentId") REFERENCES "Documents" ("Id") ON DELETE RESTRICT,
+    CONSTRAINT "FK_Meetings_EditorDocuments_EditorDocumentId" FOREIGN KEY ("EditorDocumentId") REFERENCES "EditorDocuments" ("Id") ON DELETE RESTRICT,
+    CONSTRAINT "FK_Meetings_Projects_ProjectId" FOREIGN KEY ("ProjectId") REFERENCES "Projects" ("Id") ON DELETE RESTRICT,
+    CONSTRAINT "FK_Meetings_Tasks_ProjectTaskId" FOREIGN KEY ("ProjectTaskId") REFERENCES "Tasks" ("Id") ON DELETE SET NULL
+);
+
+CREATE TABLE "MeetingActions" (
+    "Id" INTEGER NOT NULL CONSTRAINT "PK_MeetingActions" PRIMARY KEY AUTOINCREMENT,
+    "MeetingId" INTEGER NOT NULL,
+    "Text" TEXT NOT NULL,
+    "Responsible" TEXT NOT NULL,
+    "DueDate" TEXT NULL,
+    "Status" TEXT NOT NULL,
+    "DoneDate" TEXT NULL,
+    "ProjectTaskId" INTEGER NULL,
+    CONSTRAINT "FK_MeetingActions_Meetings_MeetingId" FOREIGN KEY ("MeetingId") REFERENCES "Meetings" ("Id") ON DELETE CASCADE,
+    CONSTRAINT "FK_MeetingActions_Tasks_ProjectTaskId" FOREIGN KEY ("ProjectTaskId") REFERENCES "Tasks" ("Id") ON DELETE SET NULL
+);
+
+CREATE TABLE "MeetingParticipants" (
+    "Id" INTEGER NOT NULL CONSTRAINT "PK_MeetingParticipants" PRIMARY KEY AUTOINCREMENT,
+    "MeetingId" INTEGER NOT NULL,
+    "Name" TEXT NOT NULL,
+    "Organization" TEXT NOT NULL,
+    "Role" TEXT NOT NULL,
+    "Sex" TEXT NOT NULL,
+    "Present" INTEGER NOT NULL,
+    CONSTRAINT "CK_MeetingParticipants_Sex" CHECK (Sex IN ('', 'F', 'M')),
+    CONSTRAINT "FK_MeetingParticipants_Meetings_MeetingId" FOREIGN KEY ("MeetingId") REFERENCES "Meetings" ("Id") ON DELETE CASCADE
+);
+
+CREATE TABLE "MeetingResolutions" (
+    "Id" INTEGER NOT NULL CONSTRAINT "PK_MeetingResolutions" PRIMARY KEY AUTOINCREMENT,
+    "MeetingId" INTEGER NOT NULL,
+    "Number" INTEGER NOT NULL,
+    "Text" TEXT NOT NULL,
+    "Responsible" TEXT NOT NULL,
+    CONSTRAINT "FK_MeetingResolutions_Meetings_MeetingId" FOREIGN KEY ("MeetingId") REFERENCES "Meetings" ("Id") ON DELETE CASCADE
+);
+
+CREATE INDEX "IX_Documents_FolderId" ON "Documents" ("FolderId");
+
+CREATE INDEX "IX_DocumentFolders_ParentId" ON "DocumentFolders" ("ParentId");
+
+CREATE INDEX "IX_DocumentFolders_ProjectId" ON "DocumentFolders" ("ProjectId");
+
+CREATE INDEX "IX_MeetingActions_MeetingId" ON "MeetingActions" ("MeetingId");
+
+CREATE INDEX "IX_MeetingActions_ProjectTaskId" ON "MeetingActions" ("ProjectTaskId");
+
+CREATE INDEX "IX_MeetingActions_Status_DueDate" ON "MeetingActions" ("Status", "DueDate");
+
+CREATE INDEX "IX_MeetingParticipants_MeetingId" ON "MeetingParticipants" ("MeetingId");
+
+CREATE INDEX "IX_MeetingResolutions_MeetingId" ON "MeetingResolutions" ("MeetingId");
+
+CREATE INDEX "IX_Meetings_ActivityReportId" ON "Meetings" ("ActivityReportId");
+
+CREATE INDEX "IX_Meetings_ArchivedDocumentId" ON "Meetings" ("ArchivedDocumentId");
+
+CREATE INDEX "IX_Meetings_EditorDocumentId" ON "Meetings" ("EditorDocumentId");
+
+CREATE INDEX "IX_Meetings_ProjectId_Date" ON "Meetings" ("ProjectId", "Date");
+
+CREATE INDEX "IX_Meetings_ProjectTaskId" ON "Meetings" ("ProjectTaskId");
+
+CREATE TABLE "ef_temp_Documents" (
+    "Id" INTEGER NOT NULL CONSTRAINT "PK_Documents" PRIMARY KEY AUTOINCREMENT,
+    "AnalyzedDate" TEXT NULL,
+    "ApprovedGrantAmount" REAL NOT NULL,
+    "Category" TEXT NOT NULL,
+    "ClassificationConfidence" REAL NOT NULL,
+    "ContractualEndDate" TEXT NULL,
+    "DeletedAtUtc" TEXT NULL,
+    "DocType" TEXT NOT NULL DEFAULT '',
+    "DocumentPhase" TEXT NOT NULL,
+    "DocumentReference" TEXT NOT NULL,
+    "DocumentVersion" TEXT NOT NULL,
+    "DonorName" TEXT NOT NULL,
+    "ExtractedSummary" TEXT NOT NULL,
+    "FileExtension" TEXT NOT NULL,
+    "FilePath" TEXT NOT NULL,
+    "FileSize" INTEGER NOT NULL,
+    "FolderId" INTEGER NULL,
+    "FullExtractedText" TEXT NOT NULL,
+    "IndexedAtUtc" TEXT NULL,
+    "IsDeleted" INTEGER NOT NULL DEFAULT 0,
+    "IsKeyReference" INTEGER NOT NULL,
+    "KeyInsights" TEXT NOT NULL,
+    "Language" TEXT NOT NULL DEFAULT '',
+    "LifecyclePhase" TEXT NOT NULL DEFAULT '',
+    "MetadataJson" TEXT NOT NULL DEFAULT '{}',
+    "Notes" TEXT NOT NULL,
+    "OriginalFileName" TEXT NOT NULL,
+    "ProjectId" INTEGER NOT NULL,
+    "SignatureDate" TEXT NULL,
+    "StoredFileId" INTEGER NULL,
+    "Tags" TEXT NOT NULL,
+    "Title" TEXT NOT NULL,
+    "UploadedDate" TEXT NOT NULL,
+    CONSTRAINT "FK_Documents_DocumentFolders_FolderId" FOREIGN KEY ("FolderId") REFERENCES "DocumentFolders" ("Id") ON DELETE SET NULL,
+    CONSTRAINT "FK_Documents_Projects_ProjectId" FOREIGN KEY ("ProjectId") REFERENCES "Projects" ("Id") ON DELETE CASCADE,
+    CONSTRAINT "FK_Documents_StoredFiles_StoredFileId" FOREIGN KEY ("StoredFileId") REFERENCES "StoredFiles" ("Id") ON DELETE RESTRICT
+);
+
+INSERT INTO "ef_temp_Documents" ("Id", "AnalyzedDate", "ApprovedGrantAmount", "Category", "ClassificationConfidence", "ContractualEndDate", "DeletedAtUtc", "DocType", "DocumentPhase", "DocumentReference", "DocumentVersion", "DonorName", "ExtractedSummary", "FileExtension", "FilePath", "FileSize", "FolderId", "FullExtractedText", "IndexedAtUtc", "IsDeleted", "IsKeyReference", "KeyInsights", "Language", "LifecyclePhase", "MetadataJson", "Notes", "OriginalFileName", "ProjectId", "SignatureDate", "StoredFileId", "Tags", "Title", "UploadedDate")
+SELECT "Id", "AnalyzedDate", "ApprovedGrantAmount", "Category", "ClassificationConfidence", "ContractualEndDate", "DeletedAtUtc", "DocType", "DocumentPhase", "DocumentReference", "DocumentVersion", "DonorName", "ExtractedSummary", "FileExtension", "FilePath", "FileSize", "FolderId", "FullExtractedText", "IndexedAtUtc", "IsDeleted", "IsKeyReference", "KeyInsights", "Language", "LifecyclePhase", "MetadataJson", "Notes", "OriginalFileName", "ProjectId", "SignatureDate", "StoredFileId", "Tags", "Title", "UploadedDate"
+FROM "Documents";
+
+COMMIT;
+
+PRAGMA foreign_keys = 0;
+
+BEGIN TRANSACTION;
+DROP TABLE "Documents";
+
+ALTER TABLE "ef_temp_Documents" RENAME TO "Documents";
+
+COMMIT;
+
+PRAGMA foreign_keys = 1;
+
+BEGIN TRANSACTION;
+CREATE INDEX "IX_Documents_FolderId" ON "Documents" ("FolderId");
+
+CREATE INDEX "IX_Documents_ProjectId" ON "Documents" ("ProjectId");
+
+CREATE INDEX "IX_Documents_StoredFileId" ON "Documents" ("StoredFileId");
+
+COMMIT;
+
+INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+VALUES ('20261111210517_MeetingsAndFolders', '9.0.8');
+
