@@ -12,6 +12,7 @@
         Title="{Binding WindowTitle}"
         Height="780" Width="1200"
         WindowStartupLocation="CenterScreen"
+        WindowState="Maximized"
         Background="{StaticResource BgLightBrush}">
 
     <Window.Resources>

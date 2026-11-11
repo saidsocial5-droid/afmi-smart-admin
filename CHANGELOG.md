@@ -52,6 +52,7 @@ Demandes de l'utilisateur après la première installation.
   devise de référence de l'association.
 - Paramètres › Rapports : copie des documents dans les dossiers locaux (activée par défaut) et dossier racine des
   projets.
+- La fenêtre principale s'ouvre en plein écran (agrandie).
 - Tests : 98 xUnit, 175 pytest.
 
 ### Points à valider
