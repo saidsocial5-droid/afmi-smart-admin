@@ -2,7 +2,7 @@ using System;
 
 namespace AFMI_Gestion_projet.Models
 {
-    public class ProjectDocument
+    public class ProjectDocument : ISoftDeletable
     {
         public int Id { get; set; }
         public int ProjectId { get; set; }
@@ -63,6 +63,22 @@ namespace AFMI_Gestion_projet.Models
         public DateTime? AnalyzedDate { get; set; }
 
         public DateTime UploadedDate { get; set; } = DateTime.Now;
+
+        // --- GED (Lot 6) ---
+        /// <summary>Type de document (Convention, Rapport narratif, Facture…), classé automatiquement puis vérifiable.</summary>
+        public string DocType { get; set; } = string.Empty;
+        /// <summary>Phase du cycle de vie : Identification, Formulation, Contractualisation, Mise en œuvre, Suivi, Clôture, Évaluation.</summary>
+        public string LifecyclePhase { get; set; } = string.Empty;
+        /// <summary>Confiance de la classification automatique (0–100) ; 100 = confirmée par l'utilisateur.</summary>
+        public double ClassificationConfidence { get; set; }
+        /// <summary>Métadonnées extraites (dates, montants, parties, échéances), JSON.</summary>
+        public string MetadataJson { get; set; } = "{}";
+        public int? StoredFileId { get; set; }
+        public Finance.StoredFile? StoredFile { get; set; }
+        public string Language { get; set; } = string.Empty;
+        public DateTime? IndexedAtUtc { get; set; }
+        public bool IsDeleted { get; set; }
+        public DateTime? DeletedAtUtc { get; set; }
 
         // UI-only helpers (not persisted)
         [System.ComponentModel.DataAnnotations.Schema.NotMapped]

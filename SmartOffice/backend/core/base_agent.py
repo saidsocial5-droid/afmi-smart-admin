@@ -114,6 +114,9 @@ class BaseAgent(ABC):
                 for p in projects:
                     context_parts.append(f"- [{p.code}] {p.title} | Bailleur : {p.donor} | Budget : {p.total_budget:,.2f} {p.currency} | Statut : {p.status}")
 
+            # 2 bis. Mémoire documentaire (Lot 6) : documents de référence de la GED (conventions, rapports finaux, évaluations)
+            context_parts.extend(self._key_documents_context())
+
             # 3. Dynamic Grants Pipeline
             grants = db.query(GrantPipelineModel).limit(5).all()
             if grants:
@@ -125,6 +128,24 @@ class BaseAgent(ABC):
             db.close()
 
         return "\n\n".join(context_parts)
+
+    @staticmethod
+    def _key_documents_context() -> list:
+        """Résumés des documents de référence de la base unique (absents si la base n'est pas disponible)."""
+        from backend.core import unified_db
+        try:
+            with unified_db.connect() as conn:
+                rows = conn.execute(
+                    "SELECT d.Title, d.DocType, d.ExtractedSummary, p.Code FROM Documents d JOIN Projects p ON p.Id = d.ProjectId "
+                    "WHERE d.IsDeleted = 0 AND (d.IsKeyReference = 1 OR d.DocType IN ('Convention', 'Rapport final', 'Rapport d''évaluation')) "
+                    "ORDER BY COALESCE(d.SignatureDate, d.UploadedDate) DESC LIMIT 6").fetchall()
+        except Exception:
+            return []
+        if not rows:
+            return []
+        lines = ["\n### 📚 Documents de référence (GED des projets) :"]
+        lines += [f"- [{r['Code']}] {r['DocType'] or 'Document'} « {r['Title']} » : {(r['ExtractedSummary'] or '')[:280]}" for r in rows]
+        return lines
 
     def assemble_system_prompt(self, language: str = "ar") -> str:
         """Combine dynamic prompt, institutional profile, and custom instructions."""

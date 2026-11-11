@@ -1015,5 +1015,169 @@ CREATE INDEX "IX_IndicatorMeasurements_IndicatorId_PeriodEnd" ON "IndicatorMeasu
 INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
 VALUES ('20261111102355_ResultsIndicators', '9.0.8');
 
+ALTER TABLE "Documents" ADD "ClassificationConfidence" REAL NOT NULL DEFAULT 0.0;
+
+ALTER TABLE "Documents" ADD "DeletedAtUtc" TEXT NULL;
+
+ALTER TABLE "Documents" ADD "DocType" TEXT NOT NULL DEFAULT '';
+
+ALTER TABLE "Documents" ADD "IndexedAtUtc" TEXT NULL;
+
+ALTER TABLE "Documents" ADD "IsDeleted" INTEGER NOT NULL DEFAULT 0;
+
+ALTER TABLE "Documents" ADD "Language" TEXT NOT NULL DEFAULT '';
+
+ALTER TABLE "Documents" ADD "LifecyclePhase" TEXT NOT NULL DEFAULT '';
+
+ALTER TABLE "Documents" ADD "MetadataJson" TEXT NOT NULL DEFAULT '{}';
+
+ALTER TABLE "Documents" ADD "StoredFileId" INTEGER NULL;
+
+CREATE TABLE "DocumentChunks" (
+    "Id" INTEGER NOT NULL CONSTRAINT "PK_DocumentChunks" PRIMARY KEY AUTOINCREMENT,
+    "DocumentId" INTEGER NOT NULL,
+    "Ordinal" INTEGER NOT NULL,
+    "Page" INTEGER NULL,
+    "Text" TEXT NOT NULL,
+    "Embedding" BLOB NULL,
+    "EmbeddingModel" TEXT NOT NULL,
+    CONSTRAINT "FK_DocumentChunks_Documents_DocumentId" FOREIGN KEY ("DocumentId") REFERENCES "Documents" ("Id") ON DELETE CASCADE
+);
+
+CREATE TABLE "ProjectMilestones" (
+    "Id" INTEGER NOT NULL CONSTRAINT "PK_ProjectMilestones" PRIMARY KEY AUTOINCREMENT,
+    "ProjectId" INTEGER NOT NULL,
+    "Title" TEXT NOT NULL,
+    "Date" TEXT NOT NULL,
+    "Phase" TEXT NOT NULL,
+    "Done" INTEGER NOT NULL,
+    "SourceDocumentId" INTEGER NULL,
+    "IsDeleted" INTEGER NOT NULL DEFAULT 0,
+    "DeletedAtUtc" TEXT NULL,
+    CONSTRAINT "FK_ProjectMilestones_Documents_SourceDocumentId" FOREIGN KEY ("SourceDocumentId") REFERENCES "Documents" ("Id") ON DELETE RESTRICT,
+    CONSTRAINT "FK_ProjectMilestones_Projects_ProjectId" FOREIGN KEY ("ProjectId") REFERENCES "Projects" ("Id") ON DELETE RESTRICT
+);
+
+CREATE TABLE "ReportingObligations" (
+    "Id" INTEGER NOT NULL CONSTRAINT "PK_ReportingObligations" PRIMARY KEY AUTOINCREMENT,
+    "ProjectId" INTEGER NOT NULL,
+    "FundingAgreementId" INTEGER NULL,
+    "Title" TEXT NOT NULL,
+    "Kind" TEXT NOT NULL,
+    "DueDate" TEXT NOT NULL,
+    "Status" TEXT NOT NULL,
+    "DeliveredDocumentId" INTEGER NULL,
+    "SourceDocumentId" INTEGER NULL,
+    "SourceExcerpt" TEXT NOT NULL,
+    "Notes" TEXT NOT NULL,
+    "IsDeleted" INTEGER NOT NULL DEFAULT 0,
+    "DeletedAtUtc" TEXT NULL,
+    CONSTRAINT "FK_ReportingObligations_Documents_DeliveredDocumentId" FOREIGN KEY ("DeliveredDocumentId") REFERENCES "Documents" ("Id") ON DELETE RESTRICT,
+    CONSTRAINT "FK_ReportingObligations_Documents_SourceDocumentId" FOREIGN KEY ("SourceDocumentId") REFERENCES "Documents" ("Id") ON DELETE RESTRICT,
+    CONSTRAINT "FK_ReportingObligations_FundingAgreements_FundingAgreementId" FOREIGN KEY ("FundingAgreementId") REFERENCES "FundingAgreements" ("Id") ON DELETE RESTRICT,
+    CONSTRAINT "FK_ReportingObligations_Projects_ProjectId" FOREIGN KEY ("ProjectId") REFERENCES "Projects" ("Id") ON DELETE RESTRICT
+);
+
+CREATE INDEX "IX_Documents_StoredFileId" ON "Documents" ("StoredFileId");
+
+CREATE INDEX "IX_DocumentChunks_DocumentId_Ordinal" ON "DocumentChunks" ("DocumentId", "Ordinal");
+
+CREATE INDEX "IX_ProjectMilestones_ProjectId" ON "ProjectMilestones" ("ProjectId");
+
+CREATE INDEX "IX_ProjectMilestones_SourceDocumentId" ON "ProjectMilestones" ("SourceDocumentId");
+
+CREATE INDEX "IX_ReportingObligations_DeliveredDocumentId" ON "ReportingObligations" ("DeliveredDocumentId");
+
+CREATE INDEX "IX_ReportingObligations_FundingAgreementId" ON "ReportingObligations" ("FundingAgreementId");
+
+CREATE INDEX "IX_ReportingObligations_ProjectId_DueDate" ON "ReportingObligations" ("ProjectId", "DueDate");
+
+CREATE INDEX "IX_ReportingObligations_SourceDocumentId" ON "ReportingObligations" ("SourceDocumentId");
+
+UPDATE Documents SET DocType = CASE Category
+                    WHEN 'Convention Bailleur' THEN 'Convention' WHEN 'Dossier Projet' THEN 'Document de projet'
+                    WHEN 'Budget Initial' THEN 'Budget' WHEN 'Étude de Diagnostic' THEN 'Étude ou diagnostic'
+                    WHEN 'Cadre Logique' THEN 'Cadre logique' WHEN 'Avenant' THEN 'Avenant' ELSE 'Autre' END,
+                LifecyclePhase = CASE DocumentPhase
+                    WHEN 'Diagnostic' THEN 'Identification' WHEN 'Montage' THEN 'Formulation' WHEN 'Rédaction' THEN 'Formulation'
+                    WHEN 'Exécution' THEN 'Mise en œuvre' WHEN 'Évaluation' THEN 'Évaluation' WHEN 'Clôture' THEN 'Clôture' ELSE 'Formulation' END,
+                ClassificationConfidence = 100
+                WHERE DocType = '';
+
+CREATE VIRTUAL TABLE DocumentChunksFts USING fts5(Text, content='DocumentChunks', content_rowid='Id',
+                tokenize='unicode61 remove_diacritics 2');
+
+CREATE TRIGGER TR_DocumentChunks_Ai AFTER INSERT ON DocumentChunks BEGIN
+                INSERT INTO DocumentChunksFts(rowid, Text) VALUES (new.Id, new.Text); END;
+
+CREATE TRIGGER TR_DocumentChunks_Ad AFTER DELETE ON DocumentChunks BEGIN
+                INSERT INTO DocumentChunksFts(DocumentChunksFts, rowid, Text) VALUES ('delete', old.Id, old.Text); END;
+
+CREATE TRIGGER TR_DocumentChunks_Au AFTER UPDATE OF Text ON DocumentChunks BEGIN
+                INSERT INTO DocumentChunksFts(DocumentChunksFts, rowid, Text) VALUES ('delete', old.Id, old.Text);
+                INSERT INTO DocumentChunksFts(rowid, Text) VALUES (new.Id, new.Text); END;
+
+CREATE TABLE "ef_temp_Documents" (
+    "Id" INTEGER NOT NULL CONSTRAINT "PK_Documents" PRIMARY KEY AUTOINCREMENT,
+    "AnalyzedDate" TEXT NULL,
+    "ApprovedGrantAmount" REAL NOT NULL,
+    "Category" TEXT NOT NULL,
+    "ClassificationConfidence" REAL NOT NULL,
+    "ContractualEndDate" TEXT NULL,
+    "DeletedAtUtc" TEXT NULL,
+    "DocType" TEXT NOT NULL DEFAULT '',
+    "DocumentPhase" TEXT NOT NULL,
+    "DocumentReference" TEXT NOT NULL,
+    "DocumentVersion" TEXT NOT NULL,
+    "DonorName" TEXT NOT NULL,
+    "ExtractedSummary" TEXT NOT NULL,
+    "FileExtension" TEXT NOT NULL,
+    "FilePath" TEXT NOT NULL,
+    "FileSize" INTEGER NOT NULL,
+    "FullExtractedText" TEXT NOT NULL,
+    "IndexedAtUtc" TEXT NULL,
+    "IsDeleted" INTEGER NOT NULL DEFAULT 0,
+    "IsKeyReference" INTEGER NOT NULL,
+    "KeyInsights" TEXT NOT NULL,
+    "Language" TEXT NOT NULL DEFAULT '',
+    "LifecyclePhase" TEXT NOT NULL DEFAULT '',
+    "MetadataJson" TEXT NOT NULL DEFAULT '{}',
+    "Notes" TEXT NOT NULL,
+    "OriginalFileName" TEXT NOT NULL,
+    "ProjectId" INTEGER NOT NULL,
+    "SignatureDate" TEXT NULL,
+    "StoredFileId" INTEGER NULL,
+    "Tags" TEXT NOT NULL,
+    "Title" TEXT NOT NULL,
+    "UploadedDate" TEXT NOT NULL,
+    CONSTRAINT "FK_Documents_Projects_ProjectId" FOREIGN KEY ("ProjectId") REFERENCES "Projects" ("Id") ON DELETE CASCADE,
+    CONSTRAINT "FK_Documents_StoredFiles_StoredFileId" FOREIGN KEY ("StoredFileId") REFERENCES "StoredFiles" ("Id") ON DELETE RESTRICT
+);
+
+INSERT INTO "ef_temp_Documents" ("Id", "AnalyzedDate", "ApprovedGrantAmount", "Category", "ClassificationConfidence", "ContractualEndDate", "DeletedAtUtc", "DocType", "DocumentPhase", "DocumentReference", "DocumentVersion", "DonorName", "ExtractedSummary", "FileExtension", "FilePath", "FileSize", "FullExtractedText", "IndexedAtUtc", "IsDeleted", "IsKeyReference", "KeyInsights", "Language", "LifecyclePhase", "MetadataJson", "Notes", "OriginalFileName", "ProjectId", "SignatureDate", "StoredFileId", "Tags", "Title", "UploadedDate")
+SELECT "Id", "AnalyzedDate", "ApprovedGrantAmount", "Category", "ClassificationConfidence", "ContractualEndDate", "DeletedAtUtc", "DocType", "DocumentPhase", "DocumentReference", "DocumentVersion", "DonorName", "ExtractedSummary", "FileExtension", "FilePath", "FileSize", "FullExtractedText", "IndexedAtUtc", "IsDeleted", "IsKeyReference", "KeyInsights", "Language", "LifecyclePhase", "MetadataJson", "Notes", "OriginalFileName", "ProjectId", "SignatureDate", "StoredFileId", "Tags", "Title", "UploadedDate"
+FROM "Documents";
+
 COMMIT;
+
+PRAGMA foreign_keys = 0;
+
+BEGIN TRANSACTION;
+DROP TABLE "Documents";
+
+ALTER TABLE "ef_temp_Documents" RENAME TO "Documents";
+
+COMMIT;
+
+PRAGMA foreign_keys = 1;
+
+BEGIN TRANSACTION;
+CREATE INDEX "IX_Documents_ProjectId" ON "Documents" ("ProjectId");
+
+CREATE INDEX "IX_Documents_StoredFileId" ON "Documents" ("StoredFileId");
+
+COMMIT;
+
+INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+VALUES ('20261111105158_DocumentManagement', '9.0.8');
 

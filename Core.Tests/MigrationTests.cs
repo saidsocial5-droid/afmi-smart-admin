@@ -112,6 +112,24 @@ public class MigrationTests
         }
     }
 
+    [Fact]
+    public void LegacyDocuments_AreReclassified_ByTheMigrationChain()
+    {
+        using var db = new TestDatabase();
+        CreateLegacyDatabase(db, EncryptionService.Encrypt("1"), EncryptionService.Encrypt("1"));
+        db.Execute($@"INSERT INTO Documents (ProjectId, Title, Category, DocumentPhase, Tags, IsKeyReference, DocumentVersion, DonorName,
+            DocumentReference, ApprovedGrantAmount, FilePath, OriginalFileName, FileExtension, FileSize, Notes, ExtractedSummary,
+            FullExtractedText, KeyInsights, UploadedDate)
+            VALUES (1, 'Convention FV', 'Convention Bailleur', 'Exécution', '', 1, '', '', '', '{EncryptionService.Encrypt("500000")}',
+                    '', '', '', 0, '', '', '', '', '2025-05-01');");
+        using var ctx = db.Open();
+        var doc = ctx.Documents.Single();
+        Assert.Equal("Convention", doc.DocType);
+        Assert.Equal("Mise en œuvre", doc.LifecyclePhase);
+        Assert.Equal(500000, doc.ApprovedGrantAmount);
+        Assert.False(doc.IsDeleted);
+    }
+
     [Theory]
     [InlineData(null, 0)]
     [InlineData("", 0)]
@@ -120,4 +138,46 @@ public class MigrationTests
     [InlineData(4L, 4)]
     public void LegacyAmount_AcceptsPlainValues(object? value, double expected) =>
         Assert.Equal(expected, DatabaseMigrator.LegacyAmount(value));
+}
+
+public class DocumentManagementMigrationTests
+{
+    [Fact]
+    public void LegacyDocuments_AreMapped_AndFullTextIndexIsSynchronised()
+    {
+        using var db = new TestDatabase();
+        using (var ctx = db.Open())
+        {
+            var p = new AFMI_Gestion_projet.Models.Project { Name = "P", Code = "P" };
+            ctx.Projects.Add(p);
+            ctx.SaveChanges();
+            var doc = new AFMI_Gestion_projet.Models.ProjectDocument { ProjectId = p.Id, Title = "Convention", Category = "Convention Bailleur", DocumentPhase = "Montage" };
+            ctx.Documents.Add(doc);
+            ctx.SaveChanges();
+            ctx.DocumentChunks.Add(new AFMI_Gestion_projet.Models.DocumentChunk { DocumentId = doc.Id, Ordinal = 0, Text = "Le rapport financier intermédiaire est dû le 30 juin." });
+            ctx.SaveChanges();
+        }
+        // Recherche plein texte insensible aux accents (remove_diacritics).
+        Assert.Equal(1L, (long)db.Scalar("SELECT COUNT(*) FROM DocumentChunksFts WHERE DocumentChunksFts MATCH 'intermediaire'")!);
+        db.Execute("UPDATE DocumentChunks SET Text = 'Autre texte'");
+        Assert.Equal(0L, (long)db.Scalar("SELECT COUNT(*) FROM DocumentChunksFts WHERE DocumentChunksFts MATCH 'intermediaire'")!);
+        Assert.Equal(1L, (long)db.Scalar("SELECT COUNT(*) FROM DocumentChunksFts WHERE DocumentChunksFts MATCH 'autre'")!);
+    }
+
+    [Fact]
+    public void DeletingADocument_IsLogical()
+    {
+        using var db = new TestDatabase();
+        using var ctx = db.Open();
+        var p = new AFMI_Gestion_projet.Models.Project { Name = "P", Code = "P" };
+        ctx.Projects.Add(p);
+        ctx.SaveChanges();
+        var doc = new AFMI_Gestion_projet.Models.ProjectDocument { ProjectId = p.Id, Title = "PV" };
+        ctx.Documents.Add(doc);
+        ctx.SaveChanges();
+        ctx.Documents.Remove(doc);
+        ctx.SaveChanges();
+        Assert.Empty(ctx.Documents);
+        Assert.Equal(1L, (long)db.Scalar("SELECT COUNT(*) FROM Documents WHERE IsDeleted = 1")!);
+    }
 }

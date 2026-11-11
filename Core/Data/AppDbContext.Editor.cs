@@ -13,6 +13,9 @@ namespace AFMI_Gestion_projet.Data
         public DbSet<DocumentComment> DocumentComments { get; set; } = null!;
         public DbSet<Photo> Photos { get; set; } = null!;
         public DbSet<IndicatorMeasurement> IndicatorMeasurements { get; set; } = null!;
+        public DbSet<ReportingObligation> ReportingObligations { get; set; } = null!;
+        public DbSet<ProjectMilestone> ProjectMilestones { get; set; } = null!;
+        public DbSet<DocumentChunk> DocumentChunks { get; set; } = null!;
 
         private static void ConfigureEditor(ModelBuilder b)
         {
@@ -44,6 +47,36 @@ namespace AFMI_Gestion_projet.Data
             {
                 e.HasOne(x => x.EditorDocument).WithMany(d => d.Comments).HasForeignKey(x => x.EditorDocumentId).OnDelete(DeleteBehavior.Restrict);
                 e.HasIndex(x => new { x.EditorDocumentId, x.AnchorId });
+            });
+
+            b.Entity<ProjectDocument>(e =>
+            {
+                e.Property(x => x.DocType).HasMaxLength(50).HasDefaultValue("");
+                e.Property(x => x.LifecyclePhase).HasMaxLength(30).HasDefaultValue("");
+                e.Property(x => x.MetadataJson).HasDefaultValue("{}");
+                e.Property(x => x.Language).HasMaxLength(5).HasDefaultValue("");
+                e.HasOne(x => x.StoredFile).WithMany().HasForeignKey(x => x.StoredFileId).OnDelete(DeleteBehavior.Restrict);
+            });
+
+            b.Entity<ReportingObligation>(e =>
+            {
+                e.HasOne(x => x.Project).WithMany().HasForeignKey(x => x.ProjectId).OnDelete(DeleteBehavior.Restrict);
+                e.HasOne(x => x.FundingAgreement).WithMany().HasForeignKey(x => x.FundingAgreementId).OnDelete(DeleteBehavior.Restrict);
+                e.HasOne(x => x.DeliveredDocument).WithMany().HasForeignKey(x => x.DeliveredDocumentId).OnDelete(DeleteBehavior.Restrict);
+                e.HasOne(x => x.SourceDocument).WithMany().HasForeignKey(x => x.SourceDocumentId).OnDelete(DeleteBehavior.Restrict);
+                e.HasIndex(x => new { x.ProjectId, x.DueDate });
+            });
+
+            b.Entity<ProjectMilestone>(e =>
+            {
+                e.HasOne(x => x.Project).WithMany().HasForeignKey(x => x.ProjectId).OnDelete(DeleteBehavior.Restrict);
+                e.HasOne(x => x.SourceDocument).WithMany().HasForeignKey(x => x.SourceDocumentId).OnDelete(DeleteBehavior.Restrict);
+            });
+
+            b.Entity<DocumentChunk>(e =>
+            {
+                e.HasOne(x => x.Document).WithMany().HasForeignKey(x => x.DocumentId).OnDelete(DeleteBehavior.Cascade);
+                e.HasIndex(x => new { x.DocumentId, x.Ordinal });
             });
 
             b.Entity<Indicator>(e =>

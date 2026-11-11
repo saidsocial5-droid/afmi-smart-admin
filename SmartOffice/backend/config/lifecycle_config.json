@@ -1,0 +1,32 @@
+{
+  "_description": "Cycle de vie des projets et classification des documents (GED). Mots-clés en minuscules sans accents ; 'phase' = phase par défaut du type ; 'expected' = types attendus dans chaque phase (alertes « document manquant »). Modifiable sans programmation.",
+  "phases": ["Identification", "Formulation", "Contractualisation", "Mise en œuvre", "Suivi", "Clôture", "Évaluation"],
+  "types": {
+    "Convention": {"phase": "Contractualisation", "keywords": ["convention de financement", "convention de partenariat", "convention", "accord de subvention", "contrat de subvention", "les parties conviennent", "ci-apres denomme", "article 1"]},
+    "Avenant": {"phase": "Mise en œuvre", "keywords": ["avenant", "modifie la convention"]},
+    "Budget": {"phase": "Formulation", "keywords": ["budget previsionnel", "budget detaille", "cout unitaire", "rubrique budgetaire", "budget"]},
+    "Cadre logique": {"phase": "Formulation", "keywords": ["cadre logique", "logframe", "indicateurs objectivement verifiables", "sources de verification", "hypotheses"]},
+    "Termes de référence": {"phase": "Identification", "keywords": ["termes de reference", "tdr", "objet de la mission", "profil du consultant", "livrables attendus"]},
+    "Document de projet": {"phase": "Formulation", "keywords": ["note conceptuelle", "proposition de projet", "document de projet", "justification du projet", "objectif general", "objectifs specifiques"]},
+    "Étude ou diagnostic": {"phase": "Identification", "keywords": ["diagnostic", "etude de base", "etat des lieux", "enquete", "baseline"]},
+    "Rapport narratif": {"phase": "Suivi", "keywords": ["rapport d'avancement", "rapport narratif", "rapport intermediaire", "rapport technique", "activites realisees", "periode couverte"]},
+    "Rapport financier": {"phase": "Suivi", "keywords": ["rapport financier", "etat des depenses", "execution budgetaire", "taux de consommation", "justificatifs"]},
+    "Rapport final": {"phase": "Clôture", "keywords": ["rapport final", "rapport de cloture", "bilan final", "fin du projet"]},
+    "Rapport d'évaluation": {"phase": "Évaluation", "keywords": ["evaluation finale", "evaluation a mi-parcours", "rapport d'evaluation", "criteres cad", "pertinence", "efficience", "durabilite"]},
+    "Procès-verbal": {"phase": "Mise en œuvre", "keywords": ["proces-verbal", "proces verbal", "pv de reunion", "compte rendu", "comite de pilotage", "ordre du jour", "etaient presents"]},
+    "Facture": {"phase": "Mise en œuvre", "keywords": ["facture", "montant ttc", "montant ht", "tva", "ice", "net a payer"]},
+    "Contrat": {"phase": "Mise en œuvre", "keywords": ["contrat de prestation", "contrat de travail", "bon de commande", "marche", "prestataire"]},
+    "Liste de présence": {"phase": "Mise en œuvre", "keywords": ["liste de presence", "feuille de presence", "emargement", "signature des participants"]},
+    "Correspondance": {"phase": "Suivi", "keywords": ["objet :", "monsieur le", "madame la", "veuillez agreer", "nous avons l'honneur", "courrier"]}
+  },
+  "expected": {
+    "Identification": ["Étude ou diagnostic"],
+    "Formulation": ["Document de projet", "Budget", "Cadre logique"],
+    "Contractualisation": ["Convention"],
+    "Mise en œuvre": ["Liste de présence", "Procès-verbal"],
+    "Suivi": ["Rapport narratif", "Rapport financier"],
+    "Clôture": ["Rapport final"],
+    "Évaluation": ["Rapport d'évaluation"]
+  },
+  "alerts": {"report_due_days": 30, "agreement_end_days": 60}
+}

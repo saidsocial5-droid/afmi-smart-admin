@@ -133,6 +133,39 @@ class LLMRouter:
         # 3. Intelligent Institutional Heuristic Engine (Specialized in AFMI Moroccan context)
         return self._generate_heuristic_response(prompt, system_prompt, response_json, images_b64), "heuristic"
 
+    async def embed(self, texts: List[str]) -> Tuple[Optional[List[List[float]]], str]:
+        """
+        Vecteurs sémantiques des textes. Ordre : Ollama local (OLLAMA_EMBED_MODEL, nomic-embed-text par défaut), puis
+        Gemini seulement si l'IA externe est autorisée (textes masqués si le masquage est actif). (None, "none") sinon :
+        la recherche se contente alors du plein texte.
+        """
+        import os
+        model = os.getenv("OLLAMA_EMBED_MODEL", "nomic-embed-text")
+        try:
+            async with httpx.AsyncClient(timeout=60.0) as client:
+                vectors = []
+                for t in texts:
+                    r = await client.post(f"{self.ollama_url}/api/embeddings", json={"model": model, "prompt": t})
+                    r.raise_for_status()
+                    vectors.append(r.json()["embedding"])
+                return vectors, f"ollama:{model}"
+        except Exception:
+            pass
+        if self.gemini_key and privacy.external_ai_allowed():
+            if privacy.mask_enabled():
+                texts = [privacy.mask_sensitive(t)[0] for t in texts]
+            try:
+                async with httpx.AsyncClient(timeout=60.0) as client:
+                    r = await client.post(
+                        "https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:batchEmbedContents",
+                        json={"requests": [{"model": "models/text-embedding-004", "content": {"parts": [{"text": t}]}} for t in texts]},
+                        headers={"x-goog-api-key": self.gemini_key})
+                    r.raise_for_status()
+                    return [e["values"] for e in r.json()["embeddings"]], "gemini:text-embedding-004"
+            except Exception as e:
+                print(f"[LLMRouter] Embeddings Gemini indisponibles : {e}")
+        return None, "none"
+
     async def _call_gemini(
         self,
         prompt: str,

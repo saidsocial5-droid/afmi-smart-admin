@@ -22,6 +22,7 @@ from backend.api.routes_payroll import router as payroll_router
 from backend.api.routes_statements import router as statements_router
 from backend.api.routes_editor import router as editor_router
 from backend.api.routes_reports import router as reports_router
+from backend.api.routes_ged import router as ged_router
 from backend.core.orchestrator import mark_interrupted_runs
 
 
@@ -96,6 +97,7 @@ app.include_router(workflows_router)
 app.include_router(payroll_router)
 app.include_router(statements_router)
 app.include_router(reports_router)
+app.include_router(ged_router)
 app.include_router(editor_router)
 
 
