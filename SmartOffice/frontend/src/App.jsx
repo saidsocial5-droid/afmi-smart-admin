@@ -11,6 +11,9 @@ import ProjectRadarView from './views/ProjectRadarView';
 import WorkflowsView from './views/WorkflowsView';
 import PayrollView from './views/PayrollView';
 import StatementsView from './views/StatementsView';
+import DocumentEditor from './editor/DocumentEditor';
+import ChartsTemplatesView from './views/ChartsTemplatesView';
+import PhotosView from './views/PhotosView';
 import { apiFetch } from './apiClient';
 import { useLanguage } from './context/LanguageContext';
 
@@ -85,7 +88,7 @@ export default function App() {
         />
 
         {/* Main Content Area */}
-        <main className={`flex-1 p-4 md:p-6 lg:p-8 mx-auto w-full overflow-y-auto ${activeTab === "statements" ? "max-w-none min-w-0" : "max-w-7xl"}`}>
+        <main className={`flex-1 p-4 md:p-6 lg:p-8 mx-auto w-full overflow-y-auto ${["statements", "editor"].includes(activeTab) ? "max-w-none min-w-0" : "max-w-7xl"}`}>
           {activeTab === "dashboard" && (
             <DashboardView 
               projects={projects}
@@ -110,6 +113,18 @@ export default function App() {
 
           {activeTab === "payroll" && (
             <PayrollView />
+          )}
+
+          {activeTab === "editor" && (
+            <DocumentEditor />
+          )}
+
+          {activeTab === "charts" && (
+            <ChartsTemplatesView />
+          )}
+
+          {activeTab === "photos" && (
+            <PhotosView />
           )}
 
           {activeTab === "statements" && (

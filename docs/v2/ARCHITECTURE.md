@@ -1,6 +1,6 @@
 # AFMI Smart Admin 2.0 — Architecture
 
-*Mis à jour à la fin de chaque lot. État actuel : **Lot 3 (lecture des relevés)**.*
+*Mis à jour à la fin de chaque lot. État actuel : **Lot 4 (éditeur, chartes, photos)**.*
 
 ## 1. Vue d'ensemble
 
@@ -192,6 +192,46 @@ API : `/api/statements` (`context`, `upload`, `{id}`, `{id}/pages/{n}`, `PUT {id
 **Répartition des règles :** le backend ne crée que des opérations **en brouillon** (contrôles de base : compte actif,
 date ≥ ouverture, devise du compte, taux daté). La validation d'une opération, avec ventilation exacte sur des lignes
 budgétaires cohérentes, reste dans `Core/Finance`. Aucune règle financière n'est dupliquée en Python.
+
+### 2.7 Éditeur, chartes et photos (Lot 4)
+
+**Données** (migration `EditorChartsAndPhotos`) :
+
+| Table | Contenu |
+|---|---|
+| `GraphicCharts` | Charte : portée Association, Funder ou Project (contrainte de cohérence), `StyleJson` partiel |
+| `DocumentTemplates` | Modèles (contenu TipTap JSON, mise en page, partage) |
+| `EditorDocuments` | Documents : projet, bailleur, langue, contenu, mise en page propre, version courante |
+| `DocumentVersions` | Instantanés numérotés et restaurables |
+| `DocumentComments` | Commentaires ancrés par la marque `comment` portant le même identifiant |
+| `Photos` | Fichier archivé, EXIF, activité liée, légende, légende proposée, crédit, consentement |
+
+**Charte effective** (`backend/tools/editor/charts.py`) : défauts ← charte de l'association ← fiche du bailleur
+(couleur, logo, mentions, textes) ← charte du bailleur ← charte du projet ← mise en page propre au document.
+- Dictionnaires : fusionnés clé par clé.
+- Logos : remplacés position par position.
+- Mentions : cumulées sans doublon.
+
+**Éditeur** (`SmartOffice/frontend/src/editor/`) :
+- TipTap (ProseMirror) et extensions propres (`extensions.js`) :
+  - `FontSize`, `TextDirection`, `ShadedTableCell` ;
+  - `PageBreak`, `Columns`, `Footnote`, `TableOfContents`, `Field` ;
+  - `DynamicBlock` (vue React qui interroge `/api/editor/blocks/{kind}`) ;
+  - marques `comment`, `insertion` et `deletion`, et le greffon de révision `TrackChanges`.
+- Les paramètres d'un bloc dynamique sont stockés dans le document ; ses chiffres sont recalculés depuis la base et
+  ne sont jamais figés dans le texte.
+- `print.js` produit l'HTML imprimable :
+  - copie du rendu de l'éditeur (blocs compris), règles `@page` (boîtes de marge `:first`, `:left`), notes en fin de
+    document ;
+  - CSS de la charte commun à l'écran et à l'impression (`chartCss`).
+
+**API** :
+- `/api/charts` et `/api/charts/effective` ;
+- `/api/files/images` (seuls les fichiers archivés de type image sont servis, jamais un chemin libre) ;
+- `/api/funders/{id}/logo` ;
+- `/api/templates`, `/api/documents` (versions, commentaires) ;
+- `/api/editor/blocks/{budget|indicators|activities|chart|gallery}`, `/api/editor/fields`, `/api/editor/assistant` ;
+- `/api/photos` (import, image allégée, mise à jour, légende proposée).
 
 ## 3. Sécurité et confidentialité
 

@@ -10,10 +10,11 @@
 | Lot 1 — Fondations (base unique, migrations, audit, sécurité) | Livré (`eddba95`) |
 | Lot 2 — Banque et trésorerie (écran Trésorerie, rapprochement, prévisions) | Livré (`fa047db`) |
 | Lot 3 — Relevés scannés (OCR, validation, catégorisation, anomalies) | Livré (voir CHANGELOG) |
-| Lot 4 — Éditeur, chartes, galerie photos | **Prochaine étape** |
-| Lots 5 à 8 | À faire (voir `ANALYSE.md` § 7) |
+| Lot 4 — Éditeur, chartes, galerie photos | Livré (voir CHANGELOG) |
+| Lot 5 — Rapports annuels moral et financier | **Prochaine étape** |
+| Lots 6 à 8 | À faire (voir `ANALYSE.md` § 7) |
 
-Tests au dernier commit : 76 xUnit (`Core.Tests`) et 98 pytest (1 sauté : vrais relevés absents), tous verts.
+Tests au dernier commit : 76 xUnit (`Core.Tests`) et 105 pytest (1 sauté : vrais relevés absents), tous verts.
 
 ## En attente de l'AFMI
 
@@ -53,5 +54,7 @@ apt-get install -y tesseract-ocr tesseract-ocr-fra tesseract-ocr-ara
 cd SmartOffice && pip install -r requirements.txt pytest && python -m pytest tests
 ```
 
+- Frontend : `cd SmartOffice/frontend && npm ci && npm run build`. Les paquets `@tiptap/*` sont figés et alignés par
+  `overrides` dans `package.json` : les mettre à jour tous ensemble.
 - Le Desktop compile hors Windows avec `-p:EnableWindowsTargeting=true` ; ses tests ne tournent que sous Windows.
 - Après toute migration, régénérer `SmartOffice/tests/fixtures/unified_schema.sql` (voir `ARCHITECTURE.md` § 2.1).

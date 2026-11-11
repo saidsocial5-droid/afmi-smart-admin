@@ -1,5 +1,8 @@
 import React from 'react';
 import { 
+  FilePenLine,
+  Palette,
+  Images,
   LayoutDashboard, 
   Bot, 
   FileScan, 
@@ -50,6 +53,30 @@ export default function Sidebar({ activeTab, setActiveTab }) {
       label_en: 'OCR & Financial Audit',
       icon: FileScan,
       badge: t('badgeOcr')
+    },
+    {
+      id: 'editor',
+      label_ar: 'محرر الوثائق',
+      label_fr: 'Éditeur de documents',
+      label_en: 'Document editor',
+      icon: FilePenLine,
+      badge: 'Docs'
+    },
+    {
+      id: 'charts',
+      label_ar: 'المواثيق البصرية والنماذج',
+      label_fr: 'Chartes & modèles',
+      label_en: 'Brand charts & templates',
+      icon: Palette,
+      badge: 'Charte'
+    },
+    {
+      id: 'photos',
+      label_ar: 'صور الأنشطة',
+      label_fr: 'Photos des activités',
+      label_en: 'Activity photos',
+      icon: Images,
+      badge: 'Photos'
     },
     {
       id: 'statements',

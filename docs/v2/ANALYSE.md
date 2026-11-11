@@ -4,7 +4,7 @@
 
 **Statut : validé le 10/11/2026.** Les recommandations des décisions D1 à D5 et des questions Q1, Q2, Q6 à Q9,
 Q11, Q12 et Q14 sont retenues. Les questions Q3, Q4, Q5, Q10 et Q13 attendent des documents ou des réponses
-de l'AFMI. Avancement : **Lots 1 à 3 livrés** (voir [CHANGELOG](../../CHANGELOG.md) et [ARCHITECTURE](ARCHITECTURE.md)).
+de l'AFMI. Avancement : **Lots 1 à 4 livrés** (voir [CHANGELOG](../../CHANGELOG.md) et [ARCHITECTURE](ARCHITECTURE.md)).
 
 Écarts entre ce plan et sa réalisation, à ce stade :
 

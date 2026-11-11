@@ -1,5 +1,86 @@
 # Journal des modifications
 
+## [2.0.0 — Lot 4 : Éditeur, chartes graphiques, photos] — 11/11/2026
+
+Trois nouveaux menus dans Smart Office : **Éditeur de documents**, **Chartes & modèles**, **Photos des activités**.
+Éditeur retenu : **TipTap 2.27.3** (licence MIT, décision D3). Toutes les versions `@tiptap/*` sont figées et
+alignées par des `overrides`, pour éviter le mélange de versions qui casse la compilation.
+
+### Ajouté
+- **Éditeur de documents** :
+  - page A4 avec les marges, les couleurs et les polices de la charte ;
+  - styles de titres, polices, tailles, couleur, surlignage, gras, italique, souligné, barré, indice, exposant ;
+  - alignements, listes, citations ;
+  - tableaux : ajout et suppression de lignes et de colonnes, fusion et scission de cellules, ligne d'en-tête,
+    trame des cellules, colonnes redimensionnables ;
+  - images, sauts de page, bloc en 2 colonnes, notes de bas de page numérotées ;
+  - table des matières automatique, numérotation des titres en option (1, 1.1, 1.1.1) ;
+  - champs dynamiques : date, projet, code du projet, bailleur, association, titre ;
+  - sens d'écriture par paragraphe : documents arabes (RTL) et mixtes français/arabe ;
+  - enregistrement automatique 8 s après la dernière frappe, et Ctrl+S.
+- **Blocs dynamiques**, recalculés depuis la base à l'ouverture et sur « Actualiser » :
+  - tableau budgétaire (prévu, réalisé, écart, taux, réalisé net des avoirs) ;
+  - indicateurs (cible, réalisé, taux) ;
+  - activités de la période ;
+  - graphique « prévu / réalisé » en SVG, sans bibliothèque ;
+  - galerie photos : 1 à 4 par ligne, numérotation « Photo n° X », légende et crédit, sélection automatique,
+    photos réordonnables et retirables.
+- **Révision** : mode révision (ajouts soulignés en vert, suppressions barrées en rouge, avec auteur et date),
+  acceptation ou refus d'une modification ou de toutes. Retirer son propre ajout le supprime vraiment.
+- **Commentaires** ancrés sur un passage, avec liste, navigation et résolution. **Versions** enregistrées avec une
+  note ; à la restauration, l'état courant est d'abord conservé comme version.
+- **Assistant IA dans l'éditeur** : reformuler, résumer, traduire (arabe, français, anglais), rédiger une section à
+  partir des données du projet.
+  - seuls les faits de la base sont fournis au modèle ;
+  - les chiffres du texte absents de ces faits sont signalés ;
+  - les règles de confidentialité s'appliquent, et le mode hors ligne est indiqué clairement.
+- **Aperçu paginé et impression ou PDF** :
+  - pagination A4 ;
+  - en-têtes et pieds de page avec logos, première page différente, pages paires et impaires, « Page n / N » ;
+  - mentions obligatoires en pied de page, notes en fin de document ;
+  - version finale imprimée (suppressions en révision masquées, ajouts intégrés) ;
+  - techniquement : règles CSS `@page` et boîtes de marge de Chromium/WebView2.
+- **Chartes graphiques** avec héritage **association → fiche du bailleur (couleur, logo, mentions, textes saisis dans
+  l'application de bureau) → charte du bailleur → charte du projet** :
+  - couleurs, polices, taille, marges, logos sur 7 positions, en-têtes et pieds de page, mentions obligatoires
+    (cumulées), style des tableaux, photos par ligne ;
+  - la charte effective d'un projet et sa chaîne d'héritage sont affichées.
+- **Modèles** : enregistrer un document comme modèle, dupliquer, partager ou rendre personnel, supprimer. Un modèle de
+  base « Rapport d'activité » est proposé, avec titres, champs et blocs.
+- **Photos** :
+  - import par lot, avec date et GPS lus dans l'EXIF ;
+  - archivage de l'original (SHA-256) et version allégée (2000 px) pour les documents ;
+  - activité liée, légende, crédit, consentement au droit à l'image ;
+  - légende proposée par un modèle de vision, à valider, jamais inventée si aucun modèle n'est disponible ;
+  - sélection automatique pour un rapport : consentement obligatoire, légendes validées d'abord, jours variés.
+- **Migration `EditorChartsAndPhotos`** (6 tables), réversible. Les écritures sont journalisées, et le journal résume
+  les contenus longs.
+- 7 tests pytest supplémentaires (105 au total).
+
+### Vérifié dans un navigateur (Playwright, Chromium)
+Parcours complet sur une association fictive :
+- création d'un rapport (5 blocs alimentés, 4 photos), saisie, paragraphe arabe ;
+- révision (ajout, suppression, tout accepter), commentaire, tableau, note, version ;
+- aperçu paginé converti en PDF de 3 pages : logo du bailleur en en-tête, mention obligatoire en pied de page,
+  pas de numéro sur la première page, « Page 2 / 3 » ensuite.
+
+Ces essais ont fait apparaître trois défauts, corrigés : numéro de page sur la première page, taux au format
+anglais, table des matières numérotée par erreur.
+
+### Points à valider
+1. **Fidélité de l'impression** : la pagination et les en-têtes s'appuient sur Chromium. Le WebView2 de Windows est
+   à jour sur Windows 10 et 11 ; un rendu identique sous Word viendra avec l'export .docx (Lot 7).
+2. **Notes de bas de page** : elles sont regroupées en fin de document à l'impression, car Chromium ne sait pas les
+   placer en bas de chaque page. L'export .docx (Lot 7) les placera en bas de page.
+3. **Numéros de page dans la table des matières** : non disponibles à l'impression (limite de Chromium). Ils le seront
+   dans l'export .docx, avec le champ TOC de Word.
+4. **Révision** : version simplifiée. Le texte tapé, effacé ou collé est suivi ; les changements de mise en forme et
+   les fusions de paragraphes ne le sont pas. Il n'y a pas de co-édition simultanée.
+5. **Arabe** : les polices Amiri ou Noto Naskh Arabic sont proposées, mais elles doivent être installées sur le poste.
+   Leur intégration dans l'installateur est à prévoir au Lot 8.
+6. **Anciennes photos des rapports d'activité** (application de bureau) : elles ne sont pas reprises automatiquement
+   dans la galerie. Je propose une reprise au Lot 5.
+
 ## [2.0.0 — Lot 3 : Lecture intelligente des relevés] — 11/11/2026
 
 Nouveau menu **Smart Office → Relevés bancaires**. La lecture se fait **sur le poste** (OCR Tesseract) ; l'IA n'est
