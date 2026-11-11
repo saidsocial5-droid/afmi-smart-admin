@@ -1,0 +1,54 @@
+name: Installateur Windows
+
+# Construit l'installateur AFMI Smart Admin sur une machine Windows de GitHub (build_installer.bat) :
+# composants tiers (Tesseract fra/ara, police Amiri), tests, backend PyInstaller, publication .NET autonome,
+# base de démonstration, guide HTML, Inno Setup. Le fichier .exe est publié comme artefact de l'exécution.
+on:
+  workflow_dispatch:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+
+jobs:
+  installer:
+    runs-on: windows-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.x
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Inno Setup
+        run: choco install innosetup --no-progress -y
+
+      - name: Construction de l'installateur
+        shell: cmd
+        env:
+          PYTHONUTF8: "1"
+        run: call build_installer.bat
+
+      - name: Empreintes des composants tiers
+        if: always()
+        shell: pwsh
+        run: if (Test-Path third_party\SHA256SUMS.txt) { Get-Content third_party\SHA256SUMS.txt }
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: AFMI_Smart_Admin_Setup
+          path: |
+            build/installer/*.exe
+            third_party/SHA256SUMS.txt
+          if-no-files-found: error
+          retention-days: 30

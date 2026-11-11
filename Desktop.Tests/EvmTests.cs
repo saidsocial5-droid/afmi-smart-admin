@@ -157,55 +157,29 @@ namespace AFMI_Gestion_projet.Tests
             }
         }
 
+        /// <summary>
+        /// Décision D2-a (v2, Lot 1) : les montants sont stockés en clair (la migration DecryptLegacyAmounts a déchiffré
+        /// ceux de la 1.3.0) ; la confidentialité repose sur le profil Windows et BitLocker. Remplace l'ancien test du
+        /// chiffrement, qui lisait en outre la base réelle de l'utilisateur au lieu de la base jetable des tests.
+        /// </summary>
         [Fact]
-        public void TestDatabaseEncryption()
+        public void TestBudgetStoredInClear_InThrowawayDatabase()
         {
+            string dbPath = AFMI_Gestion_projet.Data.DatabasePaths.GetDatabasePath();
+            string realDb = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "AFMIGestionProjet", "database.db");
+            Assert.NotEqual(Path.GetFullPath(realDb), Path.GetFullPath(dbPath));          // jamais la base réelle
+
             using (var context = new AFMI_Gestion_projet.Data.AppDbContext())
             {
-                // Ensure schema is created
-                context.Database.EnsureCreated();
-
-                // Create a test project
-                var testProject = new Project
-                {
-                    Name = "Secret Project",
-                    Code = "SEC-007",
-                    BudgetGlobal = 999999
-                };
-                context.Projects.Add(testProject);
+                context.Projects.Add(new Project { Name = "Projet budget", Code = "CLR-001", BudgetGlobal = 999999 });
                 context.SaveChanges();
             }
-
-            // Verify using raw SQLite connection that the budget value is stored encrypted
-            string folder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "AFMIGestionProjet");
-            string dbPath = Path.Combine(folder, "database.db");
-            using (var connection = new Microsoft.Data.Sqlite.SqliteConnection($"Data Source={dbPath}"))
+            using (var connection = new Microsoft.Data.Sqlite.SqliteConnection($"Data Source={dbPath};Pooling=False"))
             {
                 connection.Open();
-                using (var command = connection.CreateCommand())
-                {
-                    command.CommandText = "SELECT BudgetGlobal FROM Projects WHERE Code = 'SEC-007' LIMIT 1";
-                    var result = command.ExecuteScalar()?.ToString();
-                    
-                    Assert.NotNull(result);
-                    // The raw database value must not contain the plain text budget number "999999"
-                    Assert.DoesNotContain("999999", result);
-                    
-                    // Decrypt the raw database value to verify it can be read back
-                    string decrypted = EncryptionService.Decrypt(result);
-                    Assert.Equal("999999", decrypted);
-                }
-            }
-
-            // Cleanup test project
-            using (var context = new AFMI_Gestion_projet.Data.AppDbContext())
-            {
-                var secretProject = System.Linq.Enumerable.FirstOrDefault(context.Projects, p => p.Code == "SEC-007");
-                if (secretProject != null)
-                {
-                    context.Projects.Remove(secretProject);
-                    context.SaveChanges();
-                }
+                using var command = connection.CreateCommand();
+                command.CommandText = "SELECT BudgetGlobal FROM Projects WHERE Code = 'CLR-001' LIMIT 1";
+                Assert.Equal(999999d, Convert.ToDouble(command.ExecuteScalar(), System.Globalization.CultureInfo.InvariantCulture));
             }
         }
 
