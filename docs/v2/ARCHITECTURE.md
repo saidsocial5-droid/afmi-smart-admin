@@ -331,6 +331,17 @@ Performance mesurée (test `test_performance_on_five_years_of_operations`, 15 00
 états du rapport annuel en 0,5 s, classeur Excel complet en 3,6 s, sur la machine d'intégration. La base de
 démonstration se construit en 3 s.
 
+### 2.12 Comptes rendus, classement et liaisons (Lot 9, version 2.1.0)
+
+| Élément | Emplacement | Rôle |
+|---|---|---|
+| Rapport de projet → éditeur | `tools/editor/from_report.py`, `POST /api/editor/documents/from-report` ; `ProjectDetailViewModel.OpenReportInEditorAsync` | Texte du rapport du bureau converti en document de l'éditeur (titres, tableau clé/valeur, listes, gras) + blocs de données du projet ; nouvelle version si le document existe. Affiché dans un WebView2 de l'onglet Rapports (`#editor-embed/<id>`). |
+| Comptes rendus et PV | `Core/Models/Meetings.cs`, migration `MeetingsAndFolders`, `tools/meetings/service.py`, `/api/meetings` | Compte rendu, participants, résolutions, actions. Texte pré-rempli selon le type (`_template`), repérage des décisions et des actions (`extract_from_text`), action → `Tasks`, validation → `ActivityReports` + archivage GED (projet `ASSO-GOUV` pour la vie associative). |
+| Classement | `tools/ged/folders.py`, `/api/ged/tree`, `/api/ged/folders` | Arborescence Année › Projet › Type (année = date de signature, sinon d'import), dossiers personnalisés (`DocumentFolders`, `Documents.FolderId`), copie locale (`mirror_document`) selon la structure de `ProjectFolderService`. |
+| Vue 360° et recherche | `tools/overview.py`, `/api/overview/project/{id}`, `/api/search` | Agrégation par projet (budget, trésorerie, indicateurs, activités, comptes rendus, actions, documents, échéances, alertes) ; recherche unifiée (FTS5 des documents + LIKE sur les autres tables). |
+| Liaisons | `ged/lifecycle.alerts` (MEETING_ACTION_LATE/DUE), `core/notifications`, `reports/moral.table_meetings` | Les actions alimentent alertes et e-mails ; le rapport moral reçoit « Réunions et instances ». |
+| Écrans | `MeetingsView.jsx`, `FoldersView.jsx`, `Project360View.jsx`, recherche de `Header.jsx` ; fiche projet du bureau : onglets « Vue 360° » et « Comptes rendus & PV » (`#project360-embed/<id>`, `#meetings-embed/<id>`) | |
+
 ## 3. Sécurité et confidentialité
 
 | Sujet | Mesure |

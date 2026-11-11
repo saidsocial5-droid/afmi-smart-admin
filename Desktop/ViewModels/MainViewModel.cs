@@ -48,8 +48,8 @@ namespace AFMI_Gestion_projet.ViewModels
         public bool IsDemoMode => Services.DemoService.IsDemoMode;
         public bool IsNotDemoMode => !IsDemoMode;
         public string WindowTitle => IsDemoMode
-            ? "AFMI Smart Admin 2.0 — DÉMONSTRATION (données fictives)"
-            : "AFMI Smart Admin 2.0 - Gestion de Projets, Agents IA & Reporting";
+            ? "AFMI Smart Admin 2.1 — DÉMONSTRATION (données fictives)"
+            : "AFMI Smart Admin 2.1 - Gestion de Projets, Agents IA & Reporting";
 
         public MainViewModel()
         {

@@ -131,6 +131,31 @@ Menu **Documents & cycle de vie**. Choisissez un projet.
 
 ---
 
+## 5 bis. Comptes rendus, PV, dossiers et vue 360°
+
+**Comptes rendus & PV** (menu Smart Office, ou onglet de la fiche projet) :
+1. **Nouveau compte rendu** : choisissez le type (réunion, comité de pilotage, AG, CA, rencontre, visite, activité),
+   la date, le lieu et le projet. Sans projet, il s'agit de la vie associative.
+2. Saisissez les **participants**. La présence et le sexe donnent le comptage femmes/hommes.
+3. **Rédiger dans l'éditeur** : le texte est pré-rempli et reprend les actions encore ouvertes des réunions
+   précédentes.
+4. **Repérer décisions et actions dans le texte** : l'application propose ce qu'elle a trouvé ; vous cochez puis
+   ajoutez.
+5. Pour chaque action : responsable, échéance, statut. « Créer la tâche » l'ajoute au planning du projet.
+6. **Valider et archiver** : le PV est rangé dans les documents du projet. Pour une activité, le rapport d'activité
+   est mis à jour.
+
+Les actions en retard apparaissent dans les alertes, la vue 360° et les e-mails d'alerte.
+
+**Dossiers & classement** : tous les documents par année, projet et type, avec vos dossiers personnalisés. Chaque
+document est aussi copié dans `Documents\AFMI_Projets\<Projet>\Année\Trimestre\…`, que vous pouvez ouvrir depuis
+l'explorateur Windows.
+
+**Vue 360° du projet** : budget, trésorerie, indicateurs, comptes rendus, actions, documents, échéances et alertes sur
+une seule page. **Recherche** : la zone « Rechercher partout… » de l'en-tête cherche dans tout le logiciel.
+
+Dans la fiche projet du bureau, l'onglet **Rapports** ouvre désormais le rapport dans l'éditeur de type Word.
+
 ## 6. Rapports annuels
 
 Menu **Rapports annuels**.

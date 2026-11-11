@@ -3,7 +3,7 @@
 
 #define AppName "AFMI Smart Admin"
 #ifndef AppVersion
-  #define AppVersion "2.0.1"
+  #define AppVersion "2.1.0"
 #endif
 #define AppPublisher "Association Forêt Modèle d'Ifrane (AFMI)"
 #define AppExe "AFMI Smart Admin.exe"

@@ -140,3 +140,48 @@ async def search(q: str, project_id: Optional[int] = None):
 @router.post("/ask")
 async def ask(data: Dict[str, Any]):
     return await _aguard(qa.ask(data.get("question", ""), data.get("project_id")))
+
+
+# --- Classement : arborescence et dossiers (Lot 9) ----------------------------------------------------------------
+from backend.tools.ged import folders as _folders
+
+
+def _fguard(func, *args):
+    try:
+        return func(*args)
+    except (_folders.FolderError, ValueError) as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except unified_db.UnifiedDbUnavailable as e:
+        raise HTTPException(status_code=503, detail=str(e))
+
+
+@router.get("/tree")
+def folder_tree():
+    return _fguard(_folders.tree)
+
+
+@router.get("/tree/documents")
+def tree_documents(year: Optional[str] = None, project_id: Optional[int] = None, doc_type: Optional[str] = None, folder_id: Optional[int] = None):
+    return _fguard(_folders.documents, year, project_id, doc_type, folder_id)
+
+
+@router.post("/folders")
+def create_folder(data: Dict[str, Any]):
+    return _fguard(_folders.create_folder, data)
+
+
+@router.put("/folders/{folder_id}")
+def rename_folder(folder_id: int, data: Dict[str, Any]):
+    _fguard(_folders.rename_folder, folder_id, data.get("name", ""))
+    return {"id": folder_id}
+
+
+@router.delete("/folders/{folder_id}")
+def delete_folder(folder_id: int):
+    _fguard(_folders.delete_folder, folder_id)
+    return {"deleted": folder_id}
+
+
+@router.post("/documents/{doc_id}/local-copy")
+def local_copy(doc_id: int):
+    return {"path": _fguard(_folders.mirror_document, doc_id)}

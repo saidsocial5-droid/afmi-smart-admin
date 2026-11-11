@@ -19,6 +19,8 @@ import IndicatorsView from './views/IndicatorsView';
 import ProjectDocumentsView from './views/ProjectDocumentsView';
 import SettingsView, { applyAppearance } from './views/SettingsView';
 import MeetingsView from './views/MeetingsView';
+import FoldersView from './views/FoldersView';
+import Project360View from './views/Project360View';
 import { apiFetch } from './apiClient';
 import { useLanguage } from './context/LanguageContext';
 
@@ -90,6 +92,14 @@ export default function App() {
   };
 
   // Mode intégré (#editor-embed/<id>) : l'application de bureau affiche l'éditeur seul dans l'onglet Projet › Rapports
+  const p360Embed = activeTab.match(/^project360-embed\/(\d+)/);
+  if (p360Embed) {
+    return (
+      <div dir={dir} className={`min-h-screen bg-afmi-slate p-3 ${isRtl ? 'font-arabic' : 'font-sans'} text-slate-800`}>
+        <Project360View fixedProjectId={Number(p360Embed[1])} onNavigate={(tab) => { window.location.hash = tab; }} />
+      </div>
+    );
+  }
   const meetingsEmbed = activeTab.match(/^meetings-embed\/(\d+)/);
   if (meetingsEmbed) {
     return (
@@ -116,6 +126,7 @@ export default function App() {
       {/* Institutional Top Header */}
       <Header 
         activeTab={activeTab}
+        onNavigate={setActiveTab}
         onRefresh={fetchGlobalData}
         llmConfig={llmConfig}
         totalBudget={projects.reduce((acc, p) => acc + (p.total_budget || 0), 0)}
@@ -212,6 +223,14 @@ export default function App() {
 
           {activeTab === "studio" && (
             <AgentStudioView />
+          )}
+
+          {activeTab === "project360" && (
+            <Project360View onNavigate={setActiveTab} />
+          )}
+
+          {activeTab === "folders" && (
+            <FoldersView />
           )}
 
           {activeTab === "meetings" && (

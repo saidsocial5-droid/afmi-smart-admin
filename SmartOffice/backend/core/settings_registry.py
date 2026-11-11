@@ -124,6 +124,10 @@ FIELDS += [
           help="Vérifiée au démarrage de l'application de bureau et toutes les heures.", restart=True),
     Field("backup.retention", "sauvegardes", "Nombre de sauvegardes conservées", "int", 30, min=1, max=365),
     # Apparence
+    Field("ged.mirror_local", "rapports", "Copier chaque document dans les dossiers locaux du projet", "bool", True, group="Documents",
+          help="Structure des « Dossiers Locaux » : Année › Trimestre › Comptes rendus, Rapports d'avancement, Rapports financiers."),
+    Field("ged.local_root", "rapports", "Dossier racine des projets", "string", "", group="Documents",
+          help="Vide : Documents\\AFMI_Projets. Utilisé quand un projet n'a pas encore de dossier local."),
     Field("ui.language", "apparence", "Langue de l'interface", "select", "fr", options=["fr", "ar"]),
     Field("ui.font_scale", "apparence", "Taille du texte (%)", "int", 100, min=85, max=130),
     Field("ui.primary_color", "apparence", "Couleur principale de l'interface", "color", "#1B4332"),

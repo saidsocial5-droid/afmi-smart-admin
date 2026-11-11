@@ -647,6 +647,15 @@
                 </Grid>
             </TabItem>
 
+            <!-- Vue 360° du projet (Lot 9) : budget, trésorerie, indicateurs, comptes rendus, documents, alertes -->
+            <TabItem Header="Vue 360°" x:Name="OverviewTab">
+                <Grid>
+                    <wv2:WebView2 x:Name="OverviewBrowser"/>
+                    <TextBlock x:Name="OverviewStatus" Text="Chargement de la vue d'ensemble…" Foreground="{StaticResource TextMutedBrush}"
+                               HorizontalAlignment="Center" VerticalAlignment="Center" TextWrapping="Wrap" Margin="20"/>
+                </Grid>
+            </TabItem>
+
             <!-- Comptes rendus et PV du projet (Lot 9) : écran Smart Office filtré sur le projet -->
             <TabItem Header="Comptes rendus &amp; PV" x:Name="MeetingsTab">
                 <Grid>

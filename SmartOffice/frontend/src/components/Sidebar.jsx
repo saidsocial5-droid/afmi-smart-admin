@@ -19,7 +19,9 @@ import {
   ChevronLeft,
   ChevronRight,
   Settings,
-  ClipboardList
+  ClipboardList,
+  Orbit,
+  FolderTree
 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 
@@ -82,6 +84,22 @@ export default function Sidebar({ activeTab, setActiveTab }) {
       label_en: 'Indicators & beneficiaries',
       icon: Target,
       badge: 'GAR'
+    },
+    {
+      id: 'project360',
+      label_ar: 'نظرة شاملة على المشروع',
+      label_fr: 'Vue 360° du projet',
+      label_en: 'Project 360° view',
+      icon: Orbit,
+      badge: '360°'
+    },
+    {
+      id: 'folders',
+      label_ar: 'الملفات والتصنيف',
+      label_fr: 'Dossiers & classement',
+      label_en: 'Folders & filing',
+      icon: FolderTree,
+      badge: 'GED'
     },
     {
       id: 'meetings',

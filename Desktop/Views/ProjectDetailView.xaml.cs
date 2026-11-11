@@ -40,24 +40,30 @@ namespace AFMI_Gestion_projet.Views
             if (e.PropertyName == nameof(ProjectDetailViewModel.ReportEditorUri)) ApplyEditorUri();
         }
 
-        private bool _meetingsLoaded;
+        private readonly System.Collections.Generic.HashSet<string> _loadedTabs = new();
 
-        /// <summary>Onglet « Comptes rendus & PV » : chargé à la première ouverture (démarre Smart Office si besoin).</summary>
+        /// <summary>
+        /// Onglets Smart Office de la fiche projet (Vue 360°, Comptes rendus & PV) : chargés à la première ouverture, ce qui
+        /// démarre Smart Office si besoin.
+        /// </summary>
         private async void OnProjectTabChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (e.OriginalSource != sender || _meetingsLoaded || !ReferenceEquals(((TabControl)sender).SelectedItem, MeetingsTab) || _vm == null) return;
-            _meetingsLoaded = true;
+            if (e.OriginalSource != sender || _vm == null) return;
+            var selected = ((TabControl)sender).SelectedItem;
+            var (browser, status, route) = ReferenceEquals(selected, MeetingsTab) ? (MeetingsBrowser, MeetingsStatus, "meetings-embed")
+                : ReferenceEquals(selected, OverviewTab) ? (OverviewBrowser, OverviewStatus, "project360-embed") : (null, null, "");
+            if (browser == null || status == null || !_loadedTabs.Add(route)) return;
             try
             {
-                await MeetingsBrowser.EnsureCoreWebView2Async(await Services.WebViewEnvironment.GetAsync());
+                await browser.EnsureCoreWebView2Async(await Services.WebViewEnvironment.GetAsync());
                 string url = await Services.SmartOfficeHostService.Instance.EnsureStartedAsync();
-                MeetingsBrowser.Source = new System.Uri($"{url}/?afmi_token={Services.SmartOfficeHostService.Instance.SessionToken}#meetings-embed/{_vm.Project.Id}");
-                MeetingsStatus.Visibility = Visibility.Collapsed;
+                browser.Source = new System.Uri($"{url}/?afmi_token={Services.SmartOfficeHostService.Instance.SessionToken}#{route}/{_vm.Project.Id}");
+                status.Visibility = Visibility.Collapsed;
             }
             catch (System.Exception ex)
             {
-                _meetingsLoaded = false;
-                MeetingsStatus.Text = "Comptes rendus indisponibles : " + ex.Message;
+                _loadedTabs.Remove(route);
+                status.Text = "Indisponible : " + ex.Message;
             }
         }
 

@@ -3,11 +3,20 @@ import { apiFetch } from '../apiClient';
 import { ShieldCheck, Cpu, Database, RefreshCw, Sparkles, Building, ExternalLink, Globe } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 
-export default function Header({ activeTab, onRefresh, llmConfig, totalBudget, totalBalance }) {
+export default function Header({ activeTab, onNavigate, onRefresh, llmConfig, totalBudget, totalBalance }) {
   const { language, setLanguage, t, isRtl } = useLanguage();
   // Identité, version et chiffres de la base unique ; l'état de l'IA reflète le mode hors ligne réel.
   const [info, setInfo] = useState(null);
   useEffect(() => { apiFetch('/api/settings/header').then((r) => (r.ok ? r.json() : null)).then(setInfo).catch(() => {}); }, [activeTab]);
+  // Recherche unifiée (Lot 9) : projets, documents, comptes rendus, opérations, documents rédigés
+  const [query, setQuery] = useState('');
+  const [results, setResults] = useState(null);
+  useEffect(() => {
+    if (query.trim().length < 2) { setResults(null); return undefined; }
+    const timer = setTimeout(() => apiFetch(`/api/search?q=${encodeURIComponent(query.trim())}`).then((r) => (r.ok ? r.json() : null)).then(setResults).catch(() => {}), 300);
+    return () => clearTimeout(timer);
+  }, [query]);
+  const groups = [['projects', 'Projets'], ['documents', 'Documents'], ['meetings', 'Comptes rendus'], ['operations', 'Opérations'], ['editor', 'Documents rédigés']];
   const mad = (cents) => (cents / 100).toLocaleString('fr-FR', { maximumFractionDigits: 0 });
   const engineLabel = info?.offline !== false ? 'IA locale (hors ligne)'
     : (llmConfig?.current_provider === 'ollama' ? t('engineOllama') : t('engineGemini'));
@@ -55,6 +64,27 @@ export default function Header({ activeTab, onRefresh, llmConfig, totalBudget, t
                 </div>
               </div>
             )}
+
+            {/* Recherche dans tout le logiciel */}
+            <div className="relative hidden xl:block">
+              <input aria-label="Rechercher dans tout le logiciel" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Rechercher partout…"
+                className="border border-slate-200 rounded-lg px-3 py-1.5 text-xs w-48" onKeyDown={(e) => { if (e.key === 'Escape') setQuery(''); }} />
+              {results && (
+                <div className="absolute end-0 top-9 w-96 max-h-96 overflow-auto bg-white border rounded-xl shadow-lg p-2 text-xs z-50" role="listbox">
+                  {groups.every(([k]) => !results[k]?.length) && <div className="text-slate-400 p-2">Aucun résultat.</div>}
+                  {groups.filter(([k]) => results[k]?.length).map(([k, label]) => (
+                    <div key={k} className="mb-1">
+                      <div className="font-semibold text-slate-500 px-1">{label}</div>
+                      {results[k].map((r) => (
+                        <button key={`${k}${r.id}`} className="block w-full text-start px-2 py-1 rounded hover:bg-slate-50" onClick={() => { onNavigate?.(r.tab); setQuery(''); }}>
+                          {r.title}{r.subtitle ? <span className="text-slate-400"> · {r.subtitle}</span> : null}
+                        </button>
+                      ))}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
 
             {/* Trilingual Language Switcher */}
             <div className="flex items-center bg-slate-100 p-0.5 rounded-xl border border-slate-200 text-xs font-bold">

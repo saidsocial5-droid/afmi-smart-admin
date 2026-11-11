@@ -26,6 +26,7 @@ from backend.api.routes_reports import router as reports_router
 from backend.api.routes_ged import router as ged_router
 from backend.api.routes_exports import router as exports_router
 from backend.api.routes_meetings import router as meetings_router
+from backend.api.routes_overview import router as overview_router
 from backend.core.orchestrator import mark_interrupted_runs
 
 
@@ -117,6 +118,7 @@ app.include_router(reports_router)
 app.include_router(ged_router)
 app.include_router(exports_router)
 app.include_router(meetings_router)
+app.include_router(overview_router)
 app.include_router(editor_router)
 
 

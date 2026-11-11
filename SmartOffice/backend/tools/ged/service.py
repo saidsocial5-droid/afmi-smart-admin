@@ -101,7 +101,14 @@ async def import_document(project_id: int, data: bytes, filename: str, title: Op
     indexed = await index.index_document(doc_id, pages)
     if guessed.startswith("Rapport") and not doc_type:
         mark_delivered(project_id, doc_id, guessed)
-    return {"document": get(doc_id), "proposed_obligations": proposals, "index": indexed}
+    # Copie dans les dossiers locaux du projet (Année › Trimestre › catégorie), pour l'explorateur Windows
+    from . import folders
+    try:
+        local_copy = folders.mirror_document(doc_id)
+    except OSError as e:
+        local_copy = None
+        print(f"[GED] Copie locale impossible : {e}")
+    return {"document": get(doc_id), "proposed_obligations": proposals, "index": indexed, "local_copy": local_copy}
 
 
 def get(doc_id: int) -> Dict[str, Any]:
@@ -131,6 +138,9 @@ def update(doc_id: int, data: Dict[str, Any]) -> Dict[str, Any]:
         values["ContractualEndDate"] = f"{data['end_date']} 00:00:00" if data["end_date"] else None
     if "key" in data:
         values["IsKeyReference"] = int(bool(data["key"]))
+    if "folder_id" in data:
+        from . import folders
+        folders.move_document(doc_id, data["folder_id"])
     with unified_db.connect() as conn:
         unified_db.update(conn, "Documents", "ProjectDocument", doc_id, values)
     return get(doc_id)

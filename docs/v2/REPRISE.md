@@ -15,8 +15,9 @@
 | Lot 6 — GED et cycle de vie des projets | Livré (voir CHANGELOG) |
 | Lot 7 — Exports Word/PDF/Excel et paramètres avancés | Livré (voir CHANGELOG) |
 | Lot 8 — Finalisation, données de démonstration, installateur 2.0.0 | Livré : **version 2.0.0** |
+| Lot 9 — Comptes rendus et PV, éditeur dans les rapports, dossiers, vue 360° | Livré : **version 2.1.0** |
 
-Tests au dernier commit : 97 xUnit (`Core.Tests`) et 164 pytest (1 sauté : vrais relevés absents), tous verts.
+Tests au dernier commit : 98 xUnit (`Core.Tests`) et 175 pytest (1 sauté : vrais relevés absents), tous verts.
 
 ## Reste à faire
 

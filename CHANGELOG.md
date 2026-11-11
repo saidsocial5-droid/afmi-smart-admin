@@ -1,5 +1,66 @@
 # Journal des modifications
 
+## [2.1.0] — 11/11/2026 — Lot 9 : comptes rendus et PV, éditeur dans les rapports, dossiers, liaisons
+
+Demandes de l'utilisateur après la première installation.
+
+### Ajouté
+- **Éditeur de type Word dans Projet › Rapports** (application de bureau) :
+  - « Générer et ouvrir dans l'éditeur » transforme le rapport (avancement, financier, clôture, conformité) en vrai
+    document : titres, tableau, listes, aux couleurs de la charte ;
+  - il ajoute les blocs de données du projet (budget, indicateurs, activités, graphique, photos), toujours à jour ;
+  - le document est modifiable et exportable en Word, PDF et PDF/A ;
+  - chaque régénération crée une nouvelle version.
+- **Comptes rendus & PV** (nouveau menu, et onglet de la fiche projet) :
+  - **types** : réunion, comité de pilotage, assemblée générale, conseil d'administration, rencontre (partenaire,
+    autorité, bailleur), visite de terrain, compte rendu d'activité (atelier, formation, sensibilisation) ;
+  - **saisie** : participants avec présence et sexe (comptage F/H), ordre du jour, résumé, **décisions** numérotées,
+    **actions** (responsable, échéance, statut) ;
+  - **rédaction dans l'éditeur** à partir d'un modèle propre au type, pré-rempli : tableau d'en-tête, participants,
+    ordre du jour, décisions, actions, signatures, et **suivi des actions des réunions précédentes** ;
+  - **repérage automatique des décisions et des actions** dans le texte rédigé (« Le comité décide… »,
+    « Décision 2 : … », « Action : … (responsable : X) avant le JJ/MM/AAAA », tableau des actions), à vérifier avant
+    ajout ;
+  - **action → tâche du planning du projet** (Gantt, échéances) ; une action terminée termine la tâche ;
+  - **validation** : le compte rendu est exporté et **archivé dans la GED** (type Procès-verbal ou Rapport
+    narratif). Pour une activité, le **rapport d'activité** est créé ou mis à jour, ce qui alimente les indicateurs
+    et le rapport annuel. Les PV de la vie associative (AG, CA) vont dans le dossier « Association — gouvernance ».
+- **Dossiers & classement** (nouveau menu) :
+  - arborescence **Année › Projet › Type** de tous les documents, avec leur nombre ;
+  - **dossiers personnalisés** : créer, renommer, supprimer (les documents reviennent alors dans le classement
+    automatique) ; on y range un document par simple choix dans une liste ;
+  - **copie automatique dans les dossiers locaux du projet**, avec la même structure que le bouton « Créer Dossiers »
+    du bureau : `Documents\AFMI_Projets\<Projet>\Année\Trimestre\Comptes Rendus | Rapports d'Avancement |
+    Rapports Financiers`, et « Documents Généraux & Conventions ». Le dossier du projet est créé s'il n'existe pas.
+- **Vue 360° du projet** (nouveau menu, et premier onglet Smart Office de la fiche projet), sur une seule page :
+  budget et réalisé, trésorerie des comptes liés et conventions, indicateurs, activités et comptes rendus, actions
+  en cours, documents par type et échéances, documents rédigés, photos, alertes. Chaque carte mène à son module.
+- **Recherche dans tout le logiciel** (en-tête) : projets, documents (plein texte), comptes rendus (décisions et
+  actions comprises), opérations bancaires, documents rédigés.
+- **Liaisons** :
+  - les actions en retard ou proches de leur échéance apparaissent dans les alertes de la GED, la vue 360° et les
+    e-mails d'alerte ;
+  - le rapport moral comprend une section « Réunions et instances » (nombre par type, décisions de l'année) ;
+  - la démonstration contient un comité de pilotage, un atelier et une assemblée générale.
+- **Migration `MeetingsAndFolders`** :
+  - tables `Meetings`, `MeetingParticipants`, `MeetingResolutions`, `MeetingActions`, `DocumentFolders` ;
+  - colonne `Documents.FolderId` ;
+  - testée par un aller-retour et sur une base 1.3.0.
+
+### Modifié
+- Écrans et exports hérités de la 1.3.0 : les montants s'affichaient en « € ». Ils sont désormais en **MAD**,
+  devise de référence de l'association.
+- Paramètres › Rapports : copie des documents dans les dossiers locaux (activée par défaut) et dossier racine des
+  projets.
+- Tests : 98 xUnit, 175 pytest.
+
+### Points à valider
+1. Les **modèles de PV** sont des propositions, à remplacer par vos modèles s'ils existent. Envoyez-les-moi ou
+   modifiez-les dans l'éditeur, puis enregistrez-les comme « Modèle ».
+2. **Projet technique « ASSO-GOUV »** : créé pour classer les PV d'AG et de CA, car les documents de l'application
+   sont rattachés à un projet. Il apparaît dans le portefeuille.
+3. **Copie locale** : elle est faite pour chaque document importé ou validé. Désactivable dans Paramètres › Rapports.
+
 ## [2.0.1] — 11/11/2026 — Corrections après la première installation
 
 ### Corrigé
