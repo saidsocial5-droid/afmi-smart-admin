@@ -1,0 +1,35 @@
+{
+  "_description": "Gabarits de lecture des relevés bancaires. Ajoutez une banque en copiant un bloc : 'detect' (mots du relevé qui identifient la banque), 'opening'/'closing' (libellés des soldes), 'columns' (mots d'en-tête de colonnes, en minuscules sans accents). Le gabarit 'generique' sert quand aucune banque n'est reconnue. Ces gabarits ne sont pas encore calibrés sur de vrais relevés : à ajuster avec les relevés de l'AFMI.",
+  "templates": [
+    {"id": "bp", "name": "Banque Populaire", "detect": ["banque populaire", "chaabi", "bcp"],
+     "opening": ["solde precedent", "ancien solde", "solde initial", "solde au debut"],
+     "closing": ["nouveau solde", "solde final", "solde a la fin"]},
+    {"id": "awb", "name": "Attijariwafa bank", "detect": ["attijariwafa", "attijari"],
+     "opening": ["solde initial", "solde precedent", "ancien solde", "solde d ouverture"],
+     "closing": ["solde final", "nouveau solde", "solde de cloture"]},
+    {"id": "boa", "name": "Bank of Africa (BMCE)", "detect": ["bank of africa", "bmce"],
+     "opening": ["solde precedent", "ancien solde", "solde initial"],
+     "closing": ["nouveau solde", "solde final"]},
+    {"id": "cih", "name": "CIH Bank", "detect": ["cih bank", "cih"],
+     "opening": ["ancien solde", "solde precedent", "solde initial"],
+     "closing": ["nouveau solde", "solde final"]},
+    {"id": "cam", "name": "Crédit Agricole du Maroc", "detect": ["credit agricole du maroc", "credit agricole"],
+     "opening": ["solde precedent", "ancien solde", "solde initial"],
+     "closing": ["nouveau solde", "solde final"]},
+    {"id": "sgma", "name": "Société Générale Maroc", "detect": ["societe generale", "sgma", "saham bank"],
+     "opening": ["solde precedent", "ancien solde", "solde initial"],
+     "closing": ["nouveau solde", "solde final"]},
+    {"id": "generique", "name": "Banque non reconnue", "detect": [],
+     "opening": ["solde precedent", "ancien solde", "solde initial", "solde d ouverture", "report"],
+     "closing": ["nouveau solde", "solde final", "solde de cloture"]}
+  ],
+  "columns": {
+    "date": ["date operation", "date op", "date opr", "date", "le"],
+    "value_date": ["date valeur", "date de valeur", "valeur", "val"],
+    "label": ["libelle de l operation", "libelle operation", "libelle", "designation", "operation", "nature de l operation", "description"],
+    "reference": ["reference", "ref", "n piece", "numero"],
+    "debit": ["debit", "debits", "retraits"],
+    "credit": ["credit", "credits", "versements"],
+    "amount": ["montant"]
+  }
+}

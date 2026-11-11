@@ -126,6 +126,54 @@ def find_first_tampered_audit_entry(conn: sqlite3.Connection) -> Optional[int]:
     return None
 
 
+# --- Écritures journalisées -------------------------------------------------------------------------------
+
+def now_ef() -> str:
+    """Horodatage UTC au format de stockage d'EF Core."""
+    return _ef_datetime(datetime.now(timezone.utc).replace(tzinfo=None))
+
+
+def _audit_value(v: Any) -> Any:
+    return None if v is None else str(v)
+
+
+def insert(conn: sqlite3.Connection, table: str, entity_type: str, values: Dict[str, Any]) -> int:
+    """INSERT + entrée d'audit « Création » (même format que AppDbContext : {"Champ": {"new": "…"}})."""
+    cols = ", ".join(values)
+    marks = ", ".join("?" for _ in values)
+    cur = conn.execute(f"INSERT INTO {table} ({cols}) VALUES ({marks})", tuple(values.values()))
+    new_id = cur.lastrowid
+    append_audit(conn, entity_type, str(new_id), ACTION_CREATE, {k: {"new": _audit_value(v)} for k, v in values.items()})
+    return new_id
+
+
+def update(conn: sqlite3.Connection, table: str, entity_type: str, row_id: int, values: Dict[str, Any]) -> bool:
+    """UPDATE des seuls champs modifiés + entrée d'audit « Modification ». Retourne False si rien n'a changé."""
+    old = conn.execute(f"SELECT * FROM {table} WHERE Id = ?", (row_id,)).fetchone()
+    if old is None:
+        raise KeyError(f"{entity_type} {row_id} introuvable.")
+    changes = {k: v for k, v in values.items() if old[k] != v}
+    if not changes:
+        return False
+    sets = ", ".join(f"{k} = ?" for k in changes)
+    conn.execute(f"UPDATE {table} SET {sets} WHERE Id = ?", (*changes.values(), row_id))
+    append_audit(conn, entity_type, str(row_id), ACTION_UPDATE,
+                 {k: {"old": _audit_value(old[k]), "new": _audit_value(v)} for k, v in changes.items()})
+    return True
+
+
+def soft_delete(conn: sqlite3.Connection, table: str, entity_type: str, row_id: int) -> None:
+    conn.execute(f"UPDATE {table} SET IsDeleted = 1, DeletedAtUtc = ? WHERE Id = ?", (now_ef(), row_id))
+    append_audit(conn, entity_type, str(row_id), "Suppression", {"IsDeleted": {"old": "False", "new": "True"}})
+
+
+def hard_delete(conn: sqlite3.Connection, table: str, entity_type: str, row_id: int) -> None:
+    old = conn.execute(f"SELECT * FROM {table} WHERE Id = ?", (row_id,)).fetchone()
+    conn.execute(f"DELETE FROM {table} WHERE Id = ?", (row_id,))
+    if old is not None:
+        append_audit(conn, entity_type, str(row_id), "Suppression définitive", {k: {"old": _audit_value(old[k])} for k in old.keys()})
+
+
 # --- Paramètres (table AppSettings, partagée avec SettingsService côté Desktop) ----------------------------
 
 def get_setting(key: str, default: Any = None) -> Any:
