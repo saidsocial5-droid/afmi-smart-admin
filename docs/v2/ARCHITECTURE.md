@@ -315,6 +315,22 @@ Paramètres lus ailleurs :
 
 Écran : `SmartOffice/frontend/src/views/SettingsView.jsx` (menu « Paramètres »).
 
+### 2.11 Finalisation 2.0.0 (Lot 8)
+
+| Élément | Emplacement | Rôle |
+|---|---|---|
+| Base de démonstration | `SmartOffice/demo/build_demo.py` | Association fictive (3 projets, 3 comptes dont un en EUR, 12 relevés) construite **par le pipeline réel** : relevés PDF lus, corrigés, validés, intégrés, opérations validées et rapprochées ; documents de la GED analysés ; rapport annuel généré. Schéma : script des migrations EF (`tests/fixtures/unified_schema.sql`). |
+| Mode démonstration | `Core/Services/DemoService.cs`, `MainViewModel.OpenDemo` | Copie du paquet `demo/` dans `%LocalAppData%\AFMIGestionProjet\demonstration`, correction des chemins absolus (documents, logos), seconde instance avec `AFMI_DESKTOP_DB`, `AFMI_DATA_DIR`, `AFMI_DEMO=1` (titre et bandeau, ni rapports programmés ni alertes e-mail). |
+| Rôles du bureau | `Core/Services/RoleService.cs` | Mêmes règles que `backend/core/roles.py`. La Trésorerie passe par `RunWrite`, refusé hors Administrateur et Comptable, avec un bandeau « consultation seule ». |
+| Alertes par e-mail | `backend/core/notifications.py` | Échéances (GED), trésorerie (solde négatif ou sous le seuil), rapprochement, échec de sauvegarde (`backup.last_error`, écrit par le Desktop). Tâche de fond horaire ; message seulement pour une alerte nouvelle (rappel à 7 jours) ; état dans `notifications.state` ; audit. |
+| En-tête Smart Office | `GET /api/settings/header` | Version, association, état réel de l'IA (hors ligne), trésorerie et budgets de la base unique (plus de montants codés en dur). |
+| Installateur | `installer/prepare_third_party.ps1`, `build_installer.bat`, `installer/AFMI_Smart_Admin.iss` | Tesseract dans `SmartOffice\smartoffice-backend\tesseract` (trouvé par `ocr.find_tesseract`), police Amiri installée pour l'utilisateur, base de démonstration, guide HTML (`docs/v2/captures/guide_html.py`). |
+| Captures du guide | `docs/v2/captures/capture_guide.js` | Script Playwright sur la base de démonstration. |
+
+Performance mesurée (test `test_performance_on_five_years_of_operations`, 15 000 opérations ventilées sur 5 ans) :
+états du rapport annuel en 0,5 s, classeur Excel complet en 3,6 s, sur la machine d'intégration. La base de
+démonstration se construit en 3 s.
+
 ## 3. Sécurité et confidentialité
 
 | Sujet | Mesure |
@@ -326,6 +342,7 @@ Paramètres lus ailleurs :
 | Rôles (Lot 7) | Écritures de l'API Smart Office filtrées par rôle. Compte Windows inconnu : lecture seule. Impossible d'enregistrer une liste qui retirerait ses propres droits d'administrateur. |
 | Journal | Les colonnes secrètes (`SmtpSettings.Password`, `AiSettings.CloudApiKey`) sont masquées (`***`) dans les entrées d'audit écrites par Python, comme côté .NET. |
 | IA par tâche (Lot 7) | Avant tout appel externe : mode hors ligne désactivé, plafond de coût non atteint, masquage du prompt, image refusée si le masquage est actif. « Tester la connexion » n'envoie aucune donnée et reste refusé en mode hors ligne. |
+| Démonstration (Lot 8) | Base fictive dans un dossier séparé ; refus d'installer la démonstration à l'emplacement de la base réelle ; aucun envoi d'e-mail depuis la démonstration. |
 | Isolation des tests | `AFMI_DESKTOP_DB` pointe vers une base jetable dans `Desktop.Tests`, `Core.Tests` et `pytest`. |
 
 ## 4. Variables d'environnement
@@ -338,6 +355,9 @@ Paramètres lus ailleurs :
 | `AFMI_DATA_DIR` | Desktop → backend (version installée) | Données propres au backend |
 | `AFMI_PDF_BROWSER` | Facultatif | Chemin d'Edge, de Chrome ou de Chromium pour l'impression PDF |
 | `AFMI_SOFFICE` | Facultatif | Chemin de `soffice` (LibreOffice), pour le PDF/A |
+| `AFMI_DEMO` | Desktop (fenêtre de démonstration) | Mode démonstration : titre, bandeau, aucun envoi |
+| `AFMI_DEMO_PACKAGE` | Facultatif | Dossier du paquet de démonstration (développement) |
+| `AFMI_DISABLE_SCHEDULER` | Tests | Désactive la tâche de fond des alertes |
 
 ## 5. Tests et intégration continue
 

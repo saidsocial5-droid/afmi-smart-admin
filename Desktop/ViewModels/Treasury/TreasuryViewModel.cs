@@ -92,6 +92,40 @@ namespace AFMI_Gestion_projet.ViewModels.Treasury
             }
         }
 
+        /// <summary>Rôle de l'utilisateur (Paramètres › Utilisateurs) : la Trésorerie est modifiable par l'administrateur et le comptable.</summary>
+        public bool CanEditFinance { get; } = ReadCanEditFinance(out _roleLabel);
+        private static string _roleLabel = string.Empty;
+        public bool IsReadOnly => !CanEditFinance;
+        public string ReadOnlyMessage => $"Consultation seule : votre rôle ({_roleLabel}) ne permet pas de modifier la trésorerie.";
+
+        private static bool ReadCanEditFinance(out string label)
+        {
+            try
+            {
+                using var db = new AppDbContext();
+                string? role = AFMI_Gestion_projet.Services.RoleService.CurrentRole(db, AuditContext.CurrentUser);
+                label = AFMI_Gestion_projet.Services.RoleService.Describe(role);
+                return AFMI_Gestion_projet.Services.RoleService.CanEditFinance(role);
+            }
+            catch (Exception)
+            {
+                label = "inconnu";
+                return true;          // base indisponible : les règles métier refuseront de toute façon l'écriture
+            }
+        }
+
+        /// <summary>Action d'écriture : refusée si le rôle ne le permet pas.</summary>
+        private void RunWrite(Action action, string? success = null)
+        {
+            if (!CanEditFinance)
+            {
+                StatusMessage = string.Empty;
+                ErrorMessage = ReadOnlyMessage;
+                return;
+            }
+            Run(action, success);
+        }
+
         private static long ParseAmount(string text, string field)
         {
             if (!Money.TryParse(text, out long minor)) throw new FinanceRuleException($"{field} : montant illisible « {text} ».");
@@ -177,7 +211,7 @@ namespace AFMI_Gestion_projet.ViewModels.Treasury
         [RelayCommand]
         private void SaveAccount()
         {
-            Run(() =>
+            RunWrite(() =>
             {
                 using var db = new AppDbContext();
                 var account = EditAccountId == 0 ? new BankAccount() : db.BankAccounts.Single(a => a.Id == EditAccountId);
@@ -203,7 +237,7 @@ namespace AFMI_Gestion_projet.ViewModels.Treasury
         private void CloseSelectedAccount()
         {
             if (SelectedAccount == null) return;
-            Run(() =>
+            RunWrite(() =>
             {
                 using var db = new AppDbContext();
                 new AccountService(db).Close(SelectedAccount.Account.Id, RequireDate(ClosingDate, "Date de clôture"));
@@ -225,7 +259,7 @@ namespace AFMI_Gestion_projet.ViewModels.Treasury
         private void AddLink()
         {
             if (SelectedAccount == null) return;
-            Run(() =>
+            RunWrite(() =>
             {
                 if (LinkProject?.Value is not { } projectId) throw new FinanceRuleException("Choisissez un projet.");
                 var mode = LinkMode?.Value ?? AllocationMode.None;
@@ -250,7 +284,7 @@ namespace AFMI_Gestion_projet.ViewModels.Treasury
         private void DeleteLink()
         {
             if (SelectedLink == null) return;
-            Run(() =>
+            RunWrite(() =>
             {
                 using var db = new AppDbContext();
                 db.AccountProjectLinks.Remove(db.AccountProjectLinks.Single(l => l.Id == SelectedLink.Link.Id));
@@ -280,7 +314,7 @@ namespace AFMI_Gestion_projet.ViewModels.Treasury
                 "Elles devront être ventilées puis validées. Une transaction déjà reprise n'est jamais dupliquée.",
                 "Reprise Smart Office 1.x", System.Windows.MessageBoxButton.YesNo, System.Windows.MessageBoxImage.Question);
             if (confirm != System.Windows.MessageBoxResult.Yes) return;
-            Run(() =>
+            RunWrite(() =>
             {
                 using var db = new AppDbContext();
                 var r = new LegacySmartOfficeImporter(db).Import(path, SelectedAccount.Account.Id);

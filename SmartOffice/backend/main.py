@@ -93,6 +93,10 @@ def startup_event():
     init_db()
     mark_interrupted_runs()
     load_persisted_gemini_key()
+    if os.getenv("AFMI_DISABLE_SCHEDULER") != "1":
+        import asyncio
+        from backend.core import notifications
+        asyncio.get_event_loop().create_task(notifications.scheduler())
     print("[AFMI-SmartOffice] System initialized successfully.")
 
 # Mount API Routers

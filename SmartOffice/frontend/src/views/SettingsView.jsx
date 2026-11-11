@@ -326,6 +326,25 @@ function SmtpPanel({ notify }) {
   );
 }
 
+function AlertsPanel({ notify }) {
+  const [alerts, setAlerts] = useState(null);
+  useEffect(() => { apiFetch('/api/settings/notifications/preview').then((r) => r.json()).then((d) => setAlerts(d.alerts || [])).catch(() => setAlerts([])); }, []);
+  const send = async () => {
+    const res = await apiFetch('/api/settings/notifications/send', { method: 'POST' });
+    const d = await res.json();
+    notify(res.ok && d.sent ? 'ok' : 'error', res.ok ? (d.sent ? `Récapitulatif envoyé à ${d.recipients.join(', ')}.` : d.reason) : d.detail);
+  };
+  if (alerts === null) return null;
+  return (
+    <div className="border border-slate-200 rounded-lg p-3 text-sm space-y-2">
+      <div className="flex items-center gap-2"><strong>Alertes en cours ({alerts.length})</strong>
+        <button className="ms-auto bg-slate-100 rounded px-3 py-1.5 text-xs flex items-center gap-1" onClick={send}><Mail className="w-3.5 h-3.5" /> Envoyer le récapitulatif maintenant</button></div>
+      <ul className="text-xs list-disc ps-5 max-h-40 overflow-auto">{alerts.map((a) => <li key={a.key}><strong>{a.kind}</strong> : {a.message}</li>)}</ul>
+      {alerts.length === 0 && <p className="text-xs text-slate-500">Aucune alerte pour les catégories choisies.</p>}
+    </div>
+  );
+}
+
 function ConfigFilePanel({ name, notify, structured }) {
   const [data, setData] = useState(null);
   const [text, setText] = useState('');
@@ -538,6 +557,7 @@ export default function SettingsView({ onNavigate }) {
             {special('utilisateurs') && <UsersPanel value={value('security.users')} setValue={(v) => setValue('security.users', v)} roles={snap.roles} currentUser={snap.current_user} />}
             {special('sauvegardes') && <BackupsPanel notify={notify} />}
             {special('notifications') && <SmtpPanel notify={notify} />}
+            {special('notifications') && <AlertsPanel notify={notify} />}
             {special('exports') && <ExportsInfo />}
             {special('chartes') && (
               <p className="text-sm">Les chartes graphiques (couleurs, polices, logos, en-têtes, mentions) et les modèles se gèrent dans

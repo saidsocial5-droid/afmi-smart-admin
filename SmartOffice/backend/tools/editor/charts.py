@@ -13,7 +13,7 @@ from backend.core import unified_db
 
 DEFAULT_STYLE: Dict[str, Any] = {
     "colors": {"primary": "#1B4332", "secondary": "#D4A373", "text": "#1F2937", "muted": "#6B7280"},
-    "fonts": {"body": "Calibri", "headings": "Calibri", "size_pt": 11},
+    "fonts": {"body": "Calibri", "headings": "Calibri", "size_pt": 11, "arabic": "Amiri"},   # Amiri : installée avec l'application
     "margins_mm": {"top": 25, "bottom": 22, "left": 20, "right": 20},
     "logos": [],                       # [{"file_id": 3, "position": "header-left", "height_mm": 14}]
     "header": {"text": "", "first_page_text": "", "even_text": ""},

@@ -14,9 +14,15 @@
 | Lot 5 — Rapports annuels moral et financier | Livré (voir CHANGELOG) |
 | Lot 6 — GED et cycle de vie des projets | Livré (voir CHANGELOG) |
 | Lot 7 — Exports Word/PDF/Excel et paramètres avancés | Livré (voir CHANGELOG) |
-| Lot 8 — Finalisation, données de démonstration, installateur 2.0.0 | **Prochaine étape** |
+| Lot 8 — Finalisation, données de démonstration, installateur 2.0.0 | Livré : **version 2.0.0** |
 
-Tests au dernier commit : 91 xUnit (`Core.Tests`) et 157 pytest (1 sauté : vrais relevés absents), tous verts.
+Tests au dernier commit : 96 xUnit (`Core.Tests`) et 164 pytest (1 sauté : vrais relevés absents), tous verts.
+
+## Reste à faire
+
+1. **Première construction sous Windows** (`build_installer.bat`) : contrôler les empreintes consignées par
+   `prepare_third_party.ps1`, installer, essayer la démonstration et les écrans WPF.
+2. Recalibrer les gabarits de relevés sur de vrais relevés anonymisés (voir ci-dessous).
 
 ## En attente de l'AFMI
 
@@ -60,4 +66,6 @@ cd SmartOffice && pip install -r requirements.txt pytest && python -m pytest tes
   `overrides` dans `package.json` : les mettre à jour tous ensemble.
 - Le Desktop compile hors Windows avec `-p:EnableWindowsTargeting=true` ; ses tests ne tournent que sous Windows.
 - Exports PDF : un navigateur Chromium (Edge sous Windows) est nécessaire ; LibreOffice (facultatif) pour le PDF/A.
+- Base de démonstration : `cd SmartOffice && python -m demo.build_demo <dossier>` ; captures du guide :
+  `docs/v2/captures/capture_guide.js`.
 - Après toute migration, régénérer `SmartOffice/tests/fixtures/unified_schema.sql` (voir `ARCHITECTURE.md` § 2.1).

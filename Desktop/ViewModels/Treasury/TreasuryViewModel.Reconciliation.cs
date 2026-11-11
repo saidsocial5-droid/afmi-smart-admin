@@ -85,7 +85,7 @@ namespace AFMI_Gestion_projet.ViewModels.Treasury
             if (SelectedAccount == null) { ErrorMessage = "Sélectionnez le compte du relevé."; return; }
             var dialog = new Microsoft.Win32.OpenFileDialog { Filter = "Relevé exporté par la banque (*.csv;*.txt)|*.csv;*.txt", Title = "Importer un relevé CSV" };
             if (dialog.ShowDialog() != true) return;
-            Run(() =>
+            RunWrite(() =>
             {
                 long opening = ParseAmount(ImportOpening, "Solde initial du relevé");
                 long closing = ParseAmount(ImportClosing, "Solde final du relevé");
@@ -117,7 +117,7 @@ namespace AFMI_Gestion_projet.ViewModels.Treasury
         private void ValidateStatement()
         {
             if (SelectedStatement == null) return;
-            Run(() =>
+            RunWrite(() =>
             {
                 using var db = new AppDbContext();
                 new ReconciliationService(db).Validate(SelectedStatement.Statement.Id);
@@ -129,7 +129,7 @@ namespace AFMI_Gestion_projet.ViewModels.Treasury
         private void AutoMatch()
         {
             if (SelectedStatement == null) return;
-            Run(() =>
+            RunWrite(() =>
             {
                 if (!int.TryParse(ToleranceDays, out int days) || days is < 0 or > 30) throw new FinanceRuleException("Tolérance de 0 à 30 jours.");
                 using var db = new AppDbContext();
@@ -142,7 +142,7 @@ namespace AFMI_Gestion_projet.ViewModels.Treasury
         [RelayCommand]
         private void ManualMatch()
         {
-            Run(() =>
+            RunWrite(() =>
             {
                 if (SelectedStatementLine == null || SelectedUnmatchedOperation == null)
                     throw new FinanceRuleException("Sélectionnez une ligne de relevé et une opération non rapprochée.");
@@ -156,7 +156,7 @@ namespace AFMI_Gestion_projet.ViewModels.Treasury
         private void Unmatch()
         {
             if (SelectedStatementLine is not { IsMatched: true }) return;
-            Run(() =>
+            RunWrite(() =>
             {
                 using var db = new AppDbContext();
                 new ReconciliationService(db).Unmatch(SelectedStatementLine.Id);

@@ -36,14 +36,23 @@ Journal : `%LocalAppData%\AFMIGestionProjet\smartoffice.log`.
 
 ## Installation (utilisateurs)
 
-Exécuter `AFMI_Smart_Admin_Setup_1.1.0.exe` : installation sans droits administrateur, raccourcis menu Démarrer et bureau.
+Exécuter `AFMI_Smart_Admin_Setup_2.0.0.exe` : installation sans droits administrateur, raccourcis menu Démarrer et
+bureau, **guide utilisateur** (menu Démarrer). L'installateur embarque Tesseract (français, arabe), la police arabe
+Amiri et une **base de démonstration** (bouton « 🎓 Démonstration »).
 Prérequis : Windows 10 (1809+) ou 11 x64, Microsoft Edge WebView2 Runtime (présent par défaut sur Windows 11).
+Facultatif : LibreOffice, pour les exports PDF/A.
+
+Documentation : [guide utilisateur](docs/v2/GUIDE_UTILISATEUR.md), [architecture](docs/v2/ARCHITECTURE.md),
+[analyse](docs/v2/ANALYSE.md), [historique des versions](CHANGELOG.md).
 
 ## Construire l'installateur
 
-`build_installer.bat` enchaîne : tests .NET → tests Python → build React → backend PyInstaller → `dotnet publish`
-autonome → Inno Setup. Résultat : `build\installer\AFMI_Smart_Admin_Setup_<version>.exe`.
-Prérequis développeur : .NET 9 SDK, Python 3.11+, Node.js, Inno Setup 6+.
+`build_installer.bat` enchaîne : composants tiers (`installer\prepare_third_party.ps1` : Tesseract et langues fra/ara,
+police Amiri, empreintes SHA-256 consignées) → tests .NET → tests Python → build React → backend PyInstaller →
+`dotnet publish` autonome → base de démonstration (`SmartOffice/demo/build_demo.py`) → guide HTML → Inno Setup.
+Résultat : `build\installer\AFMI_Smart_Admin_Setup_2.0.0.exe`.
+Prérequis développeur : .NET 9 SDK, Python 3.11+, Node.js, Inno Setup 6+, accès Internet pour la première préparation
+des composants tiers.
 
 ## Développement
 

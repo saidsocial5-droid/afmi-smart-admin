@@ -25,3 +25,7 @@ SmartOffice/backend/data/
 .env
 *.pfx
 *.key
+
+# Composants tiers téléchargés par installer/prepare_third_party.ps1 (empreintes conservées)
+third_party/*
+!third_party/SHA256SUMS.txt

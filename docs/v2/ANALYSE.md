@@ -4,7 +4,7 @@
 
 **Statut : validé le 10/11/2026.** Les recommandations des décisions D1 à D5 et des questions Q1, Q2, Q6 à Q9,
 Q11, Q12 et Q14 sont retenues. Les questions Q3, Q4, Q5, Q10 et Q13 attendent des documents ou des réponses
-de l'AFMI. Avancement : **Lots 1 à 7 livrés** (voir [CHANGELOG](../../CHANGELOG.md) et [ARCHITECTURE](ARCHITECTURE.md)).
+de l'AFMI. Avancement : **Lots 1 à 8 livrés — version 2.0.0** (voir [CHANGELOG](../../CHANGELOG.md) et [ARCHITECTURE](ARCHITECTURE.md)).
 
 Écarts entre ce plan et sa réalisation, à ce stade :
 
@@ -23,8 +23,11 @@ de l'AFMI. Avancement : **Lots 1 à 7 livrés** (voir [CHANGELOG](../../CHANGELO
   installé sur tout Windows 10/11, ou par Chrome/Chromium, en mode sans interface. **LibreOffice** est facultatif :
   s'il est installé, il produit le **PDF/A-2b** et des PDF avec notes en bas de page. Ni l'un ni l'autre n'est
   téléchargé par l'application.
-- **Lot 7 (rôles) :** les rôles protègent les écritures de l'API Smart Office. Les écrans WPF (Trésorerie,
-  projets) ne sont pas encore restreints : l'application de bureau reste un poste de confiance.
+- **Rôles (Lots 7 et 8) :** les rôles protègent les écritures de l'API Smart Office et de la Trésorerie du bureau.
+  Les écrans hérités de la 1.3.0 (portefeuille, tâches, bailleurs) ne sont pas restreints.
+- **Lot 8 (installateur) :** Tesseract et la police Amiri sont téléchargés une fois à la construction
+  (`prepare_third_party.ps1`), puis vérifiés par empreinte. LibreOffice n'est pas embarqué (taille : plus de
+  300 Mo) : il reste facultatif, pour le PDF/A.
 - **Lot 7 (sauvegardes) :** l'ancienne sauvegarde automatique du Desktop (copie du fichier ouvert, 5 exemplaires)
   est remplacée par `BackupService` : copie cohérente par l'API SQLite, fréquence et conservation paramétrables,
   restauration différée au démarrage.

@@ -265,6 +265,7 @@ class HtmlWriter:
 .doc-body h2::before { counter-increment: h2; content: counter(h1) "." counter(h2) " "; }
 .doc-body h3::before { counter-increment: h3; content: counter(h1) "." counter(h2) "." counter(h3) " "; }""" if s.get("heading_numbering") else ""
         body_font = _css_str(f.get("body") or "Calibri")
+        arabic = _css_str(f.get("arabic") or "Amiri")
         head_font = _css_str(f.get("headings") or f.get("body") or "Calibri")
         return f"""<!doctype html><html lang="{self.lang}" dir="{direction}"><head><meta charset="utf-8"><title>{escape(self.p['title'])}</title>
 <style>
@@ -272,7 +273,7 @@ class HtmlWriter:
 @page :left {{ {self._margin_boxes('left', logos)} }}
 @page :first {{ {self._margin_boxes('first', logos)} }}
 html, body {{ margin: 0; background: white; }}
-.doc-body {{ font-family: "{body_font}", Calibri, Carlito, Arial, "DejaVu Sans", sans-serif; font-size: {f.get('size_pt') or 11}pt; color: {c.get('text') or '#1F2937'}; line-height: 1.45; }}
+.doc-body {{ font-family: "{body_font}", Calibri, Carlito, "{arabic}", Arial, "DejaVu Sans", sans-serif; font-size: {f.get('size_pt') or 11}pt; color: {c.get('text') or '#1F2937'}; line-height: 1.45; }}
 .doc-body h1, .doc-body h2, .doc-body h3 {{ font-family: "{head_font}", Calibri, Carlito, Arial, sans-serif; color: {c.get('primary') or '#1B4332'}; break-after: avoid; }}
 .doc-body h1 {{ font-size: 18pt; margin: 14pt 0 8pt; }} .doc-body h2 {{ font-size: 14pt; margin: 12pt 0 6pt; }} .doc-body h3 {{ font-size: 12pt; margin: 10pt 0 4pt; }}
 .doc-body p {{ margin: 0 0 6pt; }}

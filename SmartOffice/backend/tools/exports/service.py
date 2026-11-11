@@ -110,7 +110,9 @@ async def annual_package(year: int, scope_type: str = "association", scope_id: O
         else:
             res = await generator.generate(year, scope_type, scope_id, language, kind)
             if not res.get("document"):
-                raise ValueError("Rapport non généré : " + "; ".join(c["message"] for c in res.get("blocking") or []))
+                blocking = [c["message"] for c in res.get("checks") or [] if c.get("level") == "blocking"]
+                raise ValueError("Rapport non généré, contrôle bloquant : " + "; ".join(blocking or ["voir les contrôles de cohérence"]) +
+                                 " Levez-le dans la Trésorerie, ou désignez un rapport déjà relu.")
             ids[kind] = res["document"]["id"]
     import asyncio
     return await asyncio.to_thread(_build_package, year, scope_type, scope_id, language, ids, annex_ids or [],

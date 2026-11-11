@@ -1,4 +1,5 @@
 import json
+import os
 from pathlib import Path
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
@@ -251,3 +252,47 @@ def save_smtp(data: Dict[str, Any]):
 @router.post("/smtp/test")
 def test_smtp(data: Dict[str, Any]):
     return {"sent_to": _guard(smtp.send_test, data.get("to", ""))}
+
+
+@router.post("/notifications/send")
+def send_notifications():
+    from backend.core import notifications
+    return _guard(notifications.run, True)
+
+
+@router.get("/notifications/preview")
+def preview_notifications():
+    from backend.core import notifications
+    return {"alerts": _guard(notifications.collect)}
+
+
+APP_VERSION = "2.0.0"
+
+
+@router.get("/header")
+def header_info():
+    """En-tête de Smart Office : identité, version, état réel de l'IA, trésorerie et budget de la base unique."""
+    from datetime import date as _date
+    from decimal import Decimal
+    info = {"version": APP_VERSION, "demo": os.getenv("AFMI_DEMO") == "1", "offline": privacy.get(privacy.OFFLINE_KEY),
+            "association": None, "acronym": None, "treasury_mad": None, "budget_mad": None}
+    if not unified_db.is_available():
+        return info
+    from backend.tools.reports import finance
+    info["association"] = unified_db.get_setting("association.name", "Association Forêt Modèle d'Ifrane")
+    info["acronym"] = unified_db.get_setting("association.acronym", "AFMI")
+    today = _date.today().isoformat()
+    with unified_db.connect() as conn:
+        total = 0
+        for a in conn.execute("SELECT Id, Currency FROM BankAccounts WHERE IsDeleted = 0 AND Status = 'Active'"):
+            rate = finance._rate(conn, a["Currency"], today)
+            if rate is not None:
+                total += int(Decimal(finance.book_balance(conn, a["Id"], today)) * rate)
+        info["treasury_mad"] = total
+        budget = 0
+        for l in conn.execute("SELECT PlannedMinor, Currency FROM BudgetLines WHERE IsDeleted = 0"):
+            rate = finance._rate(conn, l["Currency"], today)
+            if rate is not None:
+                budget += int(Decimal(l["PlannedMinor"]) * rate)
+        info["budget_mad"] = budget
+    return info

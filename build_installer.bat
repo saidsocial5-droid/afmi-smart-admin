@@ -3,35 +3,51 @@ title AFMI Smart Admin - Construction de l'installateur Windows
 chcp 65001 > nul
 setlocal
 cd /d "%~dp0"
-set VERSION=1.3.0
+set VERSION=2.0.0
 
 echo ===================================================================
 echo   AFMI Smart Admin %VERSION% - construction de l'installateur
 echo ===================================================================
 
-echo [1/6] Tests de l'application de bureau...
+echo [0/8] Composants tiers (Tesseract fra/ara, police Amiri)...
+powershell -NoProfile -ExecutionPolicy Bypass -File installer\prepare_third_party.ps1 || goto :error
+
+echo [1/8] Tests de l'application de bureau...
 dotnet test "AFMI Smart Admin.sln" --nologo -v q || goto :error
 
-echo [2/6] Tests du backend Smart Office...
+echo [2/8] Tests du backend Smart Office...
 python -m pytest SmartOffice\tests -q -p no:cacheprovider || goto :error
 
-echo [3/6] Compilation de l'interface Smart Office...
+echo [3/8] Compilation de l'interface Smart Office...
 pushd SmartOffice\frontend
 if not exist node_modules call npm install || (popd & goto :error)
 call npm run build || (popd & goto :error)
 popd
 
-echo [4/6] Compilation du backend Smart Office (PyInstaller)...
+echo [4/8] Compilation du backend Smart Office (PyInstaller)...
 call SmartOffice\build_backend.bat || goto :error
 rem build_backend.bat changes the current directory
 cd /d "%~dp0"
 
-echo [5/6] Publication de l'application de bureau (.NET autonome)...
+echo [5/8] Publication de l'application de bureau (.NET autonome)...
 if exist build\app rmdir /s /q build\app
 dotnet publish "Desktop\AFMI Smart Admin.csproj" -c Release -r win-x64 --self-contained true -p:Version=%VERSION% -o build\app --nologo || goto :error
 xcopy /e /i /q /y "SmartOffice\build\dist\smartoffice-backend" "build\app\SmartOffice\smartoffice-backend" > nul || goto :error
+rem Tesseract embarqué : trouvé par le backend dans son dossier (backend/tools/statements/ocr.py)
+xcopy /e /i /q /y "third_party\tesseract" "build\app\SmartOffice\smartoffice-backend\tesseract" > nul || goto :error
 
-echo [6/6] Création de l'installateur (Inno Setup)...
+echo [6/8] Base de démonstration (association fictive, construite par le pipeline réel)...
+pushd SmartOffice
+python -m demo.build_demo "..\build\app\demo" || (popd & goto :error)
+popd
+
+python docs\v2\captures\guide_html.py "build\app\docs\GUIDE_UTILISATEUR.html" || goto :error
+
+echo [7/8] Contrôle du contenu...
+if not exist "build\app\demo\database.db" goto :error
+if not exist "build\app\SmartOffice\smartoffice-backend\tesseract\tessdata\ara.traineddata" goto :error
+
+echo [8/8] Création de l'installateur (Inno Setup)...
 set ISCC=
 for %%P in ("%ProgramFiles%\Inno Setup 7\ISCC.exe" "%ProgramFiles(x86)%\Inno Setup 6\ISCC.exe" "%ProgramFiles%\Inno Setup 6\ISCC.exe") do if exist %%P set ISCC=%%P
 if not defined ISCC (

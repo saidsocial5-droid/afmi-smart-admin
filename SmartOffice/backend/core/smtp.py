@@ -45,20 +45,21 @@ def save(data: Dict[str, Any]) -> Dict[str, Any]:
     return get()
 
 
-def send_test(to: str = "") -> str:
+def send(subject: str, body: str, recipients: list) -> None:
+    """Envoi d'un message avec les réglages enregistrés (STARTTLS, ou SSL sur le port 465)."""
     with unified_db.connect() as conn:
         r = conn.execute("SELECT * FROM SmtpSettings ORDER BY Id LIMIT 1").fetchone()
     if r is None or not r["Server"]:
         raise SmtpError("Renseignez d'abord le serveur SMTP.")
-    recipient = (to or r["RecipientEmail"] or "").split(",")[0].strip()
-    if "@" not in recipient:
+    recipients = [x.strip() for x in recipients if "@" in (x or "")]
+    if not recipients:
         raise SmtpError("Indiquez un destinataire.")
     password = dpapi.unprotect(r["Password"]) if r["Password"] else ""
     msg = EmailMessage()
-    msg["Subject"] = "AFMI Smart Admin — message de test"
-    msg["From"] = r["Username"] or recipient
-    msg["To"] = recipient
-    msg.set_content("Ce message confirme que l'envoi d'e-mails depuis AFMI Smart Admin fonctionne.")
+    msg["Subject"] = subject
+    msg["From"] = r["Username"] or recipients[0]
+    msg["To"] = ", ".join(recipients)
+    msg.set_content(body)
     context = ssl.create_default_context()
     try:
         if r["Port"] == 465:
@@ -74,4 +75,11 @@ def send_test(to: str = "") -> str:
                 s.send_message(msg)
     except (OSError, smtplib.SMTPException) as e:
         raise SmtpError(f"Envoi impossible : {e}") from e
+
+
+def send_test(to: str = "") -> str:
+    with unified_db.connect() as conn:
+        r = conn.execute("SELECT RecipientEmail FROM SmtpSettings ORDER BY Id LIMIT 1").fetchone()
+    recipient = (to or (r["RecipientEmail"] if r else "") or "").split(",")[0].strip()
+    send("AFMI Smart Admin — message de test", "Ce message confirme que l'envoi d'e-mails depuis AFMI Smart Admin fonctionne.", [recipient])
     return recipient

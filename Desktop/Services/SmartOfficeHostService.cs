@@ -61,7 +61,8 @@ namespace AFMI_Gestion_projet.Services
                 {
                     psi.FileName = bundledExe;
                     psi.WorkingDirectory = Path.GetDirectoryName(bundledExe)!;
-                    psi.Environment["AFMI_DATA_DIR"] = InstalledDataDir;
+                    // AFMI_DATA_DIR déjà fixé (fenêtre de démonstration) : conservé
+                    psi.Environment["AFMI_DATA_DIR"] = Environment.GetEnvironmentVariable("AFMI_DATA_DIR") ?? InstalledDataDir;
                     foreach (var arg in new[] { "--host", "127.0.0.1", "--port", port.ToString() }) psi.ArgumentList.Add(arg);
                 }
                 else

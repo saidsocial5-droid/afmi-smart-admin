@@ -77,6 +77,9 @@
             <Button Grid.Column="1" Content="↻ Actualiser" Command="{Binding RefreshCommand}" Style="{StaticResource SecondaryAction}" VerticalAlignment="Center"/>
         </Grid>
         <StackPanel Grid.Row="1">
+            <Border Background="#FEF3C7" CornerRadius="4" Padding="8,4" Margin="0,0,0,4" Visibility="{Binding IsReadOnly, Converter={StaticResource BoolToVis}}">
+                <TextBlock Text="{Binding ReadOnlyMessage}" Foreground="#92400E" TextWrapping="Wrap"/>
+            </Border>
             <TextBlock Text="{Binding ErrorMessage}" Foreground="#A80000" TextWrapping="Wrap" FontWeight="SemiBold" Margin="0,0,0,4"/>
             <TextBlock Text="{Binding StatusMessage}" Foreground="#107C41" TextWrapping="Wrap" Margin="0,0,0,4"/>
         </StackPanel>

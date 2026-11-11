@@ -181,7 +181,7 @@ namespace AFMI_Gestion_projet.ViewModels.Treasury
         [RelayCommand]
         private void SaveDraft()
         {
-            Run(() =>
+            RunWrite(() =>
             {
                 using var db = new AppDbContext();
                 new FinanceService(db).AddDraft(BuildOperation());
@@ -193,7 +193,7 @@ namespace AFMI_Gestion_projet.ViewModels.Treasury
         [RelayCommand]
         private void SaveAndValidate()
         {
-            Run(() =>
+            RunWrite(() =>
             {
                 using var db = new AppDbContext();
                 using var tx = db.Database.BeginTransaction();
@@ -210,7 +210,7 @@ namespace AFMI_Gestion_projet.ViewModels.Treasury
         private void ValidateSelected()
         {
             if (SelectedOperation is not { IsDraft: true }) return;
-            Run(() =>
+            RunWrite(() =>
             {
                 using var db = new AppDbContext();
                 new FinanceService(db).Validate(SelectedOperation.Id, User);
@@ -226,7 +226,7 @@ namespace AFMI_Gestion_projet.ViewModels.Treasury
                 $"Supprimer l'opération « {SelectedOperation.Label} » du {SelectedOperation.Date} ?\n\nElle reste conservée dans l'historique (suppression logique).",
                 "Supprimer une opération", System.Windows.MessageBoxButton.YesNo, System.Windows.MessageBoxImage.Warning);
             if (confirm != System.Windows.MessageBoxResult.Yes) return;
-            Run(() =>
+            RunWrite(() =>
             {
                 using var db = new AppDbContext();
                 var op = db.Operations.Single(o => o.Id == SelectedOperation.Id);
@@ -241,7 +241,7 @@ namespace AFMI_Gestion_projet.ViewModels.Treasury
         [RelayCommand]
         private void ExecuteTransfer()
         {
-            Run(() =>
+            RunWrite(() =>
             {
                 if (TransferFrom == null || TransferTo == null) throw new FinanceRuleException("Choisissez les comptes source et destination.");
                 long amount = ParseAmount(TransferAmount, "Montant");

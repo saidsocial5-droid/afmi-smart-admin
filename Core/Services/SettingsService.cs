@@ -18,6 +18,7 @@ namespace AFMI_Gestion_projet.Services
         public const string BackupFolder = "backup.folder";
         public const string BackupFrequency = "backup.frequency";
         public const string BackupRetention = "backup.retention";
+        public const string BackupLastError = "backup.last_error";
     }
 
     /// <summary>Lecture/écriture typée des paramètres (JSON). Les secrets sont protégés par DPAPI (Windows).</summary>
@@ -38,6 +39,7 @@ namespace AFMI_Gestion_projet.Services
             [SettingKeys.BackupFolder] = "",
             [SettingKeys.BackupFrequency] = "daily",
             [SettingKeys.BackupRetention] = 30,
+            [SettingKeys.BackupLastError] = "",
         };
 
         public T Get<T>(string key)

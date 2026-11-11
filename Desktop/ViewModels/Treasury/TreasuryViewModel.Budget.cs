@@ -99,7 +99,7 @@ namespace AFMI_Gestion_projet.ViewModels.Treasury
         [RelayCommand]
         private void AddBudgetLine()
         {
-            Run(() =>
+            RunWrite(() =>
             {
                 if (string.IsNullOrWhiteSpace(LineLabel)) throw new FinanceRuleException("Libellé de la ligne obligatoire.");
                 using var db = new AppDbContext();
@@ -119,7 +119,7 @@ namespace AFMI_Gestion_projet.ViewModels.Treasury
         private void DeleteBudgetLine()
         {
             if (SelectedBudgetLine == null) return;
-            Run(() =>
+            RunWrite(() =>
             {
                 using var db = new AppDbContext();
                 if (db.OperationAllocations.Any(a => a.BudgetLineId == SelectedBudgetLine.Line.Id))
@@ -133,7 +133,7 @@ namespace AFMI_Gestion_projet.ViewModels.Treasury
         [RelayCommand]
         private void AddAgreement()
         {
-            Run(() =>
+            RunWrite(() =>
             {
                 if (BudgetProject?.Value is not { } projectId) throw new FinanceRuleException("Une convention concerne un projet : choisissez-le.");
                 if (AgreementFunder == null) throw new FinanceRuleException("Choisissez le bailleur (menu Bailleurs de fonds pour en créer un).");
@@ -159,7 +159,7 @@ namespace AFMI_Gestion_projet.ViewModels.Treasury
         [RelayCommand]
         private void AddTranche()
         {
-            Run(() =>
+            RunWrite(() =>
             {
                 if (SelectedAgreement == null) throw new FinanceRuleException("Choisissez une convention.");
                 using var db = new AppDbContext();
@@ -177,7 +177,7 @@ namespace AFMI_Gestion_projet.ViewModels.Treasury
         [RelayCommand]
         private void MarkTrancheReceived()
         {
-            Run(() =>
+            RunWrite(() =>
             {
                 if (SelectedTranche == null || TrancheOperation == null) throw new FinanceRuleException("Choisissez la tranche et l'opération de recette qui l'a encaissée.");
                 using var db = new AppDbContext();
@@ -193,7 +193,7 @@ namespace AFMI_Gestion_projet.ViewModels.Treasury
         [RelayCommand]
         private void AddRate()
         {
-            Run(() =>
+            RunWrite(() =>
             {
                 if (!decimal.TryParse(RateValue.Replace(',', '.'), System.Globalization.NumberStyles.Number, System.Globalization.CultureInfo.InvariantCulture, out var rate) || rate <= 0)
                     throw new FinanceRuleException("Taux illisible.");

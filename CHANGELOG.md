@@ -1,5 +1,79 @@
 # Journal des modifications
 
+## [2.0.0] — 11/11/2026 — Lot 8 : finalisation, démonstration, installateur
+
+Version 2.0.0 : les huit lots du cahier des charges sont livrés. Documentation :
+[guide utilisateur illustré](docs/v2/GUIDE_UTILISATEUR.md), [architecture](docs/v2/ARCHITECTURE.md),
+[analyse](docs/v2/ANALYSE.md).
+
+### Décisions prises pour ce lot
+- **Démonstration séparée** : la base fictive est livrée avec l'application et s'ouvre dans une seconde fenêtre.
+  Elle ne peut jamais remplacer ni modifier la base réelle.
+- **Rôles étendus** à la Trésorerie de l'application de bureau.
+- **Alertes envoyées automatiquement**, sans répétition : une alerte n'est rappelée qu'au bout de 7 jours.
+- **LibreOffice non embarqué** (plus de 300 Mo) : il reste facultatif, pour le PDF/A.
+
+### Ajouté
+- **Base de démonstration** : « Association des Cèdres de l'Atlas », entièrement fictive.
+  - 3 projets : restauration de la cédraie (Fonds Vert, fictif), gestion de l'eau (Fondation Atlas, en EUR),
+    éducation à l'environnement (fonds propres).
+  - 3 comptes bancaires (Banque Populaire, Attijariwafa, CIH en euros) et **12 relevés mensuels** PDF, de janvier à
+    avril 2026.
+  - Conventions et tranches, budgets, taux de change, activités, indicateurs avec mesures par sexe et par âge,
+    10 photos légendées, 3 documents dans la GED (convention, rapport narratif, procès-verbal), rapport annuel.
+  - Tout est construit **par les traitements réels** : lecture des relevés, imputation, validation, intégration,
+    rapprochement, analyse des documents, génération du rapport.
+  - Un relevé est laissé « à vérifier » et deux opérations en brouillon, pour montrer les écrans de validation et
+    les contrôles.
+- **Mode démonstration** (bouton « 🎓 Démonstration ») : fenêtre marquée « DÉMONSTRATION — données fictives »,
+  remise à zéro possible, aucun e-mail envoyé.
+- **Rôles dans l'application de bureau** : la Trésorerie est en consultation seule pour les rôles Chargé de projet et
+  Lecteur, avec un bandeau explicatif.
+- **Alertes par e-mail** :
+  - contenu : échéances de rapports et de conventions, solde négatif ou sous le seuil, éléments non rapprochés,
+    échec d'une sauvegarde automatique ;
+  - vérification toutes les heures ; un récapitulatif part seulement s'il contient une alerte nouvelle ;
+  - aperçu et envoi immédiat dans Paramètres › Notifications ; chaque envoi est journalisé.
+- **Tests de bout en bout** :
+  - la construction de la démonstration ;
+  - les contrôles, exports Word, Excel et ZIP, et la recherche dans la GED sur cette base ;
+  - les alertes ;
+  - la **performance** : 15 000 opérations sur 5 ans donnent les états du rapport annuel en 0,5 s et le classeur
+    Excel en 3,6 s.
+- **Guide utilisateur** illustré de 11 captures d'écran prises sur la démonstration. L'installateur le livre en
+  HTML, avec un raccourci dans le menu Démarrer.
+- **Installateur 2.0.0** :
+  - **Tesseract OCR** (français et arabe) embarqué ;
+  - **police arabe Amiri** installée (licence libre OFL) ; c'est désormais la police arabe par défaut des rapports ;
+  - base de démonstration et guide inclus ;
+  - empreintes SHA-256 des composants tiers consignées et vérifiées à chaque construction.
+
+### Corrigé
+- **Installation** : le backend compilé n'embarquait pas les fichiers de configuration ajoutés aux Lots 3, 5 et 6
+  (gabarits de relevés, présentation des états, cycle de vie), ni les modèles de python-docx. La version installée
+  aurait échoué sur les relevés, les rapports et les exports Word. Un test le vérifie désormais.
+- **En-tête de Smart Office** : il affichait « Gemini 2.5 Flash » même en mode hors ligne, un nom d'association, une
+  version (« v1.0 ») et des montants codés en dur ou tirés de l'ancienne base 1.x. Il affiche maintenant l'état réel de
+  l'IA (« IA locale (hors ligne) »), l'association des paramètres, la version 2.0.0, et la trésorerie et les budgets
+  de la base unique.
+- **Dossier annuel** : le message d'erreur plantait quand un contrôle bloquant empêchait la génération du rapport.
+  Le défaut a été trouvé par le test de bout en bout.
+- La sauvegarde automatique signale désormais ses échecs (paramètres et alertes) au lieu de les ignorer.
+- Tests : 96 xUnit, 164 pytest.
+
+### Points à valider
+1. **Première construction de l'installateur sous Windows** :
+   - je n'ai pas pu télécharger Tesseract ni la police depuis cet environnement : les adresses officielles sont dans
+     `installer/prepare_third_party.ps1` ;
+   - à la première construction, contrôlez les empreintes consignées dans `third_party/SHA256SUMS.txt` ;
+   - testez ensuite l'installation, la démonstration et les écrans WPF (Trésorerie en consultation seule).
+2. **Écrans hérités du bureau** (portefeuille, tâches, bailleurs) : ils ne sont pas restreints par les rôles. À faire
+   si plusieurs personnes utilisent le même poste avec des droits différents.
+3. **Alertes par e-mail** : renseignez le SMTP et les destinataires (Paramètres › Notifications), puis faites un envoi
+   de test.
+4. Toujours en attente : vrais relevés anonymisés, modèle de l'expert-comptable (Q3, Q4), formats des bailleurs
+   (Q10), réponse à Q13 (identifiants réels dans `ngo_profile.json`, affichés en bas de la barre latérale).
+
 ## [2.0.0 — Lot 7 : Exports Word, PDF, Excel et paramètres avancés] — 11/11/2026
 
 ### Ajouté — exports

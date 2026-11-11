@@ -9,7 +9,7 @@
         xmlns:treasury="clr-namespace:AFMI_Gestion_projet.ViewModels.Treasury"
         xmlns:System="clr-namespace:System;assembly=mscorlib"
         mc:Ignorable="d"
-        Title="AFMI Smart Admin - Gestion de Projets, Agents IA &amp; Reporting"
+        Title="{Binding WindowTitle}"
         Height="780" Width="1200"
         WindowStartupLocation="CenterScreen"
         Background="{StaticResource BgLightBrush}">
@@ -147,7 +147,16 @@
 
                     <Button Content="📥   Importer une base" 
                             Command="{Binding ImportDbCommand}" 
+                            Visibility="{Binding IsNotDemoMode, Converter={StaticResource BoolToVis}}"
                             Style="{StaticResource SidebarButtonStyle}"/>
+
+                    <Button Content="🎓   Démonstration"
+                            Command="{Binding OpenDemoCommand}"
+                            ToolTip="Ouvre une association fictive (3 projets, 3 comptes, 12 relevés) dans une seconde fenêtre, sans toucher à vos données"
+                            Visibility="{Binding IsNotDemoMode, Converter={StaticResource BoolToVis}}"
+                            Style="{StaticResource SidebarButtonStyle}"/>
+                    <TextBlock Text="DÉMONSTRATION — données fictives" Foreground="#FBBF24" FontWeight="Bold" Margin="15,10" TextWrapping="Wrap"
+                               Visibility="{Binding IsDemoMode, Converter={StaticResource BoolToVis}}"/>
                 </StackPanel>
 
                 <!-- Footer / Notifications Status -->

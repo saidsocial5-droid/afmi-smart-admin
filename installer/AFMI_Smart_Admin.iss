@@ -3,7 +3,7 @@
 
 #define AppName "AFMI Smart Admin"
 #ifndef AppVersion
-  #define AppVersion "1.3.0"
+  #define AppVersion "2.0.0"
 #endif
 #define AppPublisher "Association Forêt Modèle d'Ifrane (AFMI)"
 #define AppExe "AFMI Smart Admin.exe"
@@ -41,9 +41,14 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 
 [Files]
 Source: "..\build\app\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+; Police arabe Amiri (SIL OFL 1.1) pour les rapports en arabe ; installée pour l'utilisateur (ou pour tous si élévation)
+Source: "..\third_party\fonts\Amiri-Regular.ttf"; DestDir: "{autofonts}"; FontInstall: "Amiri"; Flags: onlyifdoesntexist uninsneveruninstall
+Source: "..\third_party\fonts\Amiri-Bold.ttf"; DestDir: "{autofonts}"; FontInstall: "Amiri Bold"; Flags: onlyifdoesntexist uninsneveruninstall
+Source: "..\third_party\fonts\OFL.txt"; DestDir: "{app}\licences"; DestName: "Amiri-OFL.txt"
 
 [Icons]
 Name: "{group}\{#AppName}"; Filename: "{app}\{#AppExe}"
+Name: "{group}\Guide utilisateur"; Filename: "{app}\docs\GUIDE_UTILISATEUR.html"; Check: FileExists(ExpandConstant('{app}\docs\GUIDE_UTILISATEUR.html'))
 Name: "{group}\{cm:UninstallProgram,{#AppName}}"; Filename: "{uninstallexe}"
 Name: "{autodesktop}\{#AppName}"; Filename: "{app}\{#AppExe}"; Tasks: desktopicon
 

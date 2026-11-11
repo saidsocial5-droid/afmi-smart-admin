@@ -42,6 +42,14 @@ namespace AFMI_Gestion_projet.ViewModels
         public ICommand SaveSmtpSettingsCommand { get; }
         public ICommand ExportDbCommand { get; }
         public ICommand ImportDbCommand { get; }
+        public ICommand OpenDemoCommand { get; }
+
+        /// <summary>Fenêtre ouverte sur la base de démonstration (données fictives).</summary>
+        public bool IsDemoMode => Services.DemoService.IsDemoMode;
+        public bool IsNotDemoMode => !IsDemoMode;
+        public string WindowTitle => IsDemoMode
+            ? "AFMI Smart Admin 2.0 — DÉMONSTRATION (données fictives)"
+            : "AFMI Smart Admin 2.0 - Gestion de Projets, Agents IA & Reporting";
 
         public MainViewModel()
         {
@@ -54,8 +62,8 @@ namespace AFMI_Gestion_projet.ViewModels
             // Run rolling database backup
             AutoBackupDatabase();
 
-            // Check and process SMTP email scheduling
-            CheckScheduledReports();
+            // Check and process SMTP email scheduling (jamais d'envoi depuis la démonstration)
+            if (!Services.DemoService.IsDemoMode) CheckScheduledReports();
 
             // Instantiate child ViewModels
             DashboardVM = new DashboardViewModel(this);
@@ -76,8 +84,47 @@ namespace AFMI_Gestion_projet.ViewModels
             SaveSmtpSettingsCommand = new RelayCommand(SaveSmtpSettings);
             ExportDbCommand = new RelayCommand(ExportDatabase);
             ImportDbCommand = new RelayCommand(ImportDatabase);
+            OpenDemoCommand = new RelayCommand(OpenDemo);
 
             UpdateGlobalNotifications();
+        }
+
+        /// <summary>
+        /// Ouvre la base de démonstration dans une seconde fenêtre : copie séparée du paquet livré, jamais la base réelle.
+        /// </summary>
+        private void OpenDemo()
+        {
+            try
+            {
+                string? package = Services.DemoService.FindPackage(AppContext.BaseDirectory);
+                if (package == null)
+                {
+                    System.Windows.MessageBox.Show("La base de démonstration n'est pas installée avec cette version.", "Démonstration",
+                        System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
+                    return;
+                }
+                string target = Services.DemoService.DefaultTarget();
+                bool reset = false;
+                if (File.Exists(Path.Combine(target, "database.db")))
+                {
+                    var answer = System.Windows.MessageBox.Show(
+                        "Une démonstration existe déjà sur ce poste.\n\nOui : la remettre à zéro (vos essais sont effacés).\nNon : la rouvrir telle quelle.",
+                        "Démonstration", System.Windows.MessageBoxButton.YesNoCancel, System.Windows.MessageBoxImage.Question);
+                    if (answer == System.Windows.MessageBoxResult.Cancel) return;
+                    reset = answer == System.Windows.MessageBoxResult.Yes;
+                }
+                var (db, data) = Services.DemoService.Install(package, target, reset);
+                var psi = new System.Diagnostics.ProcessStartInfo(Environment.ProcessPath!) { UseShellExecute = false };
+                psi.Environment[DatabasePaths.OverrideVariable] = db;
+                psi.Environment["AFMI_DATA_DIR"] = data;
+                psi.Environment[Services.DemoService.ModeVariable] = "1";
+                System.Diagnostics.Process.Start(psi);
+            }
+            catch (Exception ex)
+            {
+                System.Windows.MessageBox.Show($"Ouverture de la démonstration impossible : {ex.Message}", "Démonstration",
+                    System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
+            }
         }
 
         public void Navigate(string? destination)
@@ -176,10 +223,19 @@ namespace AFMI_Gestion_projet.ViewModels
                 string folder = Services.BackupService.ResolveFolder(dbPath, settings.Get<string>(Services.SettingKeys.BackupFolder));
                 Services.BackupService.RunScheduled(dbPath, folder, settings.Get<string>(Services.SettingKeys.BackupFrequency) ?? "daily",
                     settings.Get<int>(Services.SettingKeys.BackupRetention), atStartup);
+                if (!string.IsNullOrEmpty(settings.Get<string>(Services.SettingKeys.BackupLastError)))
+                    settings.ResetToDefault(Services.SettingKeys.BackupLastError);
             }
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"Sauvegarde automatique impossible : {ex.Message}");
+                // Signalée par e-mail (Paramètres › Notifications) et dans les paramètres
+                try
+                {
+                    using var db = new AppDbContext();
+                    new Services.SettingsService(db).Set(Services.SettingKeys.BackupLastError, $"{DateTime.Now:dd/MM/yyyy HH:mm} — {ex.Message}");
+                }
+                catch (Exception) { /* base indisponible : rien de plus à faire */ }
             }
             if (_backupTimer == null)
             {

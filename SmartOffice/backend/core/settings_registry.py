@@ -113,7 +113,7 @@ FIELDS += [
           help="Adresses séparées par des virgules."),
     Field("notifications.events", "notifications", "Alertes envoyées par e-mail", "json",
           {"obligations": True, "treasury": True, "reconciliation": False, "backup_failure": True},
-          help="Échéances des bailleurs, trésorerie, relevés non rapprochés, échec de sauvegarde. Préférences enregistrées ; l'envoi automatique arrive au Lot 8."),
+          help="Échéances des bailleurs, trésorerie, relevés non rapprochés, échec de sauvegarde. Vérifiées toutes les heures ; un récapitulatif est envoyé dès qu'une alerte nouvelle apparaît (rappel après 7 jours)."),
     # Utilisateurs
     Field("security.users", "utilisateurs", "Utilisateurs autorisés", "users", [],
           help="Liste vide : poste mono-utilisateur, tous les droits. Sinon, un compte Windows absent de la liste n'a qu'un accès en lecture."),
