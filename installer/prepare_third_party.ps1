@@ -38,9 +38,23 @@ $setup = Join-Path $downloads (Split-Path -Leaf $TesseractInstaller)
 Get-Verified $TesseractInstaller $setup
 $tess = Join-Path $root "tesseract"
 if (-not (Test-Path (Join-Path $tess "tesseract.exe"))) {
-    Start-Process -FilePath $setup -ArgumentList "/S", "/D=$tess" -Wait
-    if (-not (Test-Path (Join-Path $tess "tesseract.exe"))) { throw "Installation de Tesseract dans $tess impossible." }
+    # 1) Extraction du contenu de l'installateur NSIS avec 7-Zip (sans rien installer sur le poste)
+    $sevenZip = @((Get-Command 7z -ErrorAction SilentlyContinue).Source, "$env:ProgramFiles\7-Zip\7z.exe") | Where-Object { $_ -and (Test-Path $_) } | Select-Object -First 1
+    if ($sevenZip) {
+        & $sevenZip x $setup "-o$tess" -y | Out-Null
+        Remove-Item -Recurse -Force (Join-Path $tess '$PLUGINSDIR') -ErrorAction SilentlyContinue
+        Get-ChildItem $tess -Filter "*.nsis" -ErrorAction SilentlyContinue | Remove-Item -Force
+    }
+    # 2) Sinon, installation silencieuse dans le dossier (/D doit être le dernier argument, sans guillemets)
+    if (-not (Test-Path (Join-Path $tess "tesseract.exe"))) {
+        Start-Process -FilePath $setup -ArgumentList "/S /D=$tess" -Wait -Verb RunAs
+    }
+    if (-not (Test-Path (Join-Path $tess "tesseract.exe"))) {
+        Get-ChildItem -Recurse $tess -ErrorAction SilentlyContinue | Select-Object -First 30 FullName | Out-Host
+        throw "Installation de Tesseract dans $tess impossible."
+    }
 }
+New-Item -ItemType Directory -Force -Path (Join-Path $tess "tessdata") | Out-Null
 foreach ($lang in "fra", "ara") {
     Get-Verified "$TessdataBase/$lang.traineddata" (Join-Path $downloads "$lang.traineddata")
     Copy-Item (Join-Path $downloads "$lang.traineddata") (Join-Path $tess "tessdata\$lang.traineddata") -Force
