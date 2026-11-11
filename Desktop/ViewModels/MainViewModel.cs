@@ -166,6 +166,13 @@ namespace AFMI_Gestion_projet.ViewModels
                 case "smart_office":
                     CurrentViewModel = SmartOfficeVM;
                     ActiveViewName = "Smart Office — Agents IA, OCR & Radar";
+                    SmartOfficeVM.OpenTab(null);
+                    break;
+                case "settings":
+                    // Page générale des paramètres (Smart Office) : remplace l'ancienne configuration SMTP
+                    CurrentViewModel = SmartOfficeVM;
+                    ActiveViewName = "Paramètres";
+                    SmartOfficeVM.OpenTab("settings");
                     break;
             }
         }

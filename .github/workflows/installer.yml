@@ -43,10 +43,21 @@ jobs:
           PYTHONUTF8: "1"
         run: call build_installer.bat
 
+      - name: Test de fumée (backend compilé, interface Smart Office)
+        shell: pwsh
+        run: ./installer/smoke_test.ps1
+
       - name: Empreintes des composants tiers
         if: always()
         shell: pwsh
         run: if (Test-Path third_party\SHA256SUMS.txt) { Get-Content third_party\SHA256SUMS.txt }
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: Test_de_fumee
+          path: build/smoke/
+          if-no-files-found: ignore
 
       - uses: actions/upload-artifact@v4
         with:

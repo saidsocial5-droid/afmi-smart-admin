@@ -13,7 +13,7 @@ from backend.core import unified_db
 
 PROVIDERS: Dict[str, Dict[str, Any]] = {
     "anthropic": {"label": "Anthropic (Claude)", "external": True, "base_url": "https://api.anthropic.com", "model": "claude-sonnet-5-5"},
-    "openai": {"label": "OpenAI", "external": True, "base_url": "https://api.openai.com/v1", "model": ""},
+    "openai": {"label": "OpenAI (ChatGPT)", "external": True, "base_url": "https://api.openai.com/v1", "model": ""},
     "gemini": {"label": "Google Gemini", "external": True, "base_url": "https://generativelanguage.googleapis.com/v1beta", "model": "gemini-2.5-flash"},
     "mistral": {"label": "Mistral AI", "external": True, "base_url": "https://api.mistral.ai/v1", "model": ""},
     "ollama": {"label": "Ollama (local)", "external": False, "base_url": "http://localhost:11434", "model": "llama3.1"},

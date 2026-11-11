@@ -3,7 +3,7 @@ title AFMI Smart Admin - Construction de l'installateur Windows
 chcp 65001 > nul
 setlocal
 cd /d "%~dp0"
-set VERSION=2.0.0
+set VERSION=2.0.1
 
 echo ===================================================================
 echo   AFMI Smart Admin %VERSION% - construction de l'installateur

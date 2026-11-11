@@ -1,5 +1,36 @@
 # Journal des modifications
 
+## [2.0.1] — 11/11/2026 — Corrections après la première installation
+
+### Corrigé
+- **Smart Office affichait une page blanche** dans la version installée. Sous Windows, Python lit les types de
+  fichiers dans le registre, où « .js » est souvent déclaré `text/plain` ; le navigateur refusait alors d'exécuter
+  l'interface. Les types sont désormais imposés au démarrage du backend.
+- **Intégration continue Windows** : deux anciens tests de la 1.3.0 la faisaient échouer depuis le Lot 1.
+  - L'un vérifiait le chiffrement des budgets, abandonné par la décision D2-a, et lisait la base réelle.
+  - L'autre effaçait la base partagée des autres tests.
+- **Script de construction** : encodage du script PowerShell, extraction de Tesseract, installation de pytest.
+- Titre de la barre latérale tronqué (« AFMI SMART ADMII »).
+- L'interface s'ouvrait en arabe à la première visite. Elle suit désormais la langue réglée dans les paramètres,
+  tant que l'utilisateur n'en a pas choisi une.
+
+### Modifié
+- Le bouton **« Configuration SMTP »** est remplacé par **« ⚙️ Paramètres »**. Il ouvre directement la page générale
+  des paramètres : association, comptabilité, banques, exports, **IA** (Google Gemini, Anthropic Claude,
+  OpenAI ChatGPT, Mistral, Ollama ou serveur compatible), **messagerie SMTP**, utilisateurs, sauvegardes, apparence,
+  rapports.
+- L'onglet ouvert dans Smart Office est reflété dans l'adresse (`#settings`…), ce qui permet au bureau d'ouvrir une
+  page précise.
+
+### Ajouté
+- **Construction de l'installateur sur Windows (GitHub Actions)** : poser l'étiquette « installateur » sur une pull
+  request. L'installateur est publié comme artefact de l'exécution.
+- **Test de fumée** à chaque construction :
+  - démarrage du backend compilé sur la base de démonstration et appel des principales API ;
+  - contrôle du type des scripts ;
+  - affichage de l'interface dans un navigateur, avec capture d'écran, puis ouverture de la page Paramètres.
+- Empreintes SHA-256 des composants tiers enregistrées dans `third_party/SHA256SUMS.txt`.
+
 ## [2.0.0] — 11/11/2026 — Lot 8 : finalisation, démonstration, installateur
 
 Version 2.0.0 : les huit lots du cahier des charges sont livrés. Documentation :

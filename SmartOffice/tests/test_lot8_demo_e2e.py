@@ -173,4 +173,11 @@ def test_packaging_ships_every_configuration_file():
     script = (Path(__file__).resolve().parents[1] / "build_backend.bat").read_text(encoding="utf-8")
     assert r"backend\config\*.json;backend\config" in script and "--collect-data docx" in script
     iss = (Path(__file__).resolve().parents[2] / "installer" / "AFMI_Smart_Admin.iss").read_text(encoding="utf-8-sig")
-    assert '#define AppVersion "2.0.0"' in iss and "Amiri-Regular.ttf" in iss
+    assert '#define AppVersion "2.0.1"' in iss and "Amiri-Regular.ttf" in iss
+
+
+def test_frontend_assets_have_browser_mime_types(client, monkeypatch):
+    """Page blanche sous Windows si .js est servi en text/plain (registre) : les types sont imposés au démarrage."""
+    import mimetypes
+    assert mimetypes.guess_type("index-abc.js")[0] == "application/javascript"
+    assert mimetypes.guess_type("index-abc.css")[0] == "text/css"

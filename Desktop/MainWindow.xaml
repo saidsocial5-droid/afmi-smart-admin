@@ -92,7 +92,7 @@
 
                 <!-- App Brand Header -->
                 <StackPanel Grid.Row="0" Margin="20,25,20,30">
-                    <TextBlock Text="AFMI SMART ADMIN" FontSize="20" FontWeight="Bold" Foreground="White"/>
+                    <TextBlock Text="AFMI SMART ADMIN" FontSize="18" FontWeight="Bold" Foreground="White" TextTrimming="None" TextWrapping="Wrap"/>
                     <TextBlock Text="Projets · Agents IA · Finances" FontSize="11" Foreground="#94A3B8" Margin="0,3,0,0"/>
                 </StackPanel>
 
@@ -137,8 +137,10 @@
 
                     <Separator Background="#334155" Margin="10,15,10,15"/>
 
-                    <Button Content="⚙️   Configuration SMTP" 
-                            Command="{Binding OpenSmtpConfigCommand}" 
+                    <Button Content="⚙️   Paramètres"
+                            Command="{Binding NavigateCommand}"
+                            CommandParameter="settings"
+                            ToolTip="Configuration générale : association, comptabilité, banques, IA (Gemini, Claude, ChatGPT, Ollama), messagerie, utilisateurs, sauvegardes"
                             Style="{StaticResource SidebarButtonStyle}"/>
 
                     <Button Content="📤   Exporter la base" 

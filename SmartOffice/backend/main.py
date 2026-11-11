@@ -1,4 +1,5 @@
 import hmac
+import mimetypes
 import os
 import re
 from pathlib import Path
@@ -119,6 +120,12 @@ app.include_router(editor_router)
 
 # Mount exports directory for downloads
 app.mount("/exports", StaticFiles(directory=str(settings.exports_dir)), name="exports")
+
+# Sous Windows, Python lit les types MIME dans le registre, où « .js » vaut souvent « text/plain » : le navigateur
+# refuse alors d'exécuter les scripts de l'interface (page blanche). Les types de l'interface sont donc imposés.
+for _ext, _type in ((".js", "application/javascript"), (".mjs", "application/javascript"), (".css", "text/css"),
+                    (".svg", "image/svg+xml"), (".json", "application/json"), (".woff2", "font/woff2"), (".html", "text/html")):
+    mimetypes.add_type(_type, _ext)
 
 # Mount frontend build if it exists (for unified production deployment)
 frontend_dist = settings.frontend_dist_dir

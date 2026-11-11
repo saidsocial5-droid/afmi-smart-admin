@@ -190,7 +190,8 @@ Les noms des fichiers suivent le modèle choisi dans **Paramètres › Exports**
 
 ## 9. Paramètres
 
-Menu **Paramètres** de Smart Office. Il est réservé à l'administrateur dès que des utilisateurs sont déclarés.
+Bouton **⚙️ Paramètres** de la barre latérale de l'application de bureau (ou menu **Paramètres** de Smart Office). La
+page est réservée à l'administrateur dès que des utilisateurs sont déclarés.
 
 ![Paramètres](images/09_parametres.png)
 

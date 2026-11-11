@@ -23,7 +23,16 @@ import { useLanguage } from './context/LanguageContext';
 
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState("dashboard");
+  // Onglet ouvert par le fragment d'URL (#settings…) : l'application de bureau ouvre ainsi directement une page
+  const tabFromHash = () => (typeof window !== 'undefined' && window.location.hash.length > 1 ? decodeURIComponent(window.location.hash.slice(1)) : 'dashboard');
+  const [activeTab, setActiveTab] = useState(tabFromHash);
+  useEffect(() => {
+    const onHash = () => setActiveTab(tabFromHash());
+    window.addEventListener('hashchange', onHash);
+    return () => window.removeEventListener('hashchange', onHash);
+  }, []);
+  // L'onglet courant est reflété dans l'URL (sans recharger) : l'application de bureau peut y revenir
+  useEffect(() => { if (window.location.hash.slice(1) !== activeTab) window.history.replaceState(null, '', `#${activeTab}`); }, [activeTab]);
   const [selectedAgentId, setSelectedAgentId] = useState("agent_grant_writer");
   
   // App Global State
@@ -65,10 +74,14 @@ export default function App() {
       if (!snap) return;
       const values = Object.fromEntries(snap.sections.flatMap((s) => s.fields).filter((f) => f.key.startsWith('ui.')).map((f) => [f.key, f.value]));
       applyAppearance(values);
+      // Langue réglée dans les paramètres, tant que l'utilisateur n'en a pas choisi une lui-même
+      let chosen = null;
+      try { chosen = localStorage.getItem('afmi_lang'); } catch { /* stockage indisponible */ }
+      if (!chosen && values['ui.language']) setLanguage(values['ui.language']);
     }).catch(() => {});
   }, []);
 
-  const { language, dir, isRtl } = useLanguage();
+  const { language, dir, isRtl, setLanguage } = useLanguage();
 
   const handleSelectAgentFromDashboard = (agentId) => {
     setSelectedAgentId(agentId);
