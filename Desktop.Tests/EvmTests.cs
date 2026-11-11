@@ -76,16 +76,15 @@ namespace AFMI_Gestion_projet.Tests
         [Fact]
         public void TestPerformance500Projects()
         {
-            // 1. Arrange - Setup in-memory SQLite database context
+            // 1. Arrange - base propre à ce test (jamais la base partagée des autres tests, exécutés en parallèle)
+            string perfDb = Path.Combine(Path.GetTempPath(), "afmi-desktop-tests", $"perf_{Guid.NewGuid():N}.db");
+            Directory.CreateDirectory(Path.GetDirectoryName(perfDb)!);
             var options = new Microsoft.EntityFrameworkCore.DbContextOptionsBuilder<AFMI_Gestion_projet.Data.AppDbContext>()
-                .UseSqlite("Data Source=perf_test_database.db")
+                .UseSqlite($"Data Source={perfDb};Pooling=False")
                 .Options;
 
-            using (var context = new AFMI_Gestion_projet.Data.AppDbContext())
+            using (var context = new AFMI_Gestion_projet.Data.AppDbContext(options))   // migrée à l'ouverture
             {
-                // Ensure fresh DB file for testing
-                context.Database.EnsureDeleted();
-                context.Database.EnsureCreated();
 
                 // 2. Act - Insert 500 projects in a single transaction for speed
                 var rand = new Random();
