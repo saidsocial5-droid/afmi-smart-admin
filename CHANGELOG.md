@@ -78,11 +78,8 @@ vocabulaire OCDE-CAD (gestion axée sur les résultats).
 - Les libellés en « € » qui restaient (portefeuille, fiche projet, assistant IA) passent en MAD.
 
 ### Points à valider
-1. **Comptes des contributions en nature.**
-   - Par défaut, les libellés sont « 86 — Emplois… » et « 87 — Contributions volontaires en nature ». Ce sont ceux du
-     plan comptable associatif français.
-   - Je n'ai pas trouvé de source fiable pour le plan marocain des associations : le comptable doit les confirmer dans
-     Paramètres › Comptabilité.
+1. **Comptes des contributions en nature** : 86 (emplois) et 87 (contributions volontaires en nature), **confirmés par
+   l'association** le 12/11/2026. Ils restent modifiables dans Paramètres › Comptabilité.
 2. **Tranches sans date fixe** (« à la signature ») : la date de signature est proposée, sinon le début du projet.
 3. **Indicateurs écrits à côté des activités** (et non sous la composante) : ils ne sont pas importés comme
    indicateurs du projet. À confirmer.

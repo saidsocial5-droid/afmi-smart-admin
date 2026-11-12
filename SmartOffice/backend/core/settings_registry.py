@@ -133,7 +133,7 @@ FIELDS += [
     Field("cofinancing.account_use", "comptabilite", "Compte d'emploi des contributions en nature", "string",
           "86 — Emplois des contributions volontaires en nature", group="Contributions en nature",
           help="Utilisé pour les bailleurs réglés sur « Comptabilité » : écriture de valorisation équilibrée, sans effet sur le résultat "
-               "ni sur la trésorerie. Numéro à confirmer par votre comptable (plan comptable marocain des associations)."),
+               "ni sur la trésorerie. Comptes 86 / 87 confirmés par l'association (modifiables)."),
     Field("cofinancing.account_source", "comptabilite", "Compte de ressource des contributions en nature", "string",
           "87 — Contributions volontaires en nature", group="Contributions en nature"),
     # Mises à jour
