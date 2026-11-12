@@ -18,7 +18,7 @@ from typing import Any, Dict, Iterator, Optional
 from backend.core import dpapi
 
 DESKTOP_DB_ENV = "AFMI_DESKTOP_DB"
-REQUIRED_MIGRATION_SUFFIX = "_MeetingsAndFolders"   # dernière migration dont dépend le backend (Lot 9)
+REQUIRED_MIGRATION_SUFFIX = "_DossierImport"   # dernière migration dont dépend le backend (Lot 9)
 
 ACTION_CREATE = "Création"
 ACTION_UPDATE = "Modification"

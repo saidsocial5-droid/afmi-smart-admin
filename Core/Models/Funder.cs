@@ -11,6 +11,9 @@ namespace AFMI_Gestion_projet.Models
         public string LegalMentions { get; set; } = string.Empty;
         public string HeaderText { get; set; } = string.Empty;
         public string FooterText { get; set; } = string.Empty;
+        /// <summary>Contributions en nature de ce bailleur : « Suivi » (tableau de cofinancement seulement) ou « Comptabilité »
+        /// (écriture de valorisation équilibrée en plus). Choisi par l'association pour chaque bailleur.</summary>
+        public string InKindTreatment { get; set; } = "Suivi";
         
         public ICollection<Project> Projects { get; set; } = new List<Project>();
     }

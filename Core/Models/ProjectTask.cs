@@ -16,6 +16,8 @@ namespace AFMI_Gestion_projet.Models
         public string Name { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
         public string Assignee { get; set; } = string.Empty;
+        /// <summary>Code de l'activité dans le document du bailleur (1.1, A2.3, 1.1.4…).</summary>
+        public string Code { get; set; } = string.Empty;
         
         public DateTime? TargetStartDate { get; set; }
         public DateTime? TargetEndDate { get; set; }

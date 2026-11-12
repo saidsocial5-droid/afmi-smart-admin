@@ -1354,3 +1354,200 @@ COMMIT;
 INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
 VALUES ('20261111210517_MeetingsAndFolders', '9.0.8');
 
+BEGIN TRANSACTION;
+ALTER TABLE "Tasks" ADD "Code" TEXT NOT NULL DEFAULT '';
+
+ALTER TABLE "Indicators" ADD "Code" TEXT NOT NULL DEFAULT '';
+
+ALTER TABLE "Indicators" ADD "LogframeNodeId" INTEGER NULL;
+
+ALTER TABLE "Indicators" ADD "MeansOfVerification" TEXT NOT NULL DEFAULT '';
+
+ALTER TABLE "FundingTranches" ADD "Condition" TEXT NOT NULL DEFAULT '';
+
+ALTER TABLE "FundingTranches" ADD "Percent" TEXT NULL;
+
+ALTER TABLE "Funders" ADD "InKindTreatment" TEXT NOT NULL DEFAULT 'Suivi';
+
+ALTER TABLE "BudgetLines" ADD "ActivityCode" TEXT NOT NULL DEFAULT '';
+
+ALTER TABLE "BudgetLines" ADD "DonorCategory" TEXT NOT NULL DEFAULT '';
+
+ALTER TABLE "BudgetLines" ADD "SortOrder" INTEGER NOT NULL DEFAULT 0;
+
+CREATE TABLE "CofinancingContributions" (
+    "Id" INTEGER NOT NULL CONSTRAINT "PK_CofinancingContributions" PRIMARY KEY AUTOINCREMENT,
+    "ProjectId" INTEGER NOT NULL,
+    "FundingAgreementId" INTEGER NULL,
+    "BudgetLineId" INTEGER NULL,
+    "SourceType" TEXT NOT NULL,
+    "SourceName" TEXT NOT NULL,
+    "Nature" TEXT NOT NULL,
+    "Description" TEXT NOT NULL,
+    "PlannedMinor" INTEGER NOT NULL,
+    "Currency" TEXT NOT NULL,
+    "Commitment" TEXT NOT NULL,
+    "IsDeleted" INTEGER NOT NULL DEFAULT 0,
+    "DeletedAtUtc" TEXT NULL,
+    CONSTRAINT "CK_Cofinancing_Nature" CHECK (Nature IN ('Espèces', 'Nature')),
+    CONSTRAINT "CK_Cofinancing_Planned" CHECK (PlannedMinor >= 0),
+    CONSTRAINT "FK_CofinancingContributions_BudgetLines_BudgetLineId" FOREIGN KEY ("BudgetLineId") REFERENCES "BudgetLines" ("Id") ON DELETE RESTRICT,
+    CONSTRAINT "FK_CofinancingContributions_FundingAgreements_FundingAgreementId" FOREIGN KEY ("FundingAgreementId") REFERENCES "FundingAgreements" ("Id") ON DELETE RESTRICT,
+    CONSTRAINT "FK_CofinancingContributions_Projects_ProjectId" FOREIGN KEY ("ProjectId") REFERENCES "Projects" ("Id") ON DELETE RESTRICT
+);
+
+CREATE TABLE "DonorRules" (
+    "Id" INTEGER NOT NULL CONSTRAINT "PK_DonorRules" PRIMARY KEY AUTOINCREMENT,
+    "FundingAgreementId" INTEGER NOT NULL,
+    "Kind" TEXT NOT NULL,
+    "Value" TEXT NULL,
+    "Text" TEXT NOT NULL,
+    "SourceExcerpt" TEXT NOT NULL,
+    "IsDeleted" INTEGER NOT NULL DEFAULT 0,
+    "DeletedAtUtc" TEXT NULL,
+    CONSTRAINT "FK_DonorRules_FundingAgreements_FundingAgreementId" FOREIGN KEY ("FundingAgreementId") REFERENCES "FundingAgreements" ("Id") ON DELETE RESTRICT
+);
+
+CREATE TABLE "LogframeNodes" (
+    "Id" INTEGER NOT NULL CONSTRAINT "PK_LogframeNodes" PRIMARY KEY AUTOINCREMENT,
+    "ProjectId" INTEGER NOT NULL,
+    "ParentId" INTEGER NULL,
+    "Level" TEXT NOT NULL,
+    "Code" TEXT NOT NULL,
+    "Statement" TEXT NOT NULL,
+    "SortOrder" INTEGER NOT NULL,
+    "IsDeleted" INTEGER NOT NULL DEFAULT 0,
+    "DeletedAtUtc" TEXT NULL,
+    CONSTRAINT "CK_LogframeNodes_Level" CHECK (Level IN ('Objectif global', 'Objectif spécifique', 'Résultat', 'Produit')),
+    CONSTRAINT "FK_LogframeNodes_LogframeNodes_ParentId" FOREIGN KEY ("ParentId") REFERENCES "LogframeNodes" ("Id") ON DELETE RESTRICT,
+    CONSTRAINT "FK_LogframeNodes_Projects_ProjectId" FOREIGN KEY ("ProjectId") REFERENCES "Projects" ("Id") ON DELETE RESTRICT
+);
+
+CREATE TABLE "ProjectImports" (
+    "Id" INTEGER NOT NULL CONSTRAINT "PK_ProjectImports" PRIMARY KEY AUTOINCREMENT,
+    "ProjectId" INTEGER NULL,
+    "CreatedAtUtc" TEXT NOT NULL,
+    "CreatedBy" TEXT NOT NULL,
+    "FilesJson" TEXT NOT NULL,
+    "ResultJson" TEXT NOT NULL,
+    "Engine" TEXT NOT NULL,
+    "Status" TEXT NOT NULL,
+    "AppliedAtUtc" TEXT NULL,
+    "AppliedSummary" TEXT NOT NULL,
+    CONSTRAINT "FK_ProjectImports_Projects_ProjectId" FOREIGN KEY ("ProjectId") REFERENCES "Projects" ("Id") ON DELETE SET NULL
+);
+
+CREATE TABLE "ProjectRisks" (
+    "Id" INTEGER NOT NULL CONSTRAINT "PK_ProjectRisks" PRIMARY KEY AUTOINCREMENT,
+    "ProjectId" INTEGER NOT NULL,
+    "Description" TEXT NOT NULL,
+    "Probability" TEXT NOT NULL,
+    "Impact" TEXT NOT NULL,
+    "Mitigation" TEXT NOT NULL,
+    "Owner" TEXT NOT NULL,
+    "Status" TEXT NOT NULL,
+    "IsDeleted" INTEGER NOT NULL DEFAULT 0,
+    "DeletedAtUtc" TEXT NULL,
+    CONSTRAINT "FK_ProjectRisks_Projects_ProjectId" FOREIGN KEY ("ProjectId") REFERENCES "Projects" ("Id") ON DELETE RESTRICT
+);
+
+CREATE TABLE "CofinancingEntries" (
+    "Id" INTEGER NOT NULL CONSTRAINT "PK_CofinancingEntries" PRIMARY KEY AUTOINCREMENT,
+    "ContributionId" INTEGER NOT NULL,
+    "Date" TEXT NOT NULL,
+    "AmountMinor" INTEGER NOT NULL,
+    "Description" TEXT NOT NULL,
+    "Evidence" TEXT NOT NULL,
+    "CreatedBy" TEXT NOT NULL,
+    "CreatedAtUtc" TEXT NOT NULL,
+    "IsDeleted" INTEGER NOT NULL DEFAULT 0,
+    "DeletedAtUtc" TEXT NULL,
+    CONSTRAINT "CK_CofinancingEntries_Amount" CHECK (AmountMinor > 0),
+    CONSTRAINT "FK_CofinancingEntries_CofinancingContributions_ContributionId" FOREIGN KEY ("ContributionId") REFERENCES "CofinancingContributions" ("Id") ON DELETE RESTRICT
+);
+
+CREATE INDEX "IX_Indicators_LogframeNodeId" ON "Indicators" ("LogframeNodeId");
+
+CREATE INDEX "IX_CofinancingContributions_BudgetLineId" ON "CofinancingContributions" ("BudgetLineId");
+
+CREATE INDEX "IX_CofinancingContributions_FundingAgreementId" ON "CofinancingContributions" ("FundingAgreementId");
+
+CREATE INDEX "IX_CofinancingContributions_ProjectId" ON "CofinancingContributions" ("ProjectId");
+
+CREATE INDEX "IX_CofinancingEntries_ContributionId" ON "CofinancingEntries" ("ContributionId");
+
+CREATE INDEX "IX_DonorRules_FundingAgreementId" ON "DonorRules" ("FundingAgreementId");
+
+CREATE INDEX "IX_LogframeNodes_ParentId" ON "LogframeNodes" ("ParentId");
+
+CREATE INDEX "IX_LogframeNodes_ProjectId_SortOrder" ON "LogframeNodes" ("ProjectId", "SortOrder");
+
+CREATE INDEX "IX_ProjectImports_ProjectId" ON "ProjectImports" ("ProjectId");
+
+CREATE INDEX "IX_ProjectRisks_ProjectId" ON "ProjectRisks" ("ProjectId");
+
+CREATE TABLE "ef_temp_Funders" (
+    "Id" INTEGER NOT NULL CONSTRAINT "PK_Funders" PRIMARY KEY AUTOINCREMENT,
+    "FooterText" TEXT NOT NULL,
+    "HeaderText" TEXT NOT NULL,
+    "InKindTreatment" TEXT NOT NULL DEFAULT 'Suivi',
+    "LegalMentions" TEXT NOT NULL,
+    "LogoPath" TEXT NOT NULL,
+    "Name" TEXT NOT NULL,
+    "PrimaryColor" TEXT NOT NULL,
+    CONSTRAINT "CK_Funders_InKindTreatment" CHECK (InKindTreatment IN ('Suivi', 'Comptabilité'))
+);
+
+INSERT INTO "ef_temp_Funders" ("Id", "FooterText", "HeaderText", "InKindTreatment", "LegalMentions", "LogoPath", "Name", "PrimaryColor")
+SELECT "Id", "FooterText", "HeaderText", "InKindTreatment", "LegalMentions", "LogoPath", "Name", "PrimaryColor"
+FROM "Funders";
+
+CREATE TABLE "ef_temp_Indicators" (
+    "Id" INTEGER NOT NULL CONSTRAINT "PK_Indicators" PRIMARY KEY AUTOINCREMENT,
+    "Aggregation" TEXT NOT NULL DEFAULT 'Somme',
+    "BaselineValue" REAL NULL,
+    "Code" TEXT NOT NULL DEFAULT '',
+    "CurrentValue" REAL NOT NULL,
+    "Description" TEXT NOT NULL,
+    "Level" TEXT NOT NULL DEFAULT 'Extrant',
+    "LogframeNodeId" INTEGER NULL,
+    "MeansOfVerification" TEXT NOT NULL DEFAULT '',
+    "Name" TEXT NOT NULL,
+    "ProjectId" INTEGER NOT NULL,
+    "TargetValue" REAL NOT NULL,
+    "Unit" TEXT NOT NULL,
+    CONSTRAINT "FK_Indicators_LogframeNodes_LogframeNodeId" FOREIGN KEY ("LogframeNodeId") REFERENCES "LogframeNodes" ("Id") ON DELETE SET NULL,
+    CONSTRAINT "FK_Indicators_Projects_ProjectId" FOREIGN KEY ("ProjectId") REFERENCES "Projects" ("Id") ON DELETE CASCADE
+);
+
+INSERT INTO "ef_temp_Indicators" ("Id", "Aggregation", "BaselineValue", "Code", "CurrentValue", "Description", "Level", "LogframeNodeId", "MeansOfVerification", "Name", "ProjectId", "TargetValue", "Unit")
+SELECT "Id", "Aggregation", "BaselineValue", "Code", "CurrentValue", "Description", "Level", "LogframeNodeId", "MeansOfVerification", "Name", "ProjectId", "TargetValue", "Unit"
+FROM "Indicators";
+
+COMMIT;
+
+PRAGMA foreign_keys = 0;
+
+BEGIN TRANSACTION;
+DROP TABLE "Funders";
+
+ALTER TABLE "ef_temp_Funders" RENAME TO "Funders";
+
+DROP TABLE "Indicators";
+
+ALTER TABLE "ef_temp_Indicators" RENAME TO "Indicators";
+
+COMMIT;
+
+PRAGMA foreign_keys = 1;
+
+BEGIN TRANSACTION;
+CREATE INDEX "IX_Indicators_LogframeNodeId" ON "Indicators" ("LogframeNodeId");
+
+CREATE INDEX "IX_Indicators_ProjectId" ON "Indicators" ("ProjectId");
+
+COMMIT;
+
+INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+VALUES ('20261112145148_DossierImport', '9.0.8');
+
