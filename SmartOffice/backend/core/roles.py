@@ -13,7 +13,7 @@ AREAS = [
     ("/api/statements", "finance"), ("/api/finance", "finance"), ("/api/payroll", "finance"), ("/api/ocr", "finance"),
     ("/api/exports", "read"),
     ("/api/documents", "projects"), ("/api/templates", "projects"), ("/api/charts", "projects"), ("/api/photos", "projects"),
-    ("/api/editor", "projects"), ("/api/meetings", "projects"), ("/api/folders", "projects"), ("/api/ged", "projects"), ("/api/indicators", "projects"), ("/api/projects", "projects"),
+    ("/api/editor", "projects"), ("/api/meetings", "projects"), ("/api/dossier/cofinancing", "finance"), ("/api/dossier", "projects"), ("/api/folders", "projects"), ("/api/ged", "projects"), ("/api/indicators", "projects"), ("/api/projects", "projects"),
     ("/api/grants", "projects"), ("/api/reports", "projects"), ("/api/files", "projects"), ("/api/funders", "projects"),
     ("/api/agents", "ai"), ("/api/workflows", "ai"), ("/api/plugins", "ai"), ("/api/rss", "ai"),
 ]

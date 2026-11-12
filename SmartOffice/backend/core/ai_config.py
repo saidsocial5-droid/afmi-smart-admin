@@ -27,6 +27,7 @@ TASKS: Dict[str, Dict[str, Any]] = {
     "extraction": {"label": "Lecture des relevés et pièces (secours de l'OCR)", "vision": True},
     "qa": {"label": "Questions sur les documents (GED)", "vision": False},
     "captions": {"label": "Légendes des photos", "vision": True},
+    "dossier": {"label": "Lecture des dossiers de projet (conventions, formulaires, budgets)", "vision": False},
 }
 TASK_DEFAULT = {"provider": "auto", "model": "", "temperature": None, "max_tokens": None}
 
@@ -49,6 +50,11 @@ PROMPTS: Dict[str, Dict[str, str]] = {
                                    "Texte lu par OCR (peut contenir des erreurs) :\n"},
     "ged.qa": {"label": "GED — questions sur les documents",
                "text": "Tu es l'assistant documentaire de l'association. Tu ne réponds qu'avec les documents fournis."},
+    "dossier.extract": {"label": "Dossier de projet — extraction structurée",
+                        "text": "Tu lis les documents d'un projet d'association (convention de subvention, formulaire de projet, budget, avenant). "
+                                "Tu réponds UNIQUEMENT par un objet JSON conforme au schéma demandé. Tu recopies les valeurs telles qu'elles "
+                                "sont écrites (montants, dates, codes) ; tu n'inventes rien, tu ne calcules rien : si une information est "
+                                "absente, mets null ou une liste vide. Pour chaque élément, indique le fichier et la page où tu l'as lu."},
     "photos.caption": {"label": "Photos — légende",
                        "text": "Décris cette photo d'activité d'une association de gestion forestière en UNE phrase factuelle de légende "
                                "(moins de 25 mots), en français, sans inventer de nom de personne ni de lieu."},
