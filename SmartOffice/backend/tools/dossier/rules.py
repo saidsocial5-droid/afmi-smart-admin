@@ -286,7 +286,7 @@ def extract_funding(sources: List[Source], lines: List[Line], fields: Dict[str, 
             vals = [a[0] for a in N.amounts_in(ln.text) if a[0] >= 100]
             if vals:
                 fund["total_cost"] = _field({"amount": vals[0], "currency": "MAD"}, _ref(sources, ln))
-        m = re.search(r"Taux de change[^\d]{0,40}(\d{1,3}[.,]\d{1,4})|\(taux\s*(\d{1,3}[.,]\d{1,4})\)", ln.text, re.I)
+        m = re.search(r"Taux de change[^\d]{0,90}(\d{1,3}[.,]\d{1,4})|\(taux\s*(\d{1,3}[.,]\d{1,4})\)", ln.text, re.I)
         if m and "exchange_rate" not in fund:
             fund["exchange_rate"] = _field(N.parse_amount(m.group(1) or m.group(2)), _ref(sources, ln))
     if "grant" in fund and not fund["grant"]["value"]["currency"]:
@@ -304,17 +304,22 @@ def extract_tranches(sources: List[Source], lines: List[Line], grant_currency: s
     idx = [k for k, ln in enumerate(lines) if re.search(r"^\s*Tranche\s*\d", ln.text, re.I)]
     for n, k in enumerate(idx):
         end = idx[n + 1] if n + 1 < len(idx) else k + 4
-        block = [ln for ln in lines[k:end] if ln.src == lines[k].src]
+        block = [lines[k]]
+        for ln in lines[k + 1:end]:
+            if ln.src != lines[k].src or ln.page != lines[k].page or re.match(r"^\s*\d{1,2}\.\s+[A-ZÉ]", ln.text):
+                break                                  # rubrique suivante de la convention
+            block.append(ln)
         text = " ".join(l.text.strip() for l in block)
         pct = re.search(r"\((\d{1,3})\s*%\)", text)
-        amounts = [a[0] for a in N.amounts_in(re.sub(r"n°\s*\d+|\(\d{1,3}\s*%\)", "", text)) if a[0] >= 100 and not 1900 < a[0] < 2100]
+        amounts = [a[0] for a in N.amounts_in(re.sub(r"n°\s*\d+|\(\d{1,3}\s*%\)", "", text))
+                   if a[0] >= 100 and not (1900 < a[0] < 2100 and re.fullmatch(r"\d{4}", a[1]))]      # « 2027 » = année, « 2 000 » = montant
         dts = N.dates_in(text)
         label = re.search(r"Tranche\s*\d+", text, re.I).group(0)
         text_nc = re.split(r"\s\d{1,2}\.\s+[A-ZÉ]", text)[0]                     # s'arrête à la rubrique suivante (« 7. Informations… »)
-        cond = re.split(r"[-–]\s*(?=[ÀA] la|Upon|On |Apr[èe]s|D[èe]s)", text_nc, maxsplit=1)
+        cond = re.split(r"[-–]\s*(?=[ÀA]\s?l[a'’]|[ÀA] |Upon|On |Apr[èe]s|D[èe]s|Sur )", text_nc, maxsplit=1)
         condition = cond[1] if len(cond) > 1 else ""
         for a in sorted(N.amounts_in(condition), key=lambda a: -a[2]):
-            if a[0] >= 100 and not 1900 < a[0] < 2100:
+            if a[0] >= 100 and not (1900 < a[0] < 2100 and re.fullmatch(r"\d{4}", a[1])):
                 condition = condition[:a[2]] + condition[a[2] + len(a[1]):]
         condition = _clean(condition)
         out.append({"label": label, "percent": float(pct.group(1)) if pct else None, "amount": amounts[-1] if amounts else None,
@@ -363,7 +368,7 @@ def _budget_from_rows(rows: List[List[Any]], src: Source, sheet: str) -> Optiona
     if total_col is None:
         return None
     first_num = min(numeric_cols) if numeric_cols else total_col
-    text_cols = [j for j in range(first_num) if str_count[j] >= max(2, 0.3 * len(body))]
+    text_cols = [j for j in range(first_num) if str_count[j] >= 1 and num_count[j] == 0]
     source_cols = [j for j in numeric_cols if j != total_col and re.search(SOURCE_HEADS, low[j])]
     lines_out, section, declared = [], "", None
     carry: Dict[int, str] = {}
@@ -864,9 +869,9 @@ def extract_logframe(sources: List[Source], lines: List[Line]) -> Tuple[List[Dic
             mm = re.match(r"\s*-\s*(\d[\d\s,.]*)\s*(.+)", seg)
             if mm:
                 target = N.parse_amount(mm.group(1))
-                name = _clean(mm.group(2))
+                name = _clean(mm.group(1).strip() + " " + mm.group(2))       # libellé du document, cible comprise
                 cur = {"code": f"I{comp}.{sum(1 for i in indicators if i['result_code'] == f'R{comp}') + 1}",
-                       "result_code": f"R{comp}", "name": name[:200], "target": target, "unit": name.split(" ")[0][:20],
+                       "result_code": f"R{comp}", "name": name[:200], "target": target, "unit": _clean(mm.group(2)).split(" ")[0][:20],
                        "baseline": None, "verification": "", "source": _ref(sources, nxt)}
                 indicators.append(cur)
             elif re.match(r"\s*-\s*\D", seg):

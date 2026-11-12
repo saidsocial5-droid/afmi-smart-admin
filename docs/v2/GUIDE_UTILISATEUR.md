@@ -156,6 +156,30 @@ une seule page. **Recherche** : la zone « Rechercher partout… » de l'en-têt
 
 Dans la fiche projet du bureau, l'onglet **Rapports** ouvre désormais le rapport dans l'éditeur de type Word.
 
+## 5 ter. Importer le dossier d'un projet (convention, formulaire, budget)
+
+1. **Accès** : menu Smart Office **Importer un dossier de projet**, ou onglet **📥 Dossier du bailleur** de la fiche
+   projet.
+2. **Dépôt** : déposez les pièces du bailleur, en PDF, Word ou Excel. Un seul document complet ou plusieurs pièces,
+   avenants compris.
+3. **Analyse** : cliquez sur **Analyser le dossier**. La lecture se fait sur le poste. Si une IA est activée
+   (Paramètres › IA, tâche « Lecture des dossiers de projet »), elle complète ce qui manque. Ses chiffres sont toujours
+   vérifiés dans les documents.
+4. **Vérification**, de haut en bas :
+   - **les alertes** : incohérences (rouge), points à vérifier (orange), informations (bleu) ;
+   - **chaque section** : fiche, financement et tranches, budget, cofinancement, activités, cadre logique,
+     indicateurs, rapports, règles du bailleur, risques ;
+   - chaque valeur indique le fichier et la page d'où elle vient, et se corrige directement dans le tableau ;
+   - décochez « Appliquer » sur une section à ne pas reprendre.
+5. **Choix du projet et du bailleur** : choisissez le projet, ou créez-le. Pour le bailleur, choisissez le traitement
+   des **contributions en nature** :
+   - **Suivi** : un tableau du prévu et du réalisé ;
+   - **Comptabilité** : en plus, une écriture de valorisation avec justificatif.
+6. **Application** : cliquez sur **Appliquer au projet**. Réimporter le même dossier met à jour sans créer de doublon.
+
+Ensuite, dans la **Vue 360°**, la carte **Cofinancement** montre le prévu et le réalisé de chaque cofinanceur. On y
+saisit les réalisations : heures de main-d'œuvre, local mis à disposition, matériel…
+
 ## 6. Rapports annuels
 
 Menu **Rapports annuels**.

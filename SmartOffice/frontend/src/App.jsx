@@ -19,6 +19,7 @@ import IndicatorsView from './views/IndicatorsView';
 import ProjectDocumentsView from './views/ProjectDocumentsView';
 import SettingsView, { applyAppearance } from './views/SettingsView';
 import MeetingsView from './views/MeetingsView';
+import DossierImportView from './views/DossierImportView';
 import FoldersView from './views/FoldersView';
 import Project360View from './views/Project360View';
 import { apiFetch } from './apiClient';
@@ -100,6 +101,14 @@ export default function App() {
       </div>
     );
   }
+  const dossierEmbed = activeTab.match(/^dossier-embed\/(\d+)/);
+  if (dossierEmbed) {
+    return (
+      <div dir={dir} className={`min-h-screen bg-afmi-slate p-3 ${isRtl ? 'font-arabic' : 'font-sans'} text-slate-800`}>
+        <DossierImportView fixedProjectId={Number(dossierEmbed[1])} embedded onNavigate={(tab) => { window.location.hash = `${tab}-embed/${dossierEmbed[1]}`; }} />
+      </div>
+    );
+  }
   const meetingsEmbed = activeTab.match(/^meetings-embed\/(\d+)/);
   if (meetingsEmbed) {
     return (
@@ -142,7 +151,7 @@ export default function App() {
         />
 
         {/* Main Content Area */}
-        <main className={`flex-1 p-4 md:p-6 lg:p-8 mx-auto w-full overflow-y-auto ${["statements", "editor", "meetings"].includes(activeTab) ? "max-w-none min-w-0" : "max-w-7xl"}`}>
+        <main className={`flex-1 p-4 md:p-6 lg:p-8 mx-auto w-full overflow-y-auto ${["statements", "editor", "meetings", "dossier"].includes(activeTab) ? "max-w-none min-w-0" : "max-w-7xl"}`}>
           {activeTab === "dashboard" && (
             <DashboardView 
               projects={projects}
@@ -223,6 +232,10 @@ export default function App() {
 
           {activeTab === "studio" && (
             <AgentStudioView />
+          )}
+
+          {activeTab === "dossier" && (
+            <DossierImportView onNavigate={setActiveTab} />
           )}
 
           {activeTab === "project360" && (

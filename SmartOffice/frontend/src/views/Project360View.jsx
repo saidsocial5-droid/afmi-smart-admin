@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Orbit, Wallet, Target, ClipboardList, FolderOpen, FileText, AlertTriangle, Images, ListTodo, Landmark, ArrowRight } from 'lucide-react';
+import { Orbit, Wallet, Target, ClipboardList, FolderOpen, FileText, AlertTriangle, Images, ListTodo, Landmark, ArrowRight, HandCoins, FileInput } from 'lucide-react';
 import { apiFetch } from '../apiClient';
 
 // Vue 360° d'un projet (Lot 9) : tout ce qui le concerne, depuis la base unique, avec un lien vers chaque module.
@@ -14,6 +14,44 @@ function Card({ icon: Icon, title, onOpen, children }) {
         {onOpen && <button className="ms-auto text-xs text-afmi-forest flex items-center gap-1" onClick={onOpen}>Ouvrir <ArrowRight className="w-3 h-3" /></button>}</div>
       {children}
     </div>
+  );
+}
+
+function Cofinancing({ pid }) {
+  const [c, setC] = useState(null);
+  const [form, setForm] = useState({ id: '', date: new Date().toISOString().slice(0, 10), amount: '', evidence: '', description: '' });
+  const [msg, setMsg] = useState('');
+  const load = () => apiFetch(`/api/dossier/cofinancing/${pid}`).then((r) => (r.ok ? r.json() : null)).then(setC).catch(() => {});
+  useEffect(() => { load(); }, [pid]);
+  if (!c || !c.items.length) return null;
+  const save = async () => {
+    const res = await apiFetch(`/api/dossier/cofinancing/contributions/${form.id}/entries`, { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...form, amount: Number(form.amount) }) });
+    setMsg(res.ok ? 'Réalisation enregistrée.' : (await res.json()).detail);
+    if (res.ok) { setForm((f) => ({ ...f, amount: '', evidence: '', description: '' })); load(); }
+  };
+  return (
+    <Card icon={HandCoins} title={`Cofinancement — contributions en nature : ${c.in_kind_treatment === 'Comptabilité' ? 'suivi + comptabilité' : 'suivi'}`}>
+      {c.by_source.map((s) => (
+        <div key={s.source_name} className="text-xs">
+          <div className="flex justify-between gap-2"><span className="truncate">{s.source_name}</span><span>{mad(s.realized * 100)} / {mad(s.planned * 100)} {s.currency}</span></div>
+          <div className="h-1.5 bg-slate-100 rounded"><div className="h-1.5 bg-afmi-forest rounded" style={{ width: `${Math.min(100, s.planned ? (s.realized / s.planned) * 100 : 0)}%` }} /></div>
+        </div>
+      ))}
+      <div className="grid grid-cols-2 gap-1 pt-1">
+        <select aria-label="Contribution" className="border rounded text-xs col-span-2 min-w-0" value={form.id} onChange={(e) => setForm({ ...form, id: e.target.value })}>
+          <option value="">Saisir une réalisation…</option>
+          {c.items.map((i) => <option key={i.id} value={i.id}>{i.source_name.slice(0, 30)} · {i.line.slice(0, 40)} ({i.nature})</option>)}
+        </select>
+        {form.id && <>
+          <input type="date" className="border rounded text-xs" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} />
+          <input type="number" placeholder="Montant" className="border rounded text-xs" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} />
+          <input placeholder="Justificatif (feuille de présence…)" className="border rounded text-xs col-span-2" value={form.evidence} onChange={(e) => setForm({ ...form, evidence: e.target.value })} />
+          <button className="col-span-2 bg-afmi-forest text-white rounded text-xs py-1" onClick={save}>Enregistrer</button>
+        </>}
+      </div>
+      {msg && <div className="text-xs text-slate-600">{msg}</div>}
+    </Card>
   );
 }
 
@@ -98,6 +136,10 @@ export default function Project360View({ fixedProjectId = null, onNavigate }) {
             <Card icon={FileText} title="Rapports et documents rédigés" onOpen={() => go('editor')}>
               {o.editor_documents.map((d) => <div key={d.id} className="text-xs">{d.title}</div>)}
               {!o.editor_documents.length && <div className="text-xs text-slate-400">Aucun document rédigé.</div>}
+            </Card>
+            <Cofinancing pid={o.project.id} />
+            <Card icon={FileInput} title="Dossier du bailleur" onOpen={() => go(fixedProjectId ? `dossier-embed/${o.project.id}` : 'dossier')}>
+              <div className="text-xs text-slate-500">Importer la convention, le formulaire ou le budget pour compléter ce projet (fiche, budget, activités, indicateurs, échéances).</div>
             </Card>
             <Card icon={Images} title={`Photos (${o.photos})`} onOpen={() => go('photos')}>
               <div className="text-xs text-slate-500">Photos d'activités du projet, utilisables dans les rapports (consentement requis).</div>

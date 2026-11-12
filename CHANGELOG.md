@@ -1,5 +1,92 @@
 # Journal des modifications
 
+## [2.3.0] — 12/11/2026 — Lot 10 : import intelligent des dossiers de projet, cofinancement
+
+Demande de l'association : fournir les documents du bailleur pour que l'application remplisse le projet. Le lot a été
+conçu à partir de six vraies pièces de l'AFMI (PNUD/PMF ICCA-GSI, CEPF et ses avenants, Ambassade de France, IKI), de
+formes toutes différentes. Ces pièces ne sont pas versées au dépôt. Le modèle de données suit la norme IATI et le
+vocabulaire OCDE-CAD (gestion axée sur les résultats).
+
+### Ajouté
+- **Importer un dossier de projet** : nouveau menu Smart Office, et onglet « 📥 Dossier du bailleur » de la fiche
+  projet. On dépose la convention, le formulaire, le budget Excel ou l'avenant, en un document complet ou en plusieurs
+  pièces. L'application propose :
+  - **fiche** : code, intitulé, bailleur, période, durée, responsable, lieu, objectif ;
+  - **financement** : subvention et devise, contrepartie en MAD, taux de la convention, cofinancement, coût total ;
+  - **tranches** : pourcentage, montant, date et condition (« approbation du rapport n° 2 ») ;
+  - **budget**, avec les codes et rubriques du bailleur et une colonne par source de financement (subvention,
+    communauté, association, autres bailleurs). Le budget peut être par rubrique, par activité ou par site ;
+  - **activités** : leur calendrier est converti en dates réelles (T1…T8, « mois 1 à 3 », dates mois/jour/année des
+    bailleurs américains) ;
+  - **cadre logique** : objectifs, résultats, composantes, livrables ;
+  - **indicateurs** avec leur cible ;
+  - **rapports à remettre** ;
+  - **règles du bailleur** (plafond des frais indirects, cofinancement minimum…) ;
+  - **avenants** : nouveau montant, prolongation ;
+  - **risques**, s'ils sont lus par l'IA.
+- **Chaque valeur montre sa source** (fichier, page, extrait). Chaque section est modifiable et peut être appliquée ou
+  non. L'application ne remplace un champ de la fiche que s'il est coché.
+- **Lecture sur le poste**, sans IA. Le texte des PDF est reconstruit avec ses colonnes, et les tableaux Excel sont lus
+  par le contenu de leurs colonnes.
+  - **Facultatif** : l'IA choisie (tâche « Lecture des dossiers de projet ») complète ce que les règles ne savent pas
+    lire.
+  - **Ce qui est envoyé** : les RIB, CIN et salaires sont masqués avant tout envoi.
+  - **Vérification** : tout chiffre de l'IA est cherché dans les documents. S'il n'y figure pas, il est ignoré et
+    signalé.
+- **Contrôles de cohérence** avant application :
+  - somme des lignes contre total du tableau ;
+  - sources de financement contre total de chaque ligne ;
+  - colonne subvention contre montant demandé ;
+  - tranches : 100 % et total égal à la subvention ;
+  - montant en devise × taux contre montant en MAD ;
+  - activités hors période ;
+  - durées ou montants contradictoires (avenant CEPF : 134 102 $ contre 135 802 $, 26 contre 30 mois) ;
+  - décimales parasites d'Excel ;
+  - colonne « Taux » qui est en fait une part du total ;
+  - montant demandé différent du budget retenu ;
+  - **règles du bailleur**. Exemple réel trouvé : frais indirects à 7,53 % des frais directs pour un plafond de 7 %.
+- **Application en un clic**, dans un projet existant ou dans un nouveau projet, en écritures auditées. Sont créés ou mis
+  à jour :
+  - la convention, les tranches et les règles ;
+  - les lignes budgétaires dans la devise du bailleur ;
+  - les tâches du planning (Gantt), avec le budget des activités ;
+  - le cadre logique et les indicateurs liés à leurs résultats ;
+  - les échéances de rapports (alertes, frise) ;
+  - le cofinancement, avec une contribution par ligne et par cofinanceur ;
+  - l'archivage des pièces dans la GED et dans les dossiers locaux.
+
+  Un même dossier réimporté met à jour, sans doublon, et rien n'est jamais supprimé.
+- **Cofinancement et contributions en nature**, avec un choix **par bailleur** (fiche du bailleur ou écran d'import) :
+  - **Suivi** : tableau prévu / réalisé par cofinanceur, et saisie des réalisations dans la Vue 360° ;
+  - **Comptabilité** : en plus, chaque réalisation exige un justificatif et produit une écriture de valorisation
+    équilibrée (emploi = ressource). Elle n'a aucun effet sur le résultat ni sur la trésorerie
+    (`/api/dossier/cofinancing/{projet}/journal`).
+- **Migration `DossierImport`** :
+  - nouvelles tables `LogframeNodes`, `ProjectRisks`, `DonorRules`, `CofinancingContributions`, `CofinancingEntries`,
+    `ProjectImports` ;
+  - nouvelles colonnes : bailleur (`InKindTreatment`), tranches (`Percent`, `Condition`), lignes budgétaires
+    (`DonorCategory`, `ActivityCode`, `SortOrder`), indicateurs (`Code`, `MeansOfVerification`, `LogframeNodeId`) et
+    tâches (`Code`) ;
+  - les colonnes ajoutées ont des valeurs par défaut en base.
+- **Tests** : 1 xUnit (migration et contraintes) et 8 pytest sur des pièces fictives générées.
+  - Ils couvrent la lecture des montants, des dates et des trimestres, la convention et le formulaire, l'avenant, le
+    budget par activité et la règle des frais indirects, la colonne de parts, la vérification des chiffres de l'IA,
+    l'application, la réapplication sans doublon et le justificatif obligatoire.
+  - Total : 116 xUnit et 186 pytest.
+
+### Modifié
+- Les libellés en « € » qui restaient (portefeuille, fiche projet, assistant IA) passent en MAD.
+
+### Points à valider
+1. **Comptes des contributions en nature.**
+   - Par défaut, les libellés sont « 86 — Emplois… » et « 87 — Contributions volontaires en nature ». Ce sont ceux du
+     plan comptable associatif français.
+   - Je n'ai pas trouvé de source fiable pour le plan marocain des associations : le comptable doit les confirmer dans
+     Paramètres › Comptabilité.
+2. **Tranches sans date fixe** (« à la signature ») : la date de signature est proposée, sinon le début du projet.
+3. **Indicateurs écrits à côté des activités** (et non sous la composante) : ils ne sont pas importés comme
+   indicateurs du projet. À confirmer.
+
 ## [2.2.0] — 12/11/2026 — Mise à jour automatique
 
 ### Ajouté

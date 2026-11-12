@@ -665,6 +665,15 @@
                 </Grid>
             </TabItem>
 
+            <!-- Import intelligent du dossier du bailleur (Lot 10) : convention, formulaire, budget → fiche, budget, activités… -->
+            <TabItem Header="📥 Dossier du bailleur" x:Name="DossierTab">
+                <Grid>
+                    <wv2:WebView2 x:Name="DossierBrowser"/>
+                    <TextBlock x:Name="DossierStatus" Text="Chargement de l'import du dossier…" Foreground="{StaticResource TextMutedBrush}"
+                               HorizontalAlignment="Center" VerticalAlignment="Center" TextWrapping="Wrap" Margin="20"/>
+                </Grid>
+            </TabItem>
+
             <!-- TAB 7: HISTORIQUE D'AUDIT -->
             <TabItem Header="Historique (Audit)">
                 <Grid Margin="15">

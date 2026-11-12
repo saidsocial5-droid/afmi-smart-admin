@@ -43,7 +43,7 @@ namespace AFMI_Gestion_projet.Views
         private readonly System.Collections.Generic.HashSet<string> _loadedTabs = new();
 
         /// <summary>
-        /// Onglets Smart Office de la fiche projet (Vue 360°, Comptes rendus & PV) : chargés à la première ouverture, ce qui
+        /// Onglets Smart Office de la fiche projet (Vue 360°, Comptes rendus & PV, Dossier du bailleur) : chargés à la première ouverture, ce qui
         /// démarre Smart Office si besoin.
         /// </summary>
         private async void OnProjectTabChanged(object sender, SelectionChangedEventArgs e)
@@ -51,7 +51,8 @@ namespace AFMI_Gestion_projet.Views
             if (e.OriginalSource != sender || _vm == null) return;
             var selected = ((TabControl)sender).SelectedItem;
             var (browser, status, route) = ReferenceEquals(selected, MeetingsTab) ? (MeetingsBrowser, MeetingsStatus, "meetings-embed")
-                : ReferenceEquals(selected, OverviewTab) ? (OverviewBrowser, OverviewStatus, "project360-embed") : (null, null, "");
+                : ReferenceEquals(selected, OverviewTab) ? (OverviewBrowser, OverviewStatus, "project360-embed")
+                : ReferenceEquals(selected, DossierTab) ? (DossierBrowser, DossierStatus, "dossier-embed") : (null, null, "");
             if (browser == null || status == null || !_loadedTabs.Add(route)) return;
             try
             {

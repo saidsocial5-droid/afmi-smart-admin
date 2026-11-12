@@ -21,7 +21,8 @@ import {
   Settings,
   ClipboardList,
   Orbit,
-  FolderTree
+  FolderTree,
+  FileInput
 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 
@@ -84,6 +85,14 @@ export default function Sidebar({ activeTab, setActiveTab }) {
       label_en: 'Indicators & beneficiaries',
       icon: Target,
       badge: 'GAR'
+    },
+    {
+      id: 'dossier',
+      label_ar: 'استيراد ملف مشروع',
+      label_fr: 'Importer un dossier de projet',
+      label_en: 'Import a project file',
+      icon: FileInput,
+      badge: 'IA'
     },
     {
       id: 'project360',

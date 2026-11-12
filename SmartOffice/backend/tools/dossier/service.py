@@ -22,8 +22,8 @@ class DossierError(ValueError):
 
 
 def _dir(import_id: int) -> Path:
-    from backend.config.settings import DATA_DIR
-    d = DATA_DIR / "imports" / f"dossier_{import_id}"
+    from backend.config.settings import settings
+    d = settings.data_dir / "imports" / f"dossier_{import_id}"
     d.mkdir(parents=True, exist_ok=True)
     return d
 
@@ -148,8 +148,8 @@ async def apply(import_id: int, options: Dict[str, Any]) -> Dict[str, Any]:
         raise DossierError("Cet import a déjà été appliqué.")
     r = imp["result"]
     sections = set(options.get("sections") or SECTIONS)
-    in_kind = options.get("in_kind") or "Suivi"
-    if in_kind not in ("Suivi", "Comptabilité"):
+    in_kind = options.get("in_kind")                  # None : le réglage du bailleur reste tel quel
+    if in_kind not in (None, "Suivi", "Comptabilité"):
         raise DossierError("Traitement des contributions en nature : « Suivi » ou « Comptabilité ».")
     p, f = r.get("project", {}), r.get("funding", {})
     summary: Dict[str, int] = {}
