@@ -117,11 +117,8 @@ namespace AFMI_Gestion_projet.Tests
                 // 3. Act - Measure Portfolio Grid Loading Time (loading all projects with task counting)
                 stopwatch.Restart();
                 
-                var loadedProjects = context.Projects.ToList();
-                foreach (var p in loadedProjects)
-                {
-                    context.Entry(p).Collection(proj => proj.Tasks).Load();
-                }
+                // Une seule requête, comme le portefeuille (500 requêtes successives mesuraient surtout la lenteur du poste de build)
+                var loadedProjects = context.Projects.Include(proj => proj.Tasks).AsSplitQuery().ToList();
 
                 stopwatch.Stop();
                 long loadTimeMs = stopwatch.ElapsedMilliseconds;

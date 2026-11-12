@@ -249,6 +249,126 @@ namespace AFMI_Gestion_projet.Data.Migrations
                     b.ToTable("AuditLogs");
                 });
 
+            modelBuilder.Entity("AFMI_Gestion_projet.Models.CofinancingContribution", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("BudgetLineId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Commitment")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasMaxLength(3)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("DeletedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("FundingAgreementId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(false);
+
+                    b.Property<string>("Nature")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("PlannedMinor")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("ProjectId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("SourceName")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("SourceType")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BudgetLineId");
+
+                    b.HasIndex("FundingAgreementId");
+
+                    b.HasIndex("ProjectId");
+
+                    b.ToTable("CofinancingContributions", t =>
+                        {
+                            t.HasCheckConstraint("CK_Cofinancing_Nature", "Nature IN ('Espèces', 'Nature')");
+
+                            t.HasCheckConstraint("CK_Cofinancing_Planned", "PlannedMinor >= 0");
+                        });
+                });
+
+            modelBuilder.Entity("AFMI_Gestion_projet.Models.CofinancingEntry", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<long>("AmountMinor")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("ContributionId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateOnly>("Date")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("DeletedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Evidence")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(false);
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ContributionId");
+
+                    b.ToTable("CofinancingEntries", t =>
+                        {
+                            t.HasCheckConstraint("CK_CofinancingEntries_Amount", "AmountMinor > 0");
+                        });
+                });
+
             modelBuilder.Entity("AFMI_Gestion_projet.Models.CostEntry", b =>
                 {
                     b.Property<int>("Id")
@@ -367,6 +487,46 @@ namespace AFMI_Gestion_projet.Data.Migrations
                     b.HasIndex("ProjectId");
 
                     b.ToTable("DocumentFolders");
+                });
+
+            modelBuilder.Entity("AFMI_Gestion_projet.Models.DonorRule", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("DeletedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("FundingAgreementId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(false);
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("SourceExcerpt")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Text")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal?>("Value")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FundingAgreementId");
+
+                    b.ToTable("DonorRules");
                 });
 
             modelBuilder.Entity("AFMI_Gestion_projet.Models.Editor.DocumentComment", b =>
@@ -905,6 +1065,13 @@ namespace AFMI_Gestion_projet.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
+                    b.Property<string>("ActivityCode")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(30)
+                        .HasColumnType("TEXT")
+                        .HasDefaultValue("");
+
                     b.Property<int?>("CategoryId")
                         .HasColumnType("INTEGER");
 
@@ -920,6 +1087,13 @@ namespace AFMI_Gestion_projet.Data.Migrations
 
                     b.Property<DateTime?>("DeletedAtUtc")
                         .HasColumnType("TEXT");
+
+                    b.Property<string>("DonorCategory")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(150)
+                        .HasColumnType("TEXT")
+                        .HasDefaultValue("");
 
                     b.Property<int?>("FiscalYearId")
                         .HasColumnType("INTEGER");
@@ -942,6 +1116,11 @@ namespace AFMI_Gestion_projet.Data.Migrations
 
                     b.Property<int?>("ProjectId")
                         .HasColumnType("INTEGER");
+
+                    b.Property<int>("SortOrder")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(0);
 
                     b.HasKey("Id");
 
@@ -1306,6 +1485,12 @@ namespace AFMI_Gestion_projet.Data.Migrations
                     b.Property<long>("AmountMinor")
                         .HasColumnType("INTEGER");
 
+                    b.Property<string>("Condition")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT")
+                        .HasDefaultValue("");
+
                     b.Property<DateTime?>("DeletedAtUtc")
                         .HasColumnType("TEXT");
 
@@ -1323,6 +1508,9 @@ namespace AFMI_Gestion_projet.Data.Migrations
                     b.Property<string>("Label")
                         .IsRequired()
                         .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal?>("Percent")
                         .HasColumnType("TEXT");
 
                     b.Property<int?>("ReceivedOperationId")
@@ -1688,6 +1876,13 @@ namespace AFMI_Gestion_projet.Data.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("InKindTreatment")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT")
+                        .HasDefaultValue("Suivi");
+
                     b.Property<string>("LegalMentions")
                         .IsRequired()
                         .HasColumnType("TEXT");
@@ -1706,7 +1901,10 @@ namespace AFMI_Gestion_projet.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Funders");
+                    b.ToTable("Funders", t =>
+                        {
+                            t.HasCheckConstraint("CK_Funders_InKindTreatment", "InKindTreatment IN ('Suivi', 'Comptabilité')");
+                        });
                 });
 
             modelBuilder.Entity("AFMI_Gestion_projet.Models.Indicator", b =>
@@ -1725,6 +1923,12 @@ namespace AFMI_Gestion_projet.Data.Migrations
                     b.Property<double?>("BaselineValue")
                         .HasColumnType("REAL");
 
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT")
+                        .HasDefaultValue("");
+
                     b.Property<double>("CurrentValue")
                         .HasColumnType("REAL");
 
@@ -1738,6 +1942,15 @@ namespace AFMI_Gestion_projet.Data.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("TEXT")
                         .HasDefaultValue("Extrant");
+
+                    b.Property<int?>("LogframeNodeId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("MeansOfVerification")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT")
+                        .HasDefaultValue("");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -1754,6 +1967,8 @@ namespace AFMI_Gestion_projet.Data.Migrations
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("LogframeNodeId");
 
                     b.HasIndex("ProjectId");
 
@@ -1809,6 +2024,55 @@ namespace AFMI_Gestion_projet.Data.Migrations
                     b.ToTable("IndicatorMeasurements", t =>
                         {
                             t.HasCheckConstraint("CK_IndicatorMeasurements_Sex", "Sex IN ('', 'F', 'M')");
+                        });
+                });
+
+            modelBuilder.Entity("AFMI_Gestion_projet.Models.LogframeNode", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("DeletedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(false);
+
+                    b.Property<string>("Level")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("ParentId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("ProjectId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Statement")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ParentId");
+
+                    b.HasIndex("ProjectId", "SortOrder");
+
+                    b.ToTable("LogframeNodes", t =>
+                        {
+                            t.HasCheckConstraint("CK_LogframeNodes_Level", "Level IN ('Objectif global', 'Objectif spécifique', 'Résultat', 'Produit')");
                         });
                 });
 
@@ -2327,6 +2591,55 @@ namespace AFMI_Gestion_projet.Data.Migrations
                     b.ToTable("Documents");
                 });
 
+            modelBuilder.Entity("AFMI_Gestion_projet.Models.ProjectImport", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("AppliedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("AppliedSummary")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Engine")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("FilesJson")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("ProjectId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("ResultJson")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProjectId");
+
+                    b.ToTable("ProjectImports");
+                });
+
             modelBuilder.Entity("AFMI_Gestion_projet.Models.ProjectMilestone", b =>
                 {
                     b.Property<int>("Id")
@@ -2372,6 +2685,58 @@ namespace AFMI_Gestion_projet.Data.Migrations
                     b.ToTable("ProjectMilestones");
                 });
 
+            modelBuilder.Entity("AFMI_Gestion_projet.Models.ProjectRisk", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("DeletedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Impact")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(false);
+
+                    b.Property<string>("Mitigation")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Owner")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Probability")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("ProjectId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProjectId");
+
+                    b.ToTable("ProjectRisks");
+                });
+
             modelBuilder.Entity("AFMI_Gestion_projet.Models.ProjectTask", b =>
                 {
                     b.Property<int>("Id")
@@ -2390,6 +2755,12 @@ namespace AFMI_Gestion_projet.Data.Migrations
 
                     b.Property<double>("Budget")
                         .HasColumnType("REAL");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT")
+                        .HasDefaultValue("");
 
                     b.Property<double>("Cost")
                         .HasColumnType("REAL");
@@ -2665,6 +3036,42 @@ namespace AFMI_Gestion_projet.Data.Migrations
                     b.Navigation("Project");
                 });
 
+            modelBuilder.Entity("AFMI_Gestion_projet.Models.CofinancingContribution", b =>
+                {
+                    b.HasOne("AFMI_Gestion_projet.Models.Finance.BudgetLine", "BudgetLine")
+                        .WithMany()
+                        .HasForeignKey("BudgetLineId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("AFMI_Gestion_projet.Models.Finance.FundingAgreement", "FundingAgreement")
+                        .WithMany()
+                        .HasForeignKey("FundingAgreementId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("AFMI_Gestion_projet.Models.Project", "Project")
+                        .WithMany()
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("BudgetLine");
+
+                    b.Navigation("FundingAgreement");
+
+                    b.Navigation("Project");
+                });
+
+            modelBuilder.Entity("AFMI_Gestion_projet.Models.CofinancingEntry", b =>
+                {
+                    b.HasOne("AFMI_Gestion_projet.Models.CofinancingContribution", "Contribution")
+                        .WithMany("Entries")
+                        .HasForeignKey("ContributionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Contribution");
+                });
+
             modelBuilder.Entity("AFMI_Gestion_projet.Models.CostEntry", b =>
                 {
                     b.HasOne("AFMI_Gestion_projet.Models.Project", "Project")
@@ -2702,6 +3109,17 @@ namespace AFMI_Gestion_projet.Data.Migrations
                     b.Navigation("Parent");
 
                     b.Navigation("Project");
+                });
+
+            modelBuilder.Entity("AFMI_Gestion_projet.Models.DonorRule", b =>
+                {
+                    b.HasOne("AFMI_Gestion_projet.Models.Finance.FundingAgreement", "FundingAgreement")
+                        .WithMany()
+                        .HasForeignKey("FundingAgreementId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("FundingAgreement");
                 });
 
             modelBuilder.Entity("AFMI_Gestion_projet.Models.Editor.DocumentComment", b =>
@@ -3041,11 +3459,18 @@ namespace AFMI_Gestion_projet.Data.Migrations
 
             modelBuilder.Entity("AFMI_Gestion_projet.Models.Indicator", b =>
                 {
+                    b.HasOne("AFMI_Gestion_projet.Models.LogframeNode", "LogframeNode")
+                        .WithMany()
+                        .HasForeignKey("LogframeNodeId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.HasOne("AFMI_Gestion_projet.Models.Project", "Project")
                         .WithMany("Indicators")
                         .HasForeignKey("ProjectId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("LogframeNode");
 
                     b.Navigation("Project");
                 });
@@ -3059,6 +3484,24 @@ namespace AFMI_Gestion_projet.Data.Migrations
                         .IsRequired();
 
                     b.Navigation("Indicator");
+                });
+
+            modelBuilder.Entity("AFMI_Gestion_projet.Models.LogframeNode", b =>
+                {
+                    b.HasOne("AFMI_Gestion_projet.Models.LogframeNode", "Parent")
+                        .WithMany()
+                        .HasForeignKey("ParentId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("AFMI_Gestion_projet.Models.Project", "Project")
+                        .WithMany()
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Parent");
+
+                    b.Navigation("Project");
                 });
 
             modelBuilder.Entity("AFMI_Gestion_projet.Models.Meeting", b =>
@@ -3191,6 +3634,16 @@ namespace AFMI_Gestion_projet.Data.Migrations
                     b.Navigation("StoredFile");
                 });
 
+            modelBuilder.Entity("AFMI_Gestion_projet.Models.ProjectImport", b =>
+                {
+                    b.HasOne("AFMI_Gestion_projet.Models.Project", "Project")
+                        .WithMany()
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Project");
+                });
+
             modelBuilder.Entity("AFMI_Gestion_projet.Models.ProjectMilestone", b =>
                 {
                     b.HasOne("AFMI_Gestion_projet.Models.Project", "Project")
@@ -3207,6 +3660,17 @@ namespace AFMI_Gestion_projet.Data.Migrations
                     b.Navigation("Project");
 
                     b.Navigation("SourceDocument");
+                });
+
+            modelBuilder.Entity("AFMI_Gestion_projet.Models.ProjectRisk", b =>
+                {
+                    b.HasOne("AFMI_Gestion_projet.Models.Project", "Project")
+                        .WithMany()
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Project");
                 });
 
             modelBuilder.Entity("AFMI_Gestion_projet.Models.ProjectTask", b =>
@@ -3284,6 +3748,11 @@ namespace AFMI_Gestion_projet.Data.Migrations
             modelBuilder.Entity("AFMI_Gestion_projet.Models.ActivityReport", b =>
                 {
                     b.Navigation("Photos");
+                });
+
+            modelBuilder.Entity("AFMI_Gestion_projet.Models.CofinancingContribution", b =>
+                {
+                    b.Navigation("Entries");
                 });
 
             modelBuilder.Entity("AFMI_Gestion_projet.Models.Editor.EditorDocument", b =>

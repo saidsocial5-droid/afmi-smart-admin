@@ -229,7 +229,7 @@
                                     <TextBlock Text="{Binding SelectedProject.Name, FallbackValue='Aucun projet sélectionné'}" FontWeight="Bold" FontSize="12.5" Foreground="{StaticResource TextDarkBrush}"/>
                                     <TextBlock Text="{Binding SelectedProject.Code, StringFormat={}Code : {0}}" FontSize="11" Foreground="{StaticResource TextMutedBrush}" Margin="0,2,0,0"/>
                                     <TextBlock Text="{Binding SelectedProject.Manager, StringFormat={}Responsable : {0}}" FontSize="11" Foreground="{StaticResource TextMutedBrush}"/>
-                                    <TextBlock Text="{Binding SelectedProject.BudgetGlobal, StringFormat={}Budget : {0:N0} €}" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource PrimaryBrush}" Margin="0,3,0,0"/>
+                                    <TextBlock Text="{Binding SelectedProject.BudgetGlobal, StringFormat={}Budget : {0:N0} MAD}" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource PrimaryBrush}" Margin="0,3,0,0"/>
                                 </StackPanel>
                             </Border>
 

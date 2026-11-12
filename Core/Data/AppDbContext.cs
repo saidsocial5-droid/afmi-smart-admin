@@ -146,6 +146,7 @@ namespace AFMI_Gestion_projet.Data
 
             ConfigureFinance(modelBuilder);
             ConfigureEditor(modelBuilder);
+            ConfigureDossier(modelBuilder);
             ConfigureSoftDelete(modelBuilder);
         }
     }

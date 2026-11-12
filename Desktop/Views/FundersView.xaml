@@ -104,7 +104,16 @@
                 <TextBox Text="{Binding SelectedFunder.HeaderText, UpdateSourceTrigger=PropertyChanged}" TextWrapping="Wrap" AcceptsReturn="True" Height="50" Padding="8" Margin="0,0,0,15" />
 
                 <TextBlock Text="Pied de page personnalisé (Footer)" Foreground="#666666" Margin="0,0,0,5" />
-                <TextBox Text="{Binding SelectedFunder.FooterText, UpdateSourceTrigger=PropertyChanged}" TextWrapping="Wrap" AcceptsReturn="True" Height="50" Padding="8" Margin="0,0,0,25" />
+                <TextBox Text="{Binding SelectedFunder.FooterText, UpdateSourceTrigger=PropertyChanged}" TextWrapping="Wrap" AcceptsReturn="True" Height="50" Padding="8" Margin="0,0,0,15" />
+
+                <!-- Lot 10 : traitement des contributions en nature, choisi pour chaque bailleur -->
+                <TextBlock Text="Contributions en nature (cofinancement)" Foreground="#666666" Margin="0,0,0,5" />
+                <ComboBox SelectedValue="{Binding SelectedFunder.InKindTreatment, UpdateSourceTrigger=PropertyChanged}" SelectedValuePath="Tag" Height="32" Margin="0,0,0,4">
+                    <ComboBoxItem Tag="Suivi" Content="Suivi seulement (tableau de cofinancement)"/>
+                    <ComboBoxItem Tag="Comptabilité" Content="Suivi + écriture comptable de valorisation"/>
+                </ComboBox>
+                <TextBlock Text="« Comptabilité » : chaque réalisation exige un justificatif et produit une écriture équilibrée (emploi = ressource), sans effet sur le résultat ni sur la trésorerie."
+                           Foreground="#888888" FontSize="11" TextWrapping="Wrap" Margin="0,0,0,25" />
 
                 <Grid>
                     <Grid.ColumnDefinitions>

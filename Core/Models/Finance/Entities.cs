@@ -126,6 +126,10 @@ namespace AFMI_Gestion_projet.Models.Finance
         [MaxLength(100)] public string Label { get; set; } = string.Empty;
         public DateOnly ExpectedDate { get; set; }
         public long AmountMinor { get; set; }
+        /// <summary>Part de la subvention (%), telle qu'écrite dans la convention.</summary>
+        public decimal? Percent { get; set; }
+        /// <summary>Condition de versement (ex. « approbation du rapport n° 2 »).</summary>
+        public string Condition { get; set; } = string.Empty;
         /// <summary>Opération de recette qui a encaissé la tranche.</summary>
         public int? ReceivedOperationId { get; set; }
         public Operation? ReceivedOperation { get; set; }
@@ -150,6 +154,11 @@ namespace AFMI_Gestion_projet.Models.Finance
         public Category? Category { get; set; }
         public long PlannedMinor { get; set; }
         [MaxLength(3)] public string Currency { get; set; } = "MAD";
+        /// <summary>Rubrique du bailleur (Personnel, Équipement… ou « Salaries and Benefits »), telle qu'écrite.</summary>
+        [MaxLength(150)] public string DonorCategory { get; set; } = string.Empty;
+        /// <summary>Code de l'activité financée (budget par activité), lien avec la tâche de même code.</summary>
+        [MaxLength(30)] public string ActivityCode { get; set; } = string.Empty;
+        public int SortOrder { get; set; }
         public bool IsDeleted { get; set; }
         public DateTime? DeletedAtUtc { get; set; }
     }

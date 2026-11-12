@@ -342,6 +342,18 @@ démonstration se construit en 3 s.
 | Liaisons | `ged/lifecycle.alerts` (MEETING_ACTION_LATE/DUE), `core/notifications`, `reports/moral.table_meetings` | Les actions alimentent alertes et e-mails ; le rapport moral reçoit « Réunions et instances ». |
 | Écrans | `MeetingsView.jsx`, `FoldersView.jsx`, `Project360View.jsx`, recherche de `Header.jsx` ; fiche projet du bureau : onglets « Vue 360° » et « Comptes rendus & PV » (`#project360-embed/<id>`, `#meetings-embed/<id>`) | |
 
+### 2.13 Import intelligent des dossiers de projet (Lot 10, version 2.3.0)
+
+| Élément | Emplacement | Rôle |
+|---|---|---|
+| Lecture | `tools/dossier/sources.py` | PDF reconstruit en texte à colonnes (abscisse des mots, PyMuPDF), OCR si page scannée ; Word (paragraphes et tableaux) ; Excel (cellules). |
+| Normalisation | `tools/dossier/normalize.py` | Montants FR/EN/mixtes, devises, dates FR/EN et mois/jour/année, trimestres T1…T8 et « mois n à m » → dates. |
+| Règles | `tools/dossier/rules.py` | Champs de fiche, financement, tranches, budget (tableaux Excel par contenu de colonne, tableaux PDF par position des colonnes), activités (calendrier par trimestres, tableaux « Composante / Livrable / Activité »), cadre logique, indicateurs, règles du bailleur, rapports, avenants. Chaque valeur garde sa source. |
+| IA | `tools/dossier/ai.py`, tâche `dossier`, prompt `dossier.extract` | Proposition JSON complète ; local d'abord, masquage ; chiffres confrontés au texte (`digits_key`) ; ne remplace jamais une valeur des règles (alternative + alerte). |
+| Contrôles | `tools/dossier/checks.py` | Totaux, sources, tranches, taux, dates, contradictions, règles du bailleur, données sensibles. |
+| Service, API | `tools/dossier/service.py`, `/api/dossier` | `ProjectImports` (fichiers dans `data/imports/dossier_<id>`), revue, application auditée et idempotente (clés : référence, code, libellé), cofinancement et journal de valorisation. |
+| Écrans | `DossierImportView.jsx` (`#dossier`, `#dossier-embed/<id>`), carte Cofinancement de `Project360View.jsx`, onglet WPF « Dossier du bailleur », choix « Contributions en nature » dans la fiche bailleur | |
+
 ## 3. Sécurité et confidentialité
 
 | Sujet | Mesure |

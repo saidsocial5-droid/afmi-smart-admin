@@ -129,6 +129,13 @@ FIELDS += [
           help="Structure des « Dossiers Locaux » : Année › Trimestre › Comptes rendus, Rapports d'avancement, Rapports financiers."),
     Field("ged.local_root", "rapports", "Dossier racine des projets", "string", "", group="Documents",
           help="Vide : Documents\\AFMI_Projets. Utilisé quand un projet n'a pas encore de dossier local."),
+    # Cofinancement (Lot 10)
+    Field("cofinancing.account_use", "comptabilite", "Compte d'emploi des contributions en nature", "string",
+          "86 — Emplois des contributions volontaires en nature", group="Contributions en nature",
+          help="Utilisé pour les bailleurs réglés sur « Comptabilité » : écriture de valorisation équilibrée, sans effet sur le résultat "
+               "ni sur la trésorerie. Comptes 86 / 87 confirmés par l'association (modifiables)."),
+    Field("cofinancing.account_source", "comptabilite", "Compte de ressource des contributions en nature", "string",
+          "87 — Contributions volontaires en nature", group="Contributions en nature"),
     # Mises à jour
     Field("updates.auto_check", "mises_a_jour", "Rechercher automatiquement les nouvelles versions au démarrage", "bool", True,
           help="L'application de bureau consulte la dernière version publiée (manifeste signé). Rien n'est installé sans votre accord : "
