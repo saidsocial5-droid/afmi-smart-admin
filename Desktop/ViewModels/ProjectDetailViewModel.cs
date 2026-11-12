@@ -132,6 +132,18 @@ namespace AFMI_Gestion_projet.ViewModels
         [ObservableProperty]
         private bool _isPreviewVisible = false;
 
+        // Éditeur de type Word (Smart Office) intégré à l'onglet Rapports : le rapport y devient un document modifiable
+        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(IsReportEditorVisible))]
+        private Uri? _reportEditorUri;
+
+        [ObservableProperty]
+        private string _reportEditorStatus = string.Empty;
+
+        public bool IsReportEditorVisible => ReportEditorUri != null;
+
+        private static readonly System.Net.Http.HttpClient EditorHttp = new() { Timeout = TimeSpan.FromSeconds(90) };
+
         public List<string> ReportTypes { get; } = new() 
         { 
             "Rapport d'Avancement", 
@@ -815,7 +827,7 @@ namespace AFMI_Gestion_projet.ViewModels
                             EntityId = EditingCost.Id,
                             ChangeType = "Création",
                             FieldName = "Dépense",
-                            NewValue = $"{EditingCost.Category} - {EditingCost.ActualCost} €",
+                            NewValue = $"{EditingCost.Category} - {EditingCost.ActualCost} {Project.Currency}",
                             Timestamp = DateTime.Now
                         });
                     }
@@ -1188,7 +1200,7 @@ namespace AFMI_Gestion_projet.ViewModels
             if (doc.AnalyzedDate.HasValue)
                 sb.AppendLine($"\nDernière analyse : {doc.AnalyzedDate:dd/MM/yyyy HH:mm}");
             if (doc.ApprovedGrantAmount > 0)
-                sb.AppendLine($"Montant conventionné : {doc.ApprovedGrantAmount:N0} €");
+                sb.AppendLine($"Montant conventionné : {doc.ApprovedGrantAmount:N0} {Project.Currency}");
             if (!string.IsNullOrEmpty(doc.DonorName))
                 sb.AppendLine($"Bailleur : {doc.DonorName}");
             if (!string.IsNullOrEmpty(doc.DocumentReference))
@@ -1586,26 +1598,26 @@ namespace AFMI_Gestion_projet.ViewModels
                     AvailableExportFormats.Add("Excel");
                     SelectedExportFormat = "PDF";
 
-                    string costLines = string.Join("\n", CostEntries.Select(c => $"- {c.Description} ({c.Category}) : Prévu {c.EstimatedCost:N0}€ | Réel {c.ActualCost:N0}€"));
+                    string costLines = string.Join("\n", CostEntries.Select(c => $"- {c.Description} ({c.Category}) : Prévu {c.EstimatedCost:N0} {Project.Currency} | Réel {c.ActualCost:N0} {Project.Currency}"));
 
                     PreviewTitle = "RAPPORT FINANCIER (EVM) - " + Project.Name;
                     PreviewContent =
                         $"ANALYSE DE PERFORMANCE FINANCIÈRE (EARNED VALUE MANAGEMENT)\n" +
                         $"------------------------------------------------\n" +
                         $"Date d'édition : {DateTime.Now:dd/MM/yyyy HH:mm}\n" +
-                        $"Budget Total Alloué (BAC) : {metrics.BAC:N0} €\n" +
-                        $"Valeur Planifiée cumulée (PV) : {metrics.PV:N0} €\n" +
-                        $"Valeur Acquise cumulée (EV) : {metrics.EV:N0} €\n" +
-                        $"Coût Réel cumulé (AC) : {metrics.AC:N0} €\n\n" +
+                        $"Budget Total Alloué (BAC) : {metrics.BAC:N0} {Project.Currency}\n" +
+                        $"Valeur Planifiée cumulée (PV) : {metrics.PV:N0} {Project.Currency}\n" +
+                        $"Valeur Acquise cumulée (EV) : {metrics.EV:N0} {Project.Currency}\n" +
+                        $"Coût Réel cumulé (AC) : {metrics.AC:N0} {Project.Currency}\n\n" +
                         $"=== INDICATEURS CLÉS ===\n" +
                         $"- Indice de Performance Coût (CPI) : {metrics.CPI:F2} ({(metrics.CPI >= 1.0 ? "Sous contrôle budgétaire" : "Risque de dépassement financier")})\n" +
                         $"- Indice de Performance Planning (SPI) : {metrics.SPI:F2} ({(metrics.SPI >= 1.0 ? "Dans les délais" : "Glissement de calendrier")})\n" +
-                        $"- Écart Budgétaire (CV) : {metrics.CV:N0} €\n" +
-                        $"- Écart de Planning (SV) : {metrics.SV:N0} €\n\n" +
+                        $"- Écart Budgétaire (CV) : {metrics.CV:N0} {Project.Currency}\n" +
+                        $"- Écart de Planning (SV) : {metrics.SV:N0} {Project.Currency}\n\n" +
                         $"=== ESTIMATIONS À TERMINAISON ===\n" +
-                        $"- Coût Total Estimé à terme (EAC) : {metrics.EAC:N0} €\n" +
-                        $"- Reste à Dépenser estimé (ETC) : {metrics.ETC:N0} €\n" +
-                        $"- Écart final estimé (VAC) : {metrics.VAC:N0} €\n\n" +
+                        $"- Coût Total Estimé à terme (EAC) : {metrics.EAC:N0} {Project.Currency}\n" +
+                        $"- Reste à Dépenser estimé (ETC) : {metrics.ETC:N0} {Project.Currency}\n" +
+                        $"- Écart final estimé (VAC) : {metrics.VAC:N0} {Project.Currency}\n\n" +
                         $"=== TRANSPARENCE DU REGISTRE DE COMPTABILITÉ ===\n" +
                         $"{costLines}";
                 }
@@ -1626,9 +1638,9 @@ namespace AFMI_Gestion_projet.ViewModels
                         $"Chef de Projet : {Project.Manager}\n" +
                         $"Client destinataire : {Project.Client}\n\n" +
                         $"=== BILAN DES OBJECTIFS ET DU BUDGET ===\n" +
-                        $"- Budget Initial : {metrics.BAC:N0} €\n" +
-                        $"- Coût Réel Final : {metrics.AC:N0} €\n" +
-                        $"- Écart Final Constaté : {metrics.BAC - metrics.AC:N0} € ({(metrics.BAC >= metrics.AC ? "Économie réalisée" : "Surcoût final")})\n" +
+                        $"- Budget Initial : {metrics.BAC:N0} {Project.Currency}\n" +
+                        $"- Coût Réel Final : {metrics.AC:N0} {Project.Currency}\n" +
+                        $"- Écart Final Constaté : {metrics.BAC - metrics.AC:N0} {Project.Currency} ({(metrics.BAC >= metrics.AC ? "Économie réalisée" : "Surcoût final")})\n" +
                         $"- Nombre total de tâches validées : {Project.Tasks.Count(t => t.Status == "Terminé")} / {Project.Tasks.Count}\n\n" +
                         $"=== RETOURS D'EXPÉRIENCE (LESSONS LEARNED) ===\n" +
                         $"{lessons}\n\n" +
@@ -1647,7 +1659,7 @@ namespace AFMI_Gestion_projet.ViewModels
                     var diag = _documentService.PerformDeepDiagnostic(Project);
 
                     string docList = Project.Documents.Any() 
-                        ? string.Join("\n", Project.Documents.Select(d => $"- {d.Title} ({d.Category}) | Réf: {d.DocumentReference} | Subvention: {d.ApprovedGrantAmount:N0}€")) 
+                        ? string.Join("\n", Project.Documents.Select(d => $"- {d.Title} ({d.Category}) | Réf: {d.DocumentReference} | Subvention: {d.ApprovedGrantAmount:N0} {Project.Currency}")) 
                         : "Aucun document initial ou convention enregistré.";
 
                     PreviewTitle = "RAPPORT DE CONFORMITÉ & SUIVI DES CONVENTIONS - " + Project.Name;
@@ -1660,9 +1672,9 @@ namespace AFMI_Gestion_projet.ViewModels
                         $"=== SYNTHÈSE DU DIAGNOSTIC CONTRACTUEL ===\n" +
                         $"{diag.ExecutiveSummary}\n\n" +
                         $"=== INDICATEURS DU SOCLE CONVENTIONNÉ ===\n" +
-                        $"- Enveloppe Totale Subvention : {diag.TotalGrantCommitted:N0} €\n" +
-                        $"- Dépenses Réelles Justifiées : {diag.GrantConsumedAmount:N0} €\n" +
-                        $"- Reliquat Disponible : {diag.GrantRemainingAmount:N0} €\n" +
+                        $"- Enveloppe Totale Subvention : {diag.TotalGrantCommitted:N0} {Project.Currency}\n" +
+                        $"- Dépenses Réelles Justifiées : {diag.GrantConsumedAmount:N0} {Project.Currency}\n" +
+                        $"- Reliquat Disponible : {diag.GrantRemainingAmount:N0} {Project.Currency}\n" +
                         $"- Taux de Consommation Financière : {diag.GrantConsumptionRate:F1}%\n" +
                         $"- Score Global de Conformité : {diag.ComplianceScore:F0} / 100\n" +
                         $"- Prochaine Échéance de Rapport Bailleur : {(diag.NextReportDueDate.HasValue ? diag.NextReportDueDate.Value.ToString("dd/MM/yyyy") : "Non définie")}\n\n" +
@@ -1675,10 +1687,50 @@ namespace AFMI_Gestion_projet.ViewModels
                 }
 
                 IsPreviewVisible = true;
+                _ = OpenReportInEditorAsync();
             }
             catch (Exception ex)
             {
                 System.Windows.MessageBox.Show($"Erreur lors de la génération de l'aperçu: {ex.Message}", "Erreur", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+            }
+        }
+
+        /// <summary>
+        /// Envoie le rapport à l'éditeur de Smart Office (nouvelle version si le document existe déjà) et l'affiche dans
+        /// l'onglet. En cas d'indisponibilité, l'aperçu texte reste affiché avec le motif.
+        /// </summary>
+        private async System.Threading.Tasks.Task OpenReportInEditorAsync()
+        {
+            ReportEditorStatus = "Ouverture du rapport dans l'éditeur…";
+            try
+            {
+                string url = await SmartOfficeHostService.Instance.EnsureStartedAsync();
+                string token = SmartOfficeHostService.Instance.SessionToken ?? string.Empty;
+                string payload = System.Text.Json.JsonSerializer.Serialize(new
+                {
+                    project_id = Project.Id,
+                    report_type = SelectedReportType,
+                    title = $"{SelectedReportType} — {Project.Code}",
+                    text = PreviewContent,
+                });
+                using var request = new System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Post, $"{url}/api/editor/documents/from-report")
+                {
+                    Content = new System.Net.Http.StringContent(payload, System.Text.Encoding.UTF8, "application/json"),
+                };
+                request.Headers.Add("X-AFMI-Token", token);
+                using var response = await EditorHttp.SendAsync(request);
+                string body = await response.Content.ReadAsStringAsync();
+                using var json = System.Text.Json.JsonDocument.Parse(body);
+                if (!response.IsSuccessStatusCode)
+                    throw new InvalidOperationException(json.RootElement.TryGetProperty("detail", out var d) ? d.ToString() : $"erreur {(int)response.StatusCode}");
+                int id = json.RootElement.GetProperty("id").GetInt32();
+                ReportEditorUri = new Uri($"{url}/?afmi_token={token}#editor-embed/{id}");
+                ReportEditorStatus = string.Empty;
+            }
+            catch (Exception ex)
+            {
+                ReportEditorUri = null;
+                ReportEditorStatus = $"Éditeur indisponible ({ex.Message}) : aperçu texte affiché.";
             }
         }
 
@@ -1791,7 +1843,7 @@ li {{ margin-bottom: 6px; }}
             sb.AppendLine($"Date de génération\t{DateTime.Now:dd/MM/yyyy HH:mm}");
             sb.AppendLine();
             
-            sb.AppendLine("INDICATEURS EVM\tVALEUR (€)\tDESCRIPTION");
+            sb.AppendLine($"INDICATEURS EVM\tVALEUR ({Project.Currency})\tDESCRIPTION");
             sb.AppendLine($"BAC (Budget à terminaison)\t{metrics.BAC}\tBudget global alloué au projet");
             sb.AppendLine($"PV (Valeur planifiée)\t{metrics.PV}\tBudget planifié cumulé à date");
             sb.AppendLine($"EV (Valeur acquise)\t{metrics.EV}\tAvancement physique converti en valeur budgétaire");
@@ -1806,7 +1858,7 @@ li {{ margin-bottom: 6px; }}
             sb.AppendLine();
             
             sb.AppendLine("REGISTRE DES DEPENSES COMPTABLES");
-            sb.AppendLine("Date\tCatégorie\tDescription\tFournisseur/Bénéficiaire\tBudget Prévu (€)\tCoût Réel (€)");
+            sb.AppendLine($"Date\tCatégorie\tDescription\tFournisseur/Bénéficiaire\tBudget Prévu ({Project.Currency})\tCoût Réel ({Project.Currency})");
             foreach (var c in CostEntries)
             {
                 sb.AppendLine($"{c.Date:dd/MM/yyyy}\t{c.Category}\t{c.Description}\t{c.ResourceName}\t{c.EstimatedCost}\t{c.ActualCost}");

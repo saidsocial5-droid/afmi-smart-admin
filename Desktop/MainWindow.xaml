@@ -6,11 +6,13 @@
         xmlns:local="clr-namespace:AFMI_Gestion_projet"
         xmlns:viewmodels="clr-namespace:AFMI_Gestion_projet.ViewModels"
         xmlns:views="clr-namespace:AFMI_Gestion_projet.Views"
+        xmlns:treasury="clr-namespace:AFMI_Gestion_projet.ViewModels.Treasury"
         xmlns:System="clr-namespace:System;assembly=mscorlib"
         mc:Ignorable="d"
-        Title="AFMI Smart Admin - Gestion de Projets, Agents IA &amp; Reporting"
+        Title="{Binding WindowTitle}"
         Height="780" Width="1200"
         WindowStartupLocation="CenterScreen"
+        WindowState="Maximized"
         Background="{StaticResource BgLightBrush}">
 
     <Window.Resources>
@@ -34,6 +36,9 @@
         </DataTemplate>
         <DataTemplate DataType="{x:Type viewmodels:FundersViewModel}">
             <views:FundersView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type treasury:TreasuryViewModel}">
+            <views:TreasuryView />
         </DataTemplate>
         <DataTemplate DataType="{x:Type viewmodels:SmartOfficeViewModel}">
             <views:SmartOfficeView />
@@ -88,7 +93,7 @@
 
                 <!-- App Brand Header -->
                 <StackPanel Grid.Row="0" Margin="20,25,20,30">
-                    <TextBlock Text="AFMI SMART ADMIN" FontSize="20" FontWeight="Bold" Foreground="White"/>
+                    <TextBlock Text="AFMI SMART ADMIN" FontSize="18" FontWeight="Bold" Foreground="White" TextTrimming="None" TextWrapping="Wrap"/>
                     <TextBlock Text="Projets · Agents IA · Finances" FontSize="11" Foreground="#94A3B8" Margin="0,3,0,0"/>
                 </StackPanel>
 
@@ -109,6 +114,12 @@
                             CommandParameter="templates" 
                             Style="{StaticResource SidebarButtonStyle}"/>
                             
+                    <Button Content="🏦   Trésorerie"
+                            Command="{Binding NavigateCommand}"
+                            CommandParameter="treasury"
+                            ToolTip="Comptes bancaires et caisse, opérations, virements, rapprochement, prévisions"
+                            Style="{StaticResource SidebarButtonStyle}"/>
+
                     <Button Content="🏢   Bailleurs de Fonds" 
                             Command="{Binding NavigateCommand}" 
                             CommandParameter="funders" 
@@ -127,8 +138,10 @@
 
                     <Separator Background="#334155" Margin="10,15,10,15"/>
 
-                    <Button Content="⚙️   Configuration SMTP" 
-                            Command="{Binding OpenSmtpConfigCommand}" 
+                    <Button Content="⚙️   Paramètres"
+                            Command="{Binding NavigateCommand}"
+                            CommandParameter="settings"
+                            ToolTip="Configuration générale : association, comptabilité, banques, IA (Gemini, Claude, ChatGPT, Ollama), messagerie, utilisateurs, sauvegardes"
                             Style="{StaticResource SidebarButtonStyle}"/>
 
                     <Button Content="📤   Exporter la base" 
@@ -137,7 +150,16 @@
 
                     <Button Content="📥   Importer une base" 
                             Command="{Binding ImportDbCommand}" 
+                            Visibility="{Binding IsNotDemoMode, Converter={StaticResource BoolToVis}}"
                             Style="{StaticResource SidebarButtonStyle}"/>
+
+                    <Button Content="🎓   Démonstration"
+                            Command="{Binding OpenDemoCommand}"
+                            ToolTip="Ouvre une association fictive (3 projets, 3 comptes, 12 relevés) dans une seconde fenêtre, sans toucher à vos données"
+                            Visibility="{Binding IsNotDemoMode, Converter={StaticResource BoolToVis}}"
+                            Style="{StaticResource SidebarButtonStyle}"/>
+                    <TextBlock Text="DÉMONSTRATION — données fictives" Foreground="#FBBF24" FontWeight="Bold" Margin="15,10" TextWrapping="Wrap"
+                               Visibility="{Binding IsDemoMode, Converter={StaticResource BoolToVis}}"/>
                 </StackPanel>
 
                 <!-- Footer / Notifications Status -->
@@ -151,6 +173,11 @@
                         <StackPanel VerticalAlignment="Center">
                             <TextBlock Text="Statut Global" FontSize="11.5" Foreground="#64748B"/>
                             <TextBlock Text="Base de données locale" FontSize="12.5" FontWeight="SemiBold" Foreground="#E2E8F0" Margin="0,2,0,0"/>
+                            <TextBlock FontSize="11.5" Margin="0,4,0,0" ToolTip="Rechercher une nouvelle version">
+                                <Hyperlink Command="{Binding CheckUpdatesNowCommand}" Foreground="#94A3B8">
+                                    <Run Text="{Binding InstalledVersionLabel, Mode=OneWay}"/><Run Text=" · mises à jour"/>
+                                </Hyperlink>
+                            </TextBlock>
                         </StackPanel>
 
                         <!-- Notification Badge (Late tasks) -->
@@ -176,6 +203,7 @@
         <Grid Grid.Column="1">
             <Grid.RowDefinitions>
                 <RowDefinition Height="55"/>
+                <RowDefinition Height="Auto"/>
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
 
@@ -191,8 +219,31 @@
                 </Grid>
             </Border>
 
+            <!-- Bandeau de mise à jour (version plus récente publiée, manifeste signé) -->
+            <Border Grid.Row="1" Background="#ECFDF5" BorderBrush="#10B981" BorderThickness="0,0,0,1" Padding="20,10"
+                    Visibility="{Binding IsUpdateBannerVisible, Converter={StaticResource BoolToVis}}">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="{Binding UpdateMessage}" FontWeight="SemiBold" Foreground="#065F46" TextWrapping="Wrap"/>
+                        <TextBlock Text="{Binding UpdateNotes}" FontSize="12" Foreground="#047857" TextWrapping="Wrap" MaxHeight="60" TextTrimming="CharacterEllipsis" Margin="0,2,0,0"/>
+                        <ProgressBar Height="6" Margin="0,6,0,0" Maximum="100" Value="{Binding UpdateProgress}"
+                                     Visibility="{Binding IsUpdateBusy, Converter={StaticResource BoolToVis}}"/>
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="15,0,0,0">
+                        <Button Content="Installer maintenant" Command="{Binding InstallUpdateCommand}" Padding="14,6" Margin="0,0,8,0"
+                                Background="#1B4332" Foreground="White" BorderThickness="0" IsEnabled="{Binding IsUpdateIdle}"/>
+                        <Button Content="Plus tard" Command="{Binding DismissUpdateCommand}" Padding="14,6"
+                                IsEnabled="{Binding IsUpdateIdle}"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
             <!-- Active View Content -->
-            <ContentControl Grid.Row="1" Content="{Binding CurrentViewModel}"/>
+            <ContentControl Grid.Row="2" Content="{Binding CurrentViewModel}"/>
         </Grid>
 
         <!-- SMTP CONFIGURATION DIALOG OVERLAY -->

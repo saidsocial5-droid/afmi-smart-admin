@@ -21,10 +21,9 @@ python -m PyInstaller --noconfirm --clean --console ^
     --collect-all pdfplumber ^
     --collect-all pymupdf ^
     --hidden-import multipart ^
-    --add-data "%~dp0backend\config\ngo_profile.json;backend\config" ^
-    --add-data "%~dp0backend\config\rss_feeds.json;backend\config" ^
-    --add-data "%~dp0backend\config\payroll_rules_ma.json;backend\config" ^
-    --add-data "%~dp0backend\config\edi_9421_config.json;backend\config" ^
+    --collect-data docx ^
+    --collect-all cv2 ^
+    --add-data "%~dp0backend\config\*.json;backend\config" ^
     --collect-submodules lxml ^
     --add-data "%~dp0backend\plugins;backend\plugins" ^
     --add-data "%~dp0frontend\dist;frontend\dist" ^

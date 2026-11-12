@@ -1,0 +1,65 @@
+{
+  "description": "Contrôle du RIB marocain : clé = 97 - ((22 premiers chiffres x 100) mod 97). Vecteurs générés par la règle ; à compléter par des RIB réels confirmés.",
+  "cases": [
+    {
+      "input": "007330000123456789012385",
+      "wellFormed": true,
+      "keyValid": true
+    },
+    {
+      "input": "007330000123456789012386",
+      "wellFormed": true,
+      "keyValid": false
+    },
+    {
+      "input": "225330000987654321000152",
+      "wellFormed": true,
+      "keyValid": true
+    },
+    {
+      "input": "225330000987654321000153",
+      "wellFormed": true,
+      "keyValid": false
+    },
+    {
+      "input": "011780000000123456789047",
+      "wellFormed": true,
+      "keyValid": true
+    },
+    {
+      "input": "011780000000123456789048",
+      "wellFormed": true,
+      "keyValid": false
+    },
+    {
+      "input": "190999000000000000000145",
+      "wellFormed": true,
+      "keyValid": true
+    },
+    {
+      "input": "190999000000000000000146",
+      "wellFormed": true,
+      "keyValid": false
+    },
+    {
+      "input": "007 330 0001234567890123 85",
+      "wellFormed": true,
+      "keyValid": true
+    },
+    {
+      "input": "12345",
+      "wellFormed": false,
+      "keyValid": false
+    },
+    {
+      "input": "00733000012345678901A345",
+      "wellFormed": false,
+      "keyValid": false
+    },
+    {
+      "input": "",
+      "wellFormed": false,
+      "keyValid": false
+    }
+  ]
+}

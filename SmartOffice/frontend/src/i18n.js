@@ -3,7 +3,7 @@ export const translations = {
   ar: {
     // Header & Meta
     appTitle: "المكتب الذكي للجمعية",
-    appVersion: "AFMI-SmartOffice v1.0",
+    appVersion: "v2.0.0",
     orgSubtitle: "جمعية الغابة النموذجية إفران — Association Forêt Modèle d'Ifrane (Azrou)",
     projectsPortfolio: "محفظة المشاريع",
     availableBalance: "الرصيد المتاح",
@@ -403,7 +403,7 @@ export const translations = {
   fr: {
     // Header & Meta
     appTitle: "Bureau Intelligent de l'Association",
-    appVersion: "AFMI-SmartOffice v1.0",
+    appVersion: "v2.0.0",
     orgSubtitle: "Association Forêt Modèle d'Ifrane — جمعية الغابة النموذجية إفران (Azrou)",
     projectsPortfolio: "Portefeuille Projets",
     availableBalance: "Solde Disponible",
@@ -803,7 +803,7 @@ export const translations = {
   en: {
     // Header & Meta
     appTitle: "Smart Office of the Association",
-    appVersion: "AFMI-SmartOffice v1.0",
+    appVersion: "v2.0.0",
     orgSubtitle: "Ifrane Model Forest Association — جمعية الغابة النموذجية إفران (Azrou)",
     projectsPortfolio: "Projects Portfolio",
     availableBalance: "Available Balance",

@@ -1,3 +1,5 @@
+import hmac
+import mimetypes
 import os
 import re
 from pathlib import Path
@@ -13,11 +15,18 @@ from backend.api.routes_ocr import router as ocr_router
 from backend.api.routes_finance import router as finance_router
 from backend.api.routes_grants import router as grants_router
 from backend.api.routes_projects import router as projects_router
-from backend.api.routes_settings import router as settings_router
+from backend.api.routes_settings import router as settings_router, load_persisted_gemini_key
 from backend.api.routes_plugins import router as plugins_router
 from backend.api.routes_rss import router as rss_router
 from backend.api.routes_workflows import router as workflows_router
 from backend.api.routes_payroll import router as payroll_router
+from backend.api.routes_statements import router as statements_router
+from backend.api.routes_editor import router as editor_router
+from backend.api.routes_reports import router as reports_router
+from backend.api.routes_ged import router as ged_router
+from backend.api.routes_exports import router as exports_router
+from backend.api.routes_meetings import router as meetings_router
+from backend.api.routes_overview import router as overview_router
 from backend.core.orchestrator import mark_interrupted_runs
 
 
@@ -30,7 +39,20 @@ app = FastAPI(
 # Local-only access: the API has no authentication, so only pages served from this machine
 # (the app itself, the WPF WebView2, the Vite dev server) may call it.
 LOCAL_ORIGIN_REGEX = r"^https?://(127\.0\.0\.1|localhost)(:\d+)?$"
+TOKEN_HEADER = "X-AFMI-Token"
+TOKEN_COOKIE = "afmi_session"
+TOKEN_QUERY = "afmi_token"
 LOCAL_HOST_REGEX = re.compile(r"^(127\.0\.0\.1|localhost)(:\d+)?$", re.IGNORECASE)
+
+@app.middleware("http")
+async def role_guard(request: Request, call_next):
+    # Rôles (Paramètres › Utilisateurs) : déclaré avant local_origin_guard, donc exécuté après le contrôle du jeton.
+    from backend.core import roles
+    refusal = roles.check(request.method, request.url.path)
+    if refusal:
+        return JSONResponse(status_code=403, content={"detail": refusal})
+    return await call_next(request)
+
 
 @app.middleware("http")
 async def local_origin_guard(request: Request, call_next):
@@ -42,7 +64,22 @@ async def local_origin_guard(request: Request, call_next):
     origin = request.headers.get("origin")
     if origin is not None and not re.match(LOCAL_ORIGIN_REGEX, origin, re.IGNORECASE):
         return JSONResponse(status_code=403, content={"detail": "Origine non autorisée."})
-    return await call_next(request)
+
+    # Jeton de session (AFMI_API_TOKEN, généré par l'application de bureau à chaque démarrage) : seuls l'application
+    # et sa fenêtre Smart Office peuvent appeler l'API, pas les autres programmes du poste. La page est ouverte avec
+    # ?afmi_token=… ; le backend pose alors un cookie HttpOnly réutilisé par toutes les requêtes de la page.
+    expected = settings.api_token
+    if not expected:
+        return await call_next(request)
+    supplied = request.headers.get(TOKEN_HEADER) or request.cookies.get(TOKEN_COOKIE) or ""
+    if hmac.compare_digest(supplied.encode(), expected.encode()):
+        return await call_next(request)
+    query_token = request.query_params.get(TOKEN_QUERY, "")
+    if query_token and hmac.compare_digest(query_token.encode(), expected.encode()):
+        response = await call_next(request)
+        response.set_cookie(TOKEN_COOKIE, expected, httponly=True, samesite="strict", path="/")
+        return response
+    return JSONResponse(status_code=401, content={"detail": "Session Smart Office invalide : rouvrez le module depuis l'application."})
 
 app.add_middleware(
     CORSMiddleware,
@@ -58,6 +95,11 @@ def startup_event():
     print("[AFMI-SmartOffice] Initializing database and agents...")
     init_db()
     mark_interrupted_runs()
+    load_persisted_gemini_key()
+    if os.getenv("AFMI_DISABLE_SCHEDULER") != "1":
+        import asyncio
+        from backend.core import notifications
+        asyncio.get_event_loop().create_task(notifications.scheduler())
     print("[AFMI-SmartOffice] System initialized successfully.")
 
 # Mount API Routers
@@ -71,10 +113,23 @@ app.include_router(plugins_router)
 app.include_router(rss_router)
 app.include_router(workflows_router)
 app.include_router(payroll_router)
+app.include_router(statements_router)
+app.include_router(reports_router)
+app.include_router(ged_router)
+app.include_router(exports_router)
+app.include_router(meetings_router)
+app.include_router(overview_router)
+app.include_router(editor_router)
 
 
 # Mount exports directory for downloads
 app.mount("/exports", StaticFiles(directory=str(settings.exports_dir)), name="exports")
+
+# Sous Windows, Python lit les types MIME dans le registre, où « .js » vaut souvent « text/plain » : le navigateur
+# refuse alors d'exécuter les scripts de l'interface (page blanche). Les types de l'interface sont donc imposés.
+for _ext, _type in ((".js", "application/javascript"), (".mjs", "application/javascript"), (".css", "text/css"),
+                    (".svg", "image/svg+xml"), (".json", "application/json"), (".woff2", "font/woff2"), (".html", "text/html")):
+    mimetypes.add_type(_type, _ext)
 
 # Mount frontend build if it exists (for unified production deployment)
 frontend_dist = settings.frontend_dist_dir

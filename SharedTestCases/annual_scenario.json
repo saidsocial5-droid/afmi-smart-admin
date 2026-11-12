@@ -1,0 +1,177 @@
+{
+  "description": "Exercice 2026 commun aux tests .NET (FinanceService, ReconciliationService) et Python (rapports annuels) : mêmes opérations, mêmes totaux attendus.",
+  "year": 2026,
+  "rates": [
+    {
+      "currency": "EUR",
+      "date": "2026-01-01",
+      "rate": "10.95"
+    }
+  ],
+  "accounts": [
+    {
+      "key": "A",
+      "title": "Compte BP",
+      "currency": "MAD",
+      "opening": 100000,
+      "opening_date": "2026-01-01"
+    },
+    {
+      "key": "B",
+      "title": "Compte EUR",
+      "currency": "EUR",
+      "opening": 0,
+      "opening_date": "2026-01-01"
+    }
+  ],
+  "operations": [
+    {
+      "key": "op1",
+      "account": "A",
+      "date": "2026-02-01",
+      "nature": "Income",
+      "direction": "Credit",
+      "amount": 500000,
+      "label": "Subvention tranche 1",
+      "allocations": [
+        {
+          "project": "P1",
+          "amount": 300000
+        },
+        {
+          "project": null,
+          "amount": 200000
+        }
+      ]
+    },
+    {
+      "key": "op2",
+      "account": "A",
+      "date": "2026-02-10",
+      "nature": "Expense",
+      "direction": "Debit",
+      "amount": 100001,
+      "label": "Achats",
+      "allocations": [
+        {
+          "project": "P1",
+          "amount": 33334
+        },
+        {
+          "project": "P1",
+          "amount": 33333
+        },
+        {
+          "project": null,
+          "amount": 33334
+        }
+      ]
+    },
+    {
+      "key": "op3",
+      "account": "B",
+      "date": "2026-03-01",
+      "nature": "Income",
+      "direction": "Credit",
+      "amount": 10001,
+      "label": "Don EUR",
+      "allocations": [
+        {
+          "project": "P1",
+          "amount": 5000
+        },
+        {
+          "project": "P1",
+          "amount": 5001
+        }
+      ]
+    },
+    {
+      "key": "op4",
+      "account": "A",
+      "date": "2026-03-05",
+      "nature": "Income",
+      "direction": "Debit",
+      "amount": 20000,
+      "label": "Restitution",
+      "allocations": [
+        {
+          "project": "P1",
+          "amount": 20000
+        }
+      ]
+    },
+    {
+      "key": "op5",
+      "account": "A",
+      "date": "2026-03-06",
+      "nature": "Expense",
+      "direction": "Credit",
+      "amount": 5000,
+      "label": "Avoir",
+      "allocations": [
+        {
+          "project": null,
+          "amount": 5000
+        }
+      ]
+    }
+  ],
+  "transfer": {
+    "from": "A",
+    "to": "B",
+    "date": "2026-03-10",
+    "amount": 10000,
+    "received": 913
+  },
+  "statement": {
+    "account": "A",
+    "start": "2026-02-01",
+    "end": "2026-03-31",
+    "opening": 100000,
+    "closing": 474749,
+    "lines": [
+      {
+        "date": "2026-02-01",
+        "signed": 500000,
+        "match": "op1"
+      },
+      {
+        "date": "2026-02-10",
+        "signed": -100001,
+        "match": "op2"
+      },
+      {
+        "date": "2026-03-05",
+        "signed": -20000,
+        "match": "op4"
+      },
+      {
+        "date": "2026-03-06",
+        "signed": 5000,
+        "match": "op5"
+      },
+      {
+        "date": "2026-03-10",
+        "signed": -10000,
+        "match": "transfer_debit"
+      },
+      {
+        "date": "2026-03-31",
+        "signed": -250,
+        "match": null
+      }
+    ]
+  },
+  "expected": {
+    "income_mad": 589511,
+    "expense_mad": 95001,
+    "balance_A_2026-03-31": 474999,
+    "reconciliation_difference": 0,
+    "unmatched_lines": 1,
+    "python_project_P1": {
+      "income_mad": 389511,
+      "expense_mad": 66667
+    }
+  }
+}

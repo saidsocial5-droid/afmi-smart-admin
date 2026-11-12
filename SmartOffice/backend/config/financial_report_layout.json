@@ -1,0 +1,28 @@
+{
+  "_description": "Présentation des états financiers du rapport annuel. PROVISOIRE : à remplacer par le modèle de l'expert-comptable (plan de comptes, compte d'emploi des ressources). Les catégories sont désignées par leur code (Trésorerie → catégories). Copiez ce fichier dans le dossier de configuration de l'utilisateur pour le modifier.",
+  "status_note": "Présentation provisoire, à valider par l'expert-comptable de l'association.",
+  "cer": {
+    "uses": [
+      {"label": "Emplois affectés aux projets", "source": "projects", "detail": "project"},
+      {"label": "Frais de fonctionnement de l'association", "source": "operating", "detail": "category"}
+    ],
+    "resources": [
+      {"label": "Subventions", "categories": ["SUBV"], "detail": "funder"},
+      {"label": "Cotisations des membres", "categories": ["COTIS"]},
+      {"label": "Dons", "categories": ["DONS"]},
+      {"label": "Prestations", "categories": ["PREST"]},
+      {"label": "Produits financiers", "categories": ["PFIN"]},
+      {"label": "Autres ressources", "categories": ["*"]}
+    ]
+  },
+  "checks": {
+    "DRAFT_OPERATIONS": "blocking",
+    "UNPAIRED_TRANSFER": "blocking",
+    "MISSING_RATE": "blocking",
+    "UNCATEGORIZED": "warning",
+    "UNRECONCILED_ACCOUNT": "warning",
+    "MISSING_RECEIPT": "warning",
+    "INDICATOR_WITHOUT_MEASURE": "warning"
+  },
+  "receipt_threshold_mad": 1000
+}

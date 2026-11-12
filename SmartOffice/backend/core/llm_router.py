@@ -2,6 +2,8 @@ import os
 import json
 import base64
 import httpx
+
+from backend.core import privacy
 from typing import Optional, List, Dict, Any, Tuple
 from backend.config.settings import settings
 
@@ -71,11 +73,12 @@ class LLMRouter:
         model_name: Optional[str] = None,
         temperature: float = 0.4,
         images_b64: Optional[List[str]] = None,
-        response_json: bool = False
+        response_json: bool = False,
+        task: Optional[str] = None
     ) -> str:
         """Route generation request to Gemini, Ollama, or intelligent fallback."""
         text, _engine = await self.generate_with_meta(
-            prompt, system_prompt, provider, model_name, temperature, images_b64, response_json
+            prompt, system_prompt, provider, model_name, temperature, images_b64, response_json, task
         )
         return text
 
@@ -87,25 +90,50 @@ class LLMRouter:
         model_name: Optional[str] = None,
         temperature: float = 0.4,
         images_b64: Optional[List[str]] = None,
-        response_json: bool = False
+        response_json: bool = False,
+        task: Optional[str] = None
     ) -> Tuple[str, str]:
         """Same as generate(), also returns the engine that actually answered ("gemini:<model>",
-        "ollama:<model>" or "heuristic") so the UI never claims a model that was not used."""
+        "ollama:<model>" or "heuristic") so the UI never claims a model that was not used.
+
+        Avec ``task`` (redaction, reports, extraction, qa, captions), le fournisseur choisi pour cette tâche dans les
+        paramètres est utilisé en premier ; en cas de refus (hors ligne, plafond, masquage d'image) ou d'erreur, la
+        chaîne locale habituelle prend le relais. Une tâche réglée sur « moteur local » ne sort jamais du poste."""
+        if task:
+            from backend.core import ai_config, ai_providers
+            cfg = ai_config.task_config(task)
+            if cfg["provider"] == "heuristic":
+                return self._generate_heuristic_response(prompt, system_prompt, response_json, images_b64), "heuristic"
+            result = await ai_providers.run_task(task, prompt, system_prompt, temperature, images_b64, response_json)
+            if result is not None:
+                return result
+            if cfg["provider"] not in ("auto", "", None):
+                provider = "ollama"            # fournisseur choisi indisponible ou refusé : repli local uniquement
         target_provider = (provider or self.default_provider).lower()
         requested = target_provider
 
         # 1. Google Gemini Attempt (no key configured = go straight to the local engine)
         if target_provider == "gemini":
             target_provider = "ollama"
-            if self.gemini_key:
-                model = model_name or self.gemini_model
-                try:
-                    text = await self._call_gemini(
-                        prompt, system_prompt, model, temperature, images_b64, response_json
-                    )
-                    return text, f"gemini:{model}"
-                except Exception as e:
-                    print(f"[LLMRouter] Gemini failed: {e}. Falling back to Ollama or Heuristic.")
+            # Local-first : aucun envoi externe tant que l'utilisateur ne l'a pas autorisé (paramètres).
+            if self.gemini_key and privacy.external_ai_allowed():
+                mask = privacy.mask_enabled()
+                if mask and images_b64:
+                    # Une image (relevé, facture) ne peut pas être masquée : elle reste sur le poste.
+                    print("[LLMRouter] Masquage actif : image non envoyée à l'IA externe, moteur local utilisé.")
+                else:
+                    ext_prompt, ext_system = prompt, system_prompt
+                    if mask:
+                        ext_prompt, _ = privacy.mask_sensitive(prompt)
+                        ext_system, _ = privacy.mask_sensitive(system_prompt)
+                    model = model_name or self.gemini_model
+                    try:
+                        text = await self._call_gemini(
+                            ext_prompt, ext_system, model, temperature, images_b64, response_json
+                        )
+                        return text, f"gemini:{model}"
+                    except Exception as e:
+                        print(f"[LLMRouter] Gemini failed: {e}. Falling back to Ollama or Heuristic.")
 
         # 2. Ollama Local Engine Attempt (the agent's model name is a Gemini id when we fell back)
         if target_provider == "ollama":
@@ -120,6 +148,39 @@ class LLMRouter:
 
         # 3. Intelligent Institutional Heuristic Engine (Specialized in AFMI Moroccan context)
         return self._generate_heuristic_response(prompt, system_prompt, response_json, images_b64), "heuristic"
+
+    async def embed(self, texts: List[str]) -> Tuple[Optional[List[List[float]]], str]:
+        """
+        Vecteurs sémantiques des textes. Ordre : Ollama local (OLLAMA_EMBED_MODEL, nomic-embed-text par défaut), puis
+        Gemini seulement si l'IA externe est autorisée (textes masqués si le masquage est actif). (None, "none") sinon :
+        la recherche se contente alors du plein texte.
+        """
+        import os
+        model = os.getenv("OLLAMA_EMBED_MODEL", "nomic-embed-text")
+        try:
+            async with httpx.AsyncClient(timeout=60.0) as client:
+                vectors = []
+                for t in texts:
+                    r = await client.post(f"{self.ollama_url}/api/embeddings", json={"model": model, "prompt": t})
+                    r.raise_for_status()
+                    vectors.append(r.json()["embedding"])
+                return vectors, f"ollama:{model}"
+        except Exception:
+            pass
+        if self.gemini_key and privacy.external_ai_allowed():
+            if privacy.mask_enabled():
+                texts = [privacy.mask_sensitive(t)[0] for t in texts]
+            try:
+                async with httpx.AsyncClient(timeout=60.0) as client:
+                    r = await client.post(
+                        "https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:batchEmbedContents",
+                        json={"requests": [{"model": "models/text-embedding-004", "content": {"parts": [{"text": t}]}} for t in texts]},
+                        headers={"x-goog-api-key": self.gemini_key})
+                    r.raise_for_status()
+                    return [e["values"] for e in r.json()["embeddings"]], "gemini:text-embedding-004"
+            except Exception as e:
+                print(f"[LLMRouter] Embeddings Gemini indisponibles : {e}")
+        return None, "none"
 
     async def _call_gemini(
         self,

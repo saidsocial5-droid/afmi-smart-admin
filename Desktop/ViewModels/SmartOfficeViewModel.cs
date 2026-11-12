@@ -27,6 +27,18 @@ namespace AFMI_Gestion_projet.ViewModels
 
         public ICommand RetryCommand { get; }
 
+        /// <summary>Onglet demandé (ex. « settings ») : transmis à la page par le fragment d'URL.</summary>
+        private string? _tab;
+        private string? _baseUri;
+
+        public void OpenTab(string? tab)
+        {
+            _tab = tab;
+            if (_baseUri != null) PageUri = BuildUri();
+        }
+
+        private Uri BuildUri() => new($"{_baseUri}#{_tab ?? "dashboard"}");
+
         public SmartOfficeViewModel()
         {
             RetryCommand = new AsyncRelayCommand(StartAsync);
@@ -42,7 +54,9 @@ namespace AFMI_Gestion_projet.ViewModels
             try
             {
                 string url = await SmartOfficeHostService.Instance.EnsureStartedAsync();
-                PageUri = new Uri(url + "/");
+                // La page reçoit le jeton une fois ; le backend le remplace par un cookie HttpOnly.
+                _baseUri = $"{url}/?afmi_token={SmartOfficeHostService.Instance.SessionToken}";
+                PageUri = BuildUri();
                 StatusMessage = string.Empty;
             }
             catch (Exception ex)

@@ -1,0 +1,77 @@
+{
+  "description": "Répartition au plus fort reste : la somme des parts est égale au total ; égalité départagée par l'ordre.",
+  "cases": [
+    {
+      "total": 10000,
+      "weights": [
+        1,
+        1,
+        1
+      ],
+      "expected": [
+        3334,
+        3333,
+        3333
+      ]
+    },
+    {
+      "total": 100,
+      "weights": [
+        50,
+        30,
+        20
+      ],
+      "expected": [
+        50,
+        30,
+        20
+      ]
+    },
+    {
+      "total": 1,
+      "weights": [
+        1,
+        1
+      ],
+      "expected": [
+        1,
+        0
+      ]
+    },
+    {
+      "total": 99999,
+      "weights": [
+        33.33,
+        33.33,
+        33.34
+      ],
+      "expected": [
+        33330,
+        33330,
+        33339
+      ]
+    },
+    {
+      "total": 0,
+      "weights": [
+        1,
+        2
+      ],
+      "expected": [
+        0,
+        0
+      ]
+    },
+    {
+      "total": 700,
+      "weights": [
+        0,
+        1
+      ],
+      "expected": [
+        0,
+        700
+      ]
+    }
+  ]
+}

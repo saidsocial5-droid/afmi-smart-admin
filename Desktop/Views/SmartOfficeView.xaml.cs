@@ -26,9 +26,7 @@ namespace AFMI_Gestion_projet.Views
             try
             {
                 // Profil WebView2 dans LocalAppData : le dossier de l'exécutable peut être en lecture seule.
-                string userData = Path.Combine(
-                    Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "AFMIGestionProjet", "WebView2");
-                var env = await CoreWebView2Environment.CreateAsync(null, userData);
+                var env = await Services.WebViewEnvironment.GetAsync();
                 await WebView.EnsureCoreWebView2Async(env);
                 WebView.CoreWebView2.NewWindowRequested += OnNewWindowRequested;
                 _webViewReady = true;
@@ -72,7 +70,8 @@ namespace AFMI_Gestion_projet.Views
             bool showPage = _webViewReady && _viewModel.PageUri != null && !_viewModel.IsLoading && !_viewModel.HasError;
             StatusOverlay.Visibility = showPage ? Visibility.Collapsed : Visibility.Visible;
 
-            if (showPage && WebView.Source != _viewModel.PageUri)
+            // Comparaison sur l'URL complète : Uri.Equals ignore le fragment (#settings), qui sélectionne l'onglet
+            if (showPage && WebView.Source?.AbsoluteUri != _viewModel.PageUri!.AbsoluteUri)
             {
                 WebView.Source = _viewModel.PageUri;
             }

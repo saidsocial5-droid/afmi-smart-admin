@@ -35,12 +35,21 @@ namespace AFMI_Gestion_projet.ViewModels
         public AiAssistantViewModel AiAssistantVM { get; }
         public FundersViewModel FundersVM { get; }
         public SmartOfficeViewModel SmartOfficeVM { get; }
+        public Treasury.TreasuryViewModel TreasuryVM { get; }
 
         public ICommand NavigateCommand { get; }
         public ICommand OpenSmtpConfigCommand { get; }
         public ICommand SaveSmtpSettingsCommand { get; }
         public ICommand ExportDbCommand { get; }
         public ICommand ImportDbCommand { get; }
+        public ICommand OpenDemoCommand { get; }
+
+        /// <summary>Fenêtre ouverte sur la base de démonstration (données fictives).</summary>
+        public bool IsDemoMode => Services.DemoService.IsDemoMode;
+        public bool IsNotDemoMode => !IsDemoMode;
+        public string WindowTitle => IsDemoMode
+            ? "AFMI Smart Admin 2.2 — DÉMONSTRATION (données fictives)"
+            : "AFMI Smart Admin 2.2 - Gestion de Projets, Agents IA & Reporting";
 
         public MainViewModel()
         {
@@ -53,8 +62,8 @@ namespace AFMI_Gestion_projet.ViewModels
             // Run rolling database backup
             AutoBackupDatabase();
 
-            // Check and process SMTP email scheduling
-            CheckScheduledReports();
+            // Check and process SMTP email scheduling (jamais d'envoi depuis la démonstration)
+            if (!Services.DemoService.IsDemoMode) CheckScheduledReports();
 
             // Instantiate child ViewModels
             DashboardVM = new DashboardViewModel(this);
@@ -63,6 +72,7 @@ namespace AFMI_Gestion_projet.ViewModels
             AiAssistantVM = new AiAssistantViewModel(this);
             FundersVM = new FundersViewModel(this);
             SmartOfficeVM = new SmartOfficeViewModel();
+            TreasuryVM = new Treasury.TreasuryViewModel();
 
             // Set Initial View
             CurrentViewModel = DashboardVM;
@@ -74,8 +84,50 @@ namespace AFMI_Gestion_projet.ViewModels
             SaveSmtpSettingsCommand = new RelayCommand(SaveSmtpSettings);
             ExportDbCommand = new RelayCommand(ExportDatabase);
             ImportDbCommand = new RelayCommand(ImportDatabase);
+            OpenDemoCommand = new RelayCommand(OpenDemo);
+
+            // Mise à jour automatique (manifeste signé, rien n'est installé sans accord)
+            StartUpdateCheck();
 
             UpdateGlobalNotifications();
+        }
+
+        /// <summary>
+        /// Ouvre la base de démonstration dans une seconde fenêtre : copie séparée du paquet livré, jamais la base réelle.
+        /// </summary>
+        private void OpenDemo()
+        {
+            try
+            {
+                string? package = Services.DemoService.FindPackage(AppContext.BaseDirectory);
+                if (package == null)
+                {
+                    System.Windows.MessageBox.Show("La base de démonstration n'est pas installée avec cette version.", "Démonstration",
+                        System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
+                    return;
+                }
+                string target = Services.DemoService.DefaultTarget();
+                bool reset = false;
+                if (File.Exists(Path.Combine(target, "database.db")))
+                {
+                    var answer = System.Windows.MessageBox.Show(
+                        "Une démonstration existe déjà sur ce poste.\n\nOui : la remettre à zéro (vos essais sont effacés).\nNon : la rouvrir telle quelle.",
+                        "Démonstration", System.Windows.MessageBoxButton.YesNoCancel, System.Windows.MessageBoxImage.Question);
+                    if (answer == System.Windows.MessageBoxResult.Cancel) return;
+                    reset = answer == System.Windows.MessageBoxResult.Yes;
+                }
+                var (db, data) = Services.DemoService.Install(package, target, reset);
+                var psi = new System.Diagnostics.ProcessStartInfo(Environment.ProcessPath!) { UseShellExecute = false };
+                psi.Environment[DatabasePaths.OverrideVariable] = db;
+                psi.Environment["AFMI_DATA_DIR"] = data;
+                psi.Environment[Services.DemoService.ModeVariable] = "1";
+                System.Diagnostics.Process.Start(psi);
+            }
+            catch (Exception ex)
+            {
+                System.Windows.MessageBox.Show($"Ouverture de la démonstration impossible : {ex.Message}", "Démonstration",
+                    System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
+            }
         }
 
         public void Navigate(string? destination)
@@ -109,9 +161,21 @@ namespace AFMI_Gestion_projet.ViewModels
                     ActiveViewName = "Bailleurs de Fonds";
                     FundersVM.LoadFunders();
                     break;
+                case "treasury":
+                    CurrentViewModel = TreasuryVM;
+                    ActiveViewName = "Trésorerie — comptes, opérations, rapprochement, prévisions";
+                    TreasuryVM.Refresh();
+                    break;
                 case "smart_office":
                     CurrentViewModel = SmartOfficeVM;
                     ActiveViewName = "Smart Office — Agents IA, OCR & Radar";
+                    SmartOfficeVM.OpenTab(null);
+                    break;
+                case "settings":
+                    // Page générale des paramètres (Smart Office) : remplace l'ancienne configuration SMTP
+                    CurrentViewModel = SmartOfficeVM;
+                    ActiveViewName = "Paramètres";
+                    SmartOfficeVM.OpenTab("settings");
                     break;
             }
         }
@@ -152,39 +216,42 @@ namespace AFMI_Gestion_projet.ViewModels
             }
         }
 
-        private void AutoBackupDatabase()
+        private System.Windows.Threading.DispatcherTimer? _backupTimer;
+
+        /// <summary>
+        /// Sauvegarde planifiée selon Paramètres › Sauvegardes (dossier, fréquence, conservation) : copie cohérente par
+        /// l'API SQLite au démarrage puis vérifiée toutes les heures. Remplace l'ancienne copie de fichier (non sûre
+        /// pendant l'utilisation de la base) limitée à 5 exemplaires.
+        /// </summary>
+        private void AutoBackupDatabase(bool atStartup = true)
         {
             try
             {
-                string folder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "AFMIGestionProjet");
-                string dbPath = Path.Combine(folder, "database.db");
-                
-                if (File.Exists(dbPath))
-                {
-                    string backupFolder = Path.Combine(folder, "Backups");
-                    if (!Directory.Exists(backupFolder))
-                    {
-                        Directory.CreateDirectory(backupFolder);
-                    }
-                    
-                    // Maintain last 5 rolling backups
-                    string backupPath = Path.Combine(backupFolder, $"database_backup_{DateTime.Now:yyyyMMdd_HHmmss}.db");
-                    File.Copy(dbPath, backupPath, true);
-                    
-                    var files = Directory.GetFiles(backupFolder, "database_backup_*.db")
-                                         .OrderBy(f => File.GetCreationTime(f))
-                                         .ToList();
-                                         
-                    while (files.Count > 5)
-                    {
-                        File.Delete(files[0]);
-                        files.RemoveAt(0);
-                    }
-                }
+                string dbPath = DatabasePaths.GetDatabasePath();
+                using var db = new AppDbContext();
+                var settings = new Services.SettingsService(db);
+                string folder = Services.BackupService.ResolveFolder(dbPath, settings.Get<string>(Services.SettingKeys.BackupFolder));
+                Services.BackupService.RunScheduled(dbPath, folder, settings.Get<string>(Services.SettingKeys.BackupFrequency) ?? "daily",
+                    settings.Get<int>(Services.SettingKeys.BackupRetention), atStartup);
+                if (!string.IsNullOrEmpty(settings.Get<string>(Services.SettingKeys.BackupLastError)))
+                    settings.ResetToDefault(Services.SettingKeys.BackupLastError);
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Auto backup failed: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Sauvegarde automatique impossible : {ex.Message}");
+                // Signalée par e-mail (Paramètres › Notifications) et dans les paramètres
+                try
+                {
+                    using var db = new AppDbContext();
+                    new Services.SettingsService(db).Set(Services.SettingKeys.BackupLastError, $"{DateTime.Now:dd/MM/yyyy HH:mm} — {ex.Message}");
+                }
+                catch (Exception) { /* base indisponible : rien de plus à faire */ }
+            }
+            if (_backupTimer == null)
+            {
+                _backupTimer = new System.Windows.Threading.DispatcherTimer { Interval = TimeSpan.FromHours(1) };
+                _backupTimer.Tick += (_, _) => AutoBackupDatabase(atStartup: false);
+                _backupTimer.Start();
             }
         }
 
@@ -321,8 +388,8 @@ namespace AFMI_Gestion_projet.ViewModels
             {
                 try
                 {
-                    string folder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "AFMIGestionProjet");
-                    string dbPath = Path.Combine(folder, "database.db");
+                    string dbPath = DatabasePaths.GetDatabasePath();
+                    string folder = Path.GetDirectoryName(dbPath)!;
 
                     if (File.Exists(dbPath))
                     {
@@ -362,8 +429,8 @@ namespace AFMI_Gestion_projet.ViewModels
                 {
                     try
                     {
-                        string folder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "AFMIGestionProjet");
-                        string dbPath = Path.Combine(folder, "database.db");
+                        string dbPath = DatabasePaths.GetDatabasePath();
+                        string folder = Path.GetDirectoryName(dbPath)!;
 
                         // Perform a safety backup of current db before replacing it
                         if (File.Exists(dbPath))
@@ -381,6 +448,22 @@ namespace AFMI_Gestion_projet.ViewModels
 
                         // Copy imported database
                         File.Copy(ofd.FileName, dbPath, true);
+
+                        // La base importée peut venir d'une version antérieure : elle sera sauvegardée puis migrée
+                        // à la prochaine ouverture (ci-dessous). En cas d'échec, l'ancienne base est restaurée.
+                        DatabaseMigrator.ForgetMigrationState();
+                        try
+                        {
+                            using var migrated = new AppDbContext();
+                        }
+                        catch
+                        {
+                            Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools();
+                            string safetyBackup = Path.Combine(folder, "database_before_import.db");
+                            if (File.Exists(safetyBackup)) File.Copy(safetyBackup, dbPath, true);
+                            DatabaseMigrator.ForgetMigrationState();
+                            throw;
+                        }
 
                         System.Windows.MessageBox.Show(
                             "Base de données importée avec succès ! L'application va recharger les données.",

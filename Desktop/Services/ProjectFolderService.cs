@@ -152,7 +152,7 @@ namespace AFMI_Gestion_projet.Services
                 sb.AppendLine($"Code Projet        : {project.Code}");
                 sb.AppendLine($"Chef de Projet     : {project.Manager}");
                 sb.AppendLine($"Commanditaire      : {project.Client}");
-                sb.AppendLine($"Budget Global      : {project.BudgetGlobal:N0} €");
+                sb.AppendLine($"Budget Global      : {project.BudgetGlobal:N0} MAD");
                 sb.AppendLine($"Période Couverte   : {startYear} à {endYear}");
                 sb.AppendLine($"Arborescence créée : {DateTime.Now:dd/MM/yyyy HH:mm}");
                 sb.AppendLine("================================================================================");

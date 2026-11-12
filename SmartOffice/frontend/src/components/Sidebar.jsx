@@ -1,5 +1,11 @@
 import React from 'react';
 import { 
+  FolderKanban,
+  FileBarChart2,
+  Target,
+  FilePenLine,
+  Palette,
+  Images,
   LayoutDashboard, 
   Bot, 
   FileScan, 
@@ -11,7 +17,11 @@ import {
   Workflow,
   Landmark,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Settings,
+  ClipboardList,
+  Orbit,
+  FolderTree
 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 
@@ -52,6 +62,86 @@ export default function Sidebar({ activeTab, setActiveTab }) {
       badge: t('badgeOcr')
     },
     {
+      id: 'ged',
+      label_ar: 'وثائق المشاريع ودورة حياتها',
+      label_fr: 'Documents & cycle de vie',
+      label_en: 'Documents & lifecycle',
+      icon: FolderKanban,
+      badge: 'GED'
+    },
+    {
+      id: 'reports',
+      label_ar: 'التقارير السنوية',
+      label_fr: 'Rapports annuels',
+      label_en: 'Annual reports',
+      icon: FileBarChart2,
+      badge: 'AG'
+    },
+    {
+      id: 'indicators',
+      label_ar: 'المؤشرات والمستفيدون',
+      label_fr: 'Indicateurs & bénéficiaires',
+      label_en: 'Indicators & beneficiaries',
+      icon: Target,
+      badge: 'GAR'
+    },
+    {
+      id: 'project360',
+      label_ar: 'نظرة شاملة على المشروع',
+      label_fr: 'Vue 360° du projet',
+      label_en: 'Project 360° view',
+      icon: Orbit,
+      badge: '360°'
+    },
+    {
+      id: 'folders',
+      label_ar: 'الملفات والتصنيف',
+      label_fr: 'Dossiers & classement',
+      label_en: 'Folders & filing',
+      icon: FolderTree,
+      badge: 'GED'
+    },
+    {
+      id: 'meetings',
+      label_ar: 'المحاضر وتقارير الأنشطة',
+      label_fr: 'Comptes rendus & PV',
+      label_en: 'Minutes & activity reports',
+      icon: ClipboardList,
+      badge: 'PV'
+    },
+    {
+      id: 'editor',
+      label_ar: 'محرر الوثائق',
+      label_fr: 'Éditeur de documents',
+      label_en: 'Document editor',
+      icon: FilePenLine,
+      badge: 'Docs'
+    },
+    {
+      id: 'charts',
+      label_ar: 'المواثيق البصرية والنماذج',
+      label_fr: 'Chartes & modèles',
+      label_en: 'Brand charts & templates',
+      icon: Palette,
+      badge: 'Charte'
+    },
+    {
+      id: 'photos',
+      label_ar: 'صور الأنشطة',
+      label_fr: 'Photos des activités',
+      label_en: 'Activity photos',
+      icon: Images,
+      badge: 'Photos'
+    },
+    {
+      id: 'statements',
+      label_ar: 'الكشوفات البنكية',
+      label_fr: 'Relevés bancaires',
+      label_en: 'Bank statements',
+      icon: FileScan,
+      badge: 'OCR'
+    },
+    {
       id: 'payroll',
       label_ar: 'الأجور والتصريحات الضريبية',
       label_fr: 'Paie & Déclarations',
@@ -82,6 +172,13 @@ export default function Sidebar({ activeTab, setActiveTab }) {
       label_en: 'Studio & Plugins',
       icon: Sliders,
       badge: t('badgeStudio')
+    },
+    {
+      id: 'settings',
+      label_ar: 'الإعدادات المتقدمة',
+      label_fr: 'Paramètres',
+      label_en: 'Settings',
+      icon: Settings
     },
     {
       id: 'memory',

@@ -20,6 +20,43 @@ namespace AFMI_Gestion_projet
                 ShowExceptionDialog(args.Exception, "Dispatcher Unhandled Exception");
                 args.Handled = true; // Keep app alive
             };
+
+            // Restauration demandée depuis Paramètres › Sauvegardes : appliquée avant toute ouverture de la base,
+            // après une sauvegarde de sécurité de la base courante.
+            try
+            {
+                string db = Data.DatabasePaths.GetDatabasePath();
+                string? restored = Services.BackupService.ApplyPendingRestore(db, Services.BackupService.FolderFromDatabase(db));
+                if (restored != null)
+                    MessageBox.Show($"La sauvegarde {System.IO.Path.GetFileName(restored)} a été restaurée.\nLa base précédente a été conservée (motif « avant_restauration »).",
+                        "AFMI Smart Admin — restauration", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Restauration annulée : {ex.Message}\nLa base actuelle est inchangée.", "AFMI Smart Admin — restauration",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+
+            // Mise à jour du schéma avant toute fenêtre : sauvegarde automatique puis migrations EF Core.
+            // En cas d'échec, la transaction est annulée et l'application s'arrête au lieu de travailler sur une base incohérente.
+            try
+            {
+                using var db = new Data.AppDbContext();
+                // Rôles (Paramètres › Utilisateurs) : appliqués à tout enregistrement, pour tous les écrans
+                string? role = Services.RoleService.CurrentRole(db, Data.AuditContext.CurrentUser);
+                if (role != null)
+                    Data.AppDbContext.DefaultWritePermission = area => Services.RoleService.CanWrite(role, area);
+            }
+            catch (Exception ex)
+            {
+                string dbPath = Data.DatabasePaths.GetDatabasePath();
+                MessageBox.Show(
+                    "La mise à jour de la base de données a échoué. Aucune donnée n'a été modifiée.\n\n" +
+                    $"Détail : {ex.GetBaseException().Message}\n\n" +
+                    $"Base : {dbPath}\nSauvegardes : {Data.DatabasePaths.GetBackupDirectory(dbPath)}",
+                    "AFMI Smart Admin — mise à jour impossible", MessageBoxButton.OK, MessageBoxImage.Error);
+                Shutdown(1);
+            }
         }
 
         protected override void OnExit(ExitEventArgs e)

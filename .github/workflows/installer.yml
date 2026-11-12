@@ -1,0 +1,106 @@
+name: Installateur Windows
+
+# Construit l'installateur AFMI Smart Admin sur une machine Windows de GitHub (build_installer.bat) :
+# composants tiers (Tesseract fra/ara, police Amiri), tests, backend PyInstaller, publication .NET autonome,
+# base de démonstration, guide HTML, Inno Setup. Le fichier .exe est publié comme artefact de l'exécution.
+#
+# Publication (mise à jour automatique) : sur la branche main, ou avec l'étiquette « publier » sur une pull request,
+# l'installateur est publié dans le dépôt public de publication avec un manifeste signé (latest.json + .sig).
+# Secrets requis : RELEASES_TOKEN (jeton limité au dépôt de publication, « Contents : read and write »)
+# et UPDATE_SIGNING_KEY (clé privée ECDSA P-256 dont la clé publique est intégrée à l'application).
+on:
+  workflow_dispatch:
+  push:
+    tags: ["v*"]
+    branches: [main]
+  # Sur une pull request : l'étiquette « installateur » construit, l'étiquette « publier » construit et publie
+  pull_request:
+    types: [labeled]
+
+permissions:
+  contents: read
+
+jobs:
+  installer:
+    if: github.event_name != 'pull_request' || github.event.label.name == 'installateur' || github.event.label.name == 'publier'
+    runs-on: windows-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.x
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Inno Setup
+        run: choco install innosetup --no-progress -y
+
+      - name: Construction de l'installateur
+        shell: cmd
+        env:
+          PYTHONUTF8: "1"
+        run: call build_installer.bat
+
+      - name: Test de fumée (backend compilé, interface Smart Office)
+        shell: pwsh
+        run: ./installer/smoke_test.ps1
+
+      - name: Empreintes des composants tiers
+        if: always()
+        shell: pwsh
+        run: if (Test-Path third_party\SHA256SUMS.txt) { Get-Content third_party\SHA256SUMS.txt }
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: Test_de_fumee
+          path: build/smoke/
+          if-no-files-found: ignore
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: AFMI_Smart_Admin_Setup
+          path: |
+            build/installer/*.exe
+            third_party/SHA256SUMS.txt
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Publication de la version (mise à jour automatique)
+        if: github.ref == 'refs/heads/main' || github.event.label.name == 'publier'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.RELEASES_TOKEN }}
+          SIGNING_KEY: ${{ secrets.UPDATE_SIGNING_KEY }}
+          PYTHONUTF8: "1"
+          RELEASES_REPO: saidsocial5-droid/afmi-smart-admin-releases
+        run: |
+          set -euo pipefail
+          if [ -z "$GH_TOKEN" ] || [ -z "$SIGNING_KEY" ]; then
+            echo "::error::Secrets RELEASES_TOKEN et UPDATE_SIGNING_KEY requis pour publier (voir docs/v2/MISES_A_JOUR.md)."; exit 1
+          fi
+          VERSION=$(sed -n 's/^set VERSION=\([0-9.]*\).*/\1/p' build_installer.bat | tr -d '\r')
+          if gh release view "v$VERSION" --repo "$RELEASES_REPO" >/dev/null 2>&1; then
+            echo "::notice::La version $VERSION est déjà publiée : rien à faire (augmentez VERSION pour publier)."; exit 0
+          fi
+          EXE="build/installer/AFMI_Smart_Admin_Setup_$VERSION.exe"
+          python installer/make_manifest.py "$EXE" "$VERSION" "$RELEASES_REPO" build/latest.json
+          KEY="$RUNNER_TEMP/update_key.pem"
+          printf '%s\n' "$SIGNING_KEY" > "$KEY"
+          openssl dgst -sha256 -sign "$KEY" -out build/latest.json.sig build/latest.json
+          rm -f "$KEY"
+          # La clé secrète doit correspondre à la clé publique intégrée à l'application, sinon personne ne recevrait la mise à jour
+          sed -n '/BEGIN PUBLIC KEY/,/END PUBLIC KEY/p' Core/Services/UpdateVerifier.cs | sed 's/^ *//' > "$RUNNER_TEMP/pub.pem"
+          openssl dgst -sha256 -verify "$RUNNER_TEMP/pub.pem" -signature build/latest.json.sig build/latest.json
+          NOTES=$(python -c "import json;print(json.load(open('build/latest.json',encoding='utf-8'))['notes'])")
+          gh release create "v$VERSION" "$EXE" build/latest.json build/latest.json.sig --repo "$RELEASES_REPO" \
+            --title "AFMI Smart Admin $VERSION" --notes "$NOTES" --latest
+          echo "::notice::Version $VERSION publiée : https://github.com/$RELEASES_REPO/releases/tag/v$VERSION"
