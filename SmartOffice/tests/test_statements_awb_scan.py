@@ -71,3 +71,34 @@ def test_scanned_attijariwafa_statement_is_read_without_ai():
         ("2026-07-13", "2026-07-11", 150_297), ("2026-07-13", "2026-07-11", 155_006),
         ("2026-07-14", "2026-07-01", 5_940), ("2026-07-23", "2026-07-22", 900_000)]
     assert st.lines[0].label == "PRELEVEMENT EN FAV. CNSS" and st.lines[0].reference == "0016PV"
+
+
+# Lecture réelle du Tesseract Windows livré (diagnostic du poste de build) : « 59, » « 40 » séparés, code « 062411|23 ».
+WINDOWS_OCR = [
+    "SOLDE@659 DEPART@792 AU@949 30@1019 06@1087 2026@1154 12@1702 943,82@1770 CREDITEUR@1924",
+    "VALEUR@1198",
+    "CODE@179 DATE@313 LIBELLE@494 DEBIT@1470 CAPITAUX@1699 CREDIT@2116",
+    "0016PV|13@160 07|PRELEVEMENT@385 EN@719 FAV.@786 CNSS@899 11@1160 07@1227 2026@1294 1@1605 502,97@1649",
+    "0016PV|13@160 07|PRELEVEMENT@385 EN@719 FAV.@786 CNSS@899 11@1160 07@1227 2026@1294 1@1605 550,06@1649",
+    "0016GG|14@160 07|ARRETE@385 DU@606 COMPTE@674 2E@833 TRIM.@900 2026@1035 01@1160 07@1227 2026@1294 59,@1672 40@1741",
+    "062411|23@160 07|RETRAIT@385 ESPECES@629 CHO@809 100575@901 22@1159 07@1227 2026@1294 9@1606 000,00@1650",
+    "SOLDE@659 FINAL@792 AU@926 31@997 07@1065 2026@1131 831,39@1576 —@1742 CREDITEUR@1777",
+]
+
+
+def test_attijariwafa_tokens_read_by_windows_tesseract():
+    from backend.tools.statements.extract import extract
+    from backend.tools.statements.model import Word
+    from backend.tools.statements.templates import load
+    words = []
+    for i, line in enumerate(["Attijariwafa@500 bank@800", "RELEVE@300 D'IDENTITE@450 BANCAIRE@700 007@300 425@380 0006243000302148@460 76@900"] + WINDOWS_OCR):
+        y = 100 + 40 * i
+        for tok in line.split():
+            text, x = tok.rsplit("@", 1)
+            x = float(x)
+            words.append(Word(text, x, y, x + 21 * len(text), y + 24, 90.0, 0))
+    st = extract(words, *load(), "tesseract", {0: 3500})
+    assert (st.opening, st.closing) == (1_294_382, 83_139) and st.balance_ok() is True, st.warnings
+    assert [l.debit for l in st.lines] == [150_297, 155_006, 5_940, 900_000]
+    assert [l.reference for l in st.lines] == ["0016PV", "0016PV", "0016GG", "062411"]
+    assert st.lines[2].label == "ARRETE DU COMPTE 2E TRIM. 2026"
