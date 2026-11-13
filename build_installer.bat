@@ -3,7 +3,7 @@ title AFMI Smart Admin - Construction de l'installateur Windows
 chcp 65001 > nul
 setlocal
 cd /d "%~dp0"
-set VERSION=2.3.3
+set VERSION=2.4.0
 
 echo ===================================================================
 echo   AFMI Smart Admin %VERSION% - construction de l'installateur
@@ -11,6 +11,10 @@ echo ===================================================================
 
 echo [0/8] Composants tiers (Tesseract fra/ara, police Amiri)...
 powershell -NoProfile -ExecutionPolicy Bypass -File installer\prepare_third_party.ps1 || goto :error
+
+echo [0b] Icones a partir du logo (branding\logo.png, facultatif)...
+python -m pip install --quiet pillow || goto :error
+python installer\make_icon.py || goto :error
 
 echo [1/8] Tests de l'application de bureau...
 dotnet test "AFMI Smart Admin.sln" --nologo -v q || goto :error

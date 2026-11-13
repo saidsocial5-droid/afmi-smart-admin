@@ -433,16 +433,16 @@ namespace AFMI_Gestion_projet.ViewModels
                 Multiselect = true
             };
 
-            if (ofd.ShowDialog() == true)
-            {
-                foreach (var file in ofd.FileNames)
-                {
-                    if (!ImportedPhotos.Contains(file))
-                    {
-                        ImportedPhotos.Add(file);
-                    }
-                }
-            }
+            if (ofd.ShowDialog() == true) AddPhotoFiles(ofd.FileNames);
+        }
+
+        public ICommand DropPhotosCommand => _dropPhotosCommand ??= new RelayCommand<string[]>(f => { if (f != null) AddPhotoFiles(f); });
+        private ICommand? _dropPhotosCommand;
+
+        private void AddPhotoFiles(IEnumerable<string> files)
+        {
+            foreach (var file in files.Where(f => new[] { ".png", ".jpg", ".jpeg" }.Contains(System.IO.Path.GetExtension(f).ToLowerInvariant())))
+                if (!ImportedPhotos.Contains(file)) ImportedPhotos.Add(file);
         }
 
         private void RemovePhoto(string? photoPath)

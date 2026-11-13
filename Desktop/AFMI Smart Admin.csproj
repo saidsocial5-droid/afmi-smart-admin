@@ -6,7 +6,9 @@
     <RootNamespace>AFMI_Gestion_projet</RootNamespace>
     <AssemblyName>AFMI Smart Admin</AssemblyName>
     <!-- Version de l application ; build_installer.bat la fixe aussi (-p:Version). Sert à la mise à jour automatique. -->
-    <Version>2.3.3</Version>
+    <Version>2.4.0</Version>
+    <!-- Icône de l'application = logo de l'association (branding/logo.png → app.ico par installer/make_icon.py) -->
+    <ApplicationIcon Condition="Exists('..\branding\app.ico')">..\branding\app.ico</ApplicationIcon>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>

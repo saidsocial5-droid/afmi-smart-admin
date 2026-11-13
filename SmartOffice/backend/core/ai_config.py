@@ -50,6 +50,25 @@ PROMPTS: Dict[str, Dict[str, str]] = {
                                    "Texte lu par OCR (peut contenir des erreurs) :\n"},
     "ged.qa": {"label": "GED — questions sur les documents",
                "text": "Tu es l'assistant documentaire de l'association. Tu ne réponds qu'avec les documents fournis."},
+    "assist.corriger": {"label": "Champs de saisie — corriger",
+                        "text": "Corrige l'orthographe, la grammaire, la ponctuation et les accents du texte suivant. Garde la même langue, "
+                                "le même sens, les mêmes chiffres et noms. Réponds uniquement par le texte corrigé."},
+    "assist.reformuler": {"label": "Champs de saisie — reformuler",
+                          "text": "Reformule le texte suivant dans un style institutionnel clair et professionnel d'association, dans la même "
+                                  "langue, sans changer le sens, les chiffres ni les noms. Réponds uniquement par le texte reformulé."},
+    "assist.enrichir": {"label": "Champs de saisie — enrichir",
+                        "text": "Enrichis et développe le texte suivant (contexte, objectifs, précisions utiles) dans la même langue et le même "
+                                "style, sans inventer de chiffre, de date, de nom ni de fait ; signale [à compléter] là où une information "
+                                "précise manque. Réponds uniquement par le texte enrichi."},
+    "assist.generer": {"label": "Champs de saisie — générer ({champ} = libellé du champ, {lang} = langue)",
+                       "text": "Rédige en {lang} le contenu du champ « {champ} » d'un logiciel de gestion d'association de gestion forestière, "
+                               "à partir des indications et du contexte fournis. N'invente aucun chiffre, date ou nom : écris [à compléter] "
+                               "à leur place. Réponds uniquement par le texte du champ."},
+    "assist.resumer": {"label": "Champs de saisie — résumer",
+                       "text": "Résume le texte suivant en quelques phrases, dans la même langue, en gardant les chiffres exacts. "
+                               "Réponds uniquement par le résumé."},
+    "assist.traduire": {"label": "Champs de saisie — traduire ({lang} = langue cible)",
+                        "text": "Traduis fidèlement le texte suivant en {lang}, sans rien ajouter. Réponds uniquement par la traduction."},
     "dossier.extract": {"label": "Dossier de projet — extraction structurée",
                         "text": "Tu lis les documents d'un projet d'association (convention de subvention, formulaire de projet, budget, avenant). "
                                 "Tu réponds UNIQUEMENT par un objet JSON conforme au schéma demandé. Tu recopies les valeurs telles qu'elles "

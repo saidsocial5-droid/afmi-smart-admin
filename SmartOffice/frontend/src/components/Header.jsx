@@ -28,8 +28,8 @@ export default function Header({ activeTab, onNavigate, onRefresh, llmConfig, to
           
           {/* Logo & Identity */}
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-afmi-gradient flex items-center justify-center text-white shadow-md shadow-afmi-forest/20 shrink-0">
-              <span className="text-xl font-bold">🌲</span>
+            <div className="w-11 h-11 rounded-xl bg-white border border-slate-100 flex items-center justify-center shadow-sm shrink-0 overflow-hidden">
+              <img src="./favicon.png" alt="AFMI" className="w-10 h-10 object-contain" />
             </div>
             <div>
               <div className="flex items-center gap-2">

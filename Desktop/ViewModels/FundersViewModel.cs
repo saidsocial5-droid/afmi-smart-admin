@@ -130,12 +130,22 @@ namespace AFMI_Gestion_projet.ViewModels
                 Title = "Sélectionner un logo"
             };
 
-            if (ofd.ShowDialog() == true)
-            {
-                SelectedFunder.LogoPath = ofd.FileName;
-                OnPropertyChanged(nameof(SelectedFunder));
-                ((RelayCommand)SaveFunderCommand).NotifyCanExecuteChanged();
-            }
+            if (ofd.ShowDialog() == true) SetLogo(ofd.FileName);
+        }
+
+        public ICommand DropLogoCommand => _dropLogoCommand ??= new RelayCommand<string[]>(f =>
+        {
+            var img = f?.FirstOrDefault(x => new[] { ".png", ".jpg", ".jpeg" }.Contains(System.IO.Path.GetExtension(x).ToLowerInvariant()));
+            if (img != null && SelectedFunder != null) SetLogo(img);
+        });
+        private ICommand? _dropLogoCommand;
+
+        private void SetLogo(string path)
+        {
+            if (SelectedFunder == null) return;
+            SelectedFunder.LogoPath = path;
+            OnPropertyChanged(nameof(SelectedFunder));
+            ((RelayCommand)SaveFunderCommand).NotifyCanExecuteChanged();
         }
 
         partial void OnSelectedFunderChanged(Funder? value)

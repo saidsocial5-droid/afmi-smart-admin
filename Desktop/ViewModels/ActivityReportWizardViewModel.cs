@@ -103,13 +103,21 @@ namespace AFMI_Gestion_projet.ViewModels
                 Multiselect = true
             };
 
-            if (ofd.ShowDialog() == true)
+            if (ofd.ShowDialog() == true) AddPhotoFiles(ofd.FileNames);
+        }
+
+        public ICommand DropPhotosCommand => _dropPhotosCommand ??= new RelayCommand<string[]>(f => { if (f != null) AddPhotoFiles(f); });
+        private ICommand? _dropPhotosCommand;
+
+        private void AddPhotoFiles(IEnumerable<string> files)
+        {
             {
+                files = files.Where(f => new[] { ".png", ".jpg", ".jpeg" }.Contains(Path.GetExtension(f).ToLowerInvariant())).ToList();
                 // Copie dans un dossier local (AppData) pour ne pas dépendre du fichier d'origine
                 string appDataFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "AFMIGestionProjet", "Photos");
                 Directory.CreateDirectory(appDataFolder);
 
-                foreach (var file in ofd.FileNames)
+                foreach (var file in files)
                 {
                     string newFileName = $"{Guid.NewGuid()}{Path.GetExtension(file)}";
                     string destPath = Path.Combine(appDataFolder, newFileName);

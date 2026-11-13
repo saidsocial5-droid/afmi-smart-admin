@@ -18,6 +18,7 @@ namespace AFMI_Gestion_projet.Views
                 try
                 {
                     await ReportEditor.EnsureCoreWebView2Async(await Services.WebViewEnvironment.GetAsync());
+                    Services.WebViewBridge.Attach(ReportEditor);
                     _editorReady = true;
                     ApplyEditorUri();
                 }
@@ -57,6 +58,7 @@ namespace AFMI_Gestion_projet.Views
             try
             {
                 await browser.EnsureCoreWebView2Async(await Services.WebViewEnvironment.GetAsync());
+                Services.WebViewBridge.Attach(browser);
                 string url = await Services.SmartOfficeHostService.Instance.EnsureStartedAsync();
                 browser.Source = new System.Uri($"{url}/?afmi_token={Services.SmartOfficeHostService.Instance.SessionToken}#{route}/{_vm.Project.Id}");
                 status.Visibility = Visibility.Collapsed;

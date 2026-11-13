@@ -3,7 +3,7 @@
 
 #define AppName "AFMI Smart Admin"
 #ifndef AppVersion
-  #define AppVersion "2.3.3"
+  #define AppVersion "2.4.0"
 #endif
 #define AppPublisher "Association Forêt Modèle d'Ifrane (AFMI)"
 #define AppExe "AFMI Smart Admin.exe"
@@ -30,6 +30,9 @@ WizardStyle=modern
 UninstallDisplayIcon={app}\{#AppExe}
 CloseApplications=yes
 RestartApplications=no
+#if FileExists(AddBackslash(SourcePath) + "..\branding\app.ico")
+SetupIconFile=..\branding\app.ico
+#endif
 MinVersion=10.0.17763
 
 [Languages]

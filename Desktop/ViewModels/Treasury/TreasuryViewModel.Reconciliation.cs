@@ -85,11 +85,25 @@ namespace AFMI_Gestion_projet.ViewModels.Treasury
             if (SelectedAccount == null) { ErrorMessage = "Sélectionnez le compte du relevé."; return; }
             var dialog = new Microsoft.Win32.OpenFileDialog { Filter = "Relevé exporté par la banque (*.csv;*.txt)|*.csv;*.txt", Title = "Importer un relevé CSV" };
             if (dialog.ShowDialog() != true) return;
+            ImportCsvStatementFile(dialog.FileName);
+        }
+
+        [RelayCommand]
+        private void DropStatement(string[]? files)
+        {
+            var csv = files?.FirstOrDefault(f => f.EndsWith(".csv", StringComparison.OrdinalIgnoreCase) || f.EndsWith(".txt", StringComparison.OrdinalIgnoreCase));
+            if (csv == null) { ErrorMessage = "Déposez un relevé CSV (les relevés PDF ou scannés se lisent dans Smart Office › Relevés bancaires)."; return; }
+            if (SelectedAccount == null) { ErrorMessage = "Sélectionnez le compte du relevé."; return; }
+            ImportCsvStatementFile(csv);
+        }
+
+        private void ImportCsvStatementFile(string fileName)
+        {
             RunWrite(() =>
             {
                 long opening = ParseAmount(ImportOpening, "Solde initial du relevé");
                 long closing = ParseAmount(ImportClosing, "Solde final du relevé");
-                string content = ReadText(dialog.FileName);
+                string content = ReadText(fileName);
                 var parsed = StatementCsvImporter.Parse(content);
                 if (parsed.Lines.Count == 0) throw new FinanceRuleException("Aucune ligne lue. " + string.Join(" ", parsed.Errors.Take(3)));
                 using var db = new AppDbContext();

@@ -13,7 +13,9 @@ if not exist "frontend\dist\index.html" (
     goto :error
 )
 
-python -m PyInstaller --noconfirm --clean --console ^
+set ICON_OPT=
+if exist "%~dp0..\branding\app.ico" set ICON_OPT=--icon "%~dp0..\branding\app.ico"
+python -m PyInstaller --noconfirm --clean --console %ICON_OPT% ^
     --name smartoffice-backend ^
     --distpath "%~dp0build\dist" --workpath "%~dp0build\work" --specpath "%~dp0build" ^
     --collect-submodules backend ^
