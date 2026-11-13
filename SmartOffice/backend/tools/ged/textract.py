@@ -18,15 +18,9 @@ class ExtractionError(ValueError):
 
 
 def _ocr_gray(gray: np.ndarray) -> str:
-    from backend.tools.statements.ocr import ocr_image, OcrUnavailable
-    from backend.tools.statements.preprocess import preprocess
-    from backend.tools.statements.extract import group_lines
-    img, _ = preprocess(gray)
-    try:
-        words = ocr_image(img, languages="fra+ara+eng", psm=3)
-    except OcrUnavailable:
-        return ""
-    return "\n".join(" ".join(w.text for w in line) for line in group_lines(words))
+    """OCR local d'une page numérisée, colonnes des tableaux conservées (voir dossier.sources.layout_words)."""
+    from backend.tools.dossier.sources import ocr_layout
+    return ocr_layout(gray)
 
 
 def extract(data: bytes, filename: str) -> Tuple[List[Tuple[int, str]], str]:

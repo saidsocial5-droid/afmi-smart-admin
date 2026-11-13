@@ -85,7 +85,7 @@ def merge_amounts(line: List[Word]) -> List[Tuple[Word, int]]:
         if parse_amount(w.text) is None:
             continue
         parts, j = [w], i - 1
-        while j >= 0 and GROUP_RE.match(clean_numeric(line[j].text)) and parts[0].x0 - line[j].x1 < 1.2 * h:
+        while j >= 0 and GROUP_RE.match(clean_numeric(line[j].text)) and parts[0].x0 - line[j].x1 < 1.6 * h:
             parts.insert(0, line[j])
             j -= 1
         text = " ".join(p.text for p in parts)
@@ -99,9 +99,30 @@ def merge_amounts(line: List[Word]) -> List[Tuple[Word, int]]:
     return list(reversed(out))
 
 
+def _lev(a: str, b: str) -> int:
+    prev = list(range(len(b) + 1))
+    for i, ca in enumerate(a, 1):
+        cur = [i]
+        for j, cb in enumerate(b, 1):
+            cur.append(min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (ca != cb)))
+        prev = cur
+    return prev[-1]
+
+
+def _fuzzy(token: str, word: str) -> str:
+    """Mot d'en-tête mal lu par l'OCR (« degir » pour « debit ») : rapproché si la différence est minime."""
+    if token == word or len(word) < 5 or len(token) < 4:
+        return token
+    return word if _lev(token, word) <= (1 if len(word) < 5 else 2) else token
+
+
 def find_header(line: List[Word], columns: Dict[str, List[str]]) -> Optional[Dict[str, Word]]:
     """Positions des colonnes si la ligne est un en-tête (au moins une date et un montant)."""
-    tokens = [normalize(w.text) for w in line]
+    vocab = {w for ps in columns.values() for p in ps for w in p.split()}
+    tokens = []
+    for w in line:
+        t = normalize(w.text)
+        tokens.append(next((v for v in vocab if _fuzzy(t, v) == v), t) if t and t not in vocab else t)
     anchors: Dict[str, Word] = {}
     i = 0
     phrases = sorted(((k, p.split()) for k, ps in columns.items() for p in ps), key=lambda kp: -len(kp[1]))
@@ -118,6 +139,77 @@ def find_header(line: List[Word], columns: Dict[str, List[str]]) -> Optional[Dic
     if "date" in anchors and ({"debit", "credit", "amount"} & anchors.keys()) and len(anchors) >= 3:
         return anchors
     return None
+
+
+DAY_MONTH_YEAR_RE = re.compile(r"(?<!\d)(\d{1,2})[\s/.\-]+(\d{1,2})[\s/.\-]+(\d{4}|\d{2})(?!\d)")
+
+
+def _column_text(line: List[Word], x_from: float, x_to: float) -> str:
+    return " ".join(w.text for w in line if w.xc >= x_from and w.xc < x_to)
+
+
+def _date_words(line: List[Word], anchors: Dict[str, Word]) -> List[Word]:
+    """Jetons de tête qui portent le code et la date (avant le libellé) : ceux qui contiennent des chiffres."""
+    label = anchors.get("label")
+    out = []
+    for w in line[:4]:
+        if not re.search(r"\d", w.text) or (label is not None and w.xc >= label.xc):
+            break
+        out.append(w)
+    return out
+
+
+def _date_in_columns(line: List[Word], anchors: Dict[str, Word], year: Optional[int]) -> Optional[str]:
+    """Date d'opération lue dans les colonnes avant le libellé, quand elle n'est pas un jeton jj/mm/aaaa :
+    « 0016PV|13 07| » (code d'opération collé au jour, jour et mois sans année) → 13/07 de l'année du relevé."""
+    label = anchors.get("label")
+    if label is None:
+        return None
+    pre = _date_words(line, anchors)
+    if not pre:
+        return None
+    text = " ".join(w.text for w in pre)
+    m = DAY_MONTH_YEAR_RE.search(text.replace("|", " ").replace("]", " "))
+    if m:
+        d, mo, y = int(m.group(1)), int(m.group(2)), int(m.group(3))
+        y = y + 2000 if y < 100 else y
+    else:
+        pieces = re.findall(r"\d+", text)
+        if len(pieces) < 2 or year is None:
+            return None
+        d, mo, y = int(pieces[-2][-2:]), int(pieces[-1][-2:]), year
+    try:
+        return date(y, mo, d).isoformat()
+    except ValueError:
+        return None
+
+
+def _value_date_in_columns(line: List[Word], anchors: Dict[str, Word], zone: float) -> Optional[str]:
+    """Date de valeur écrite en trois groupes (« 11 07 2026 ») dans sa colonne."""
+    v = anchors.get("value_date")
+    if v is None:
+        return None
+    lo = v.x0 - 2 * v.h
+    m = DAY_MONTH_YEAR_RE.search(_column_text(line, lo, zone).replace("|", " "))
+    if not m:
+        return None
+    d, mo, y = int(m.group(1)), int(m.group(2)), int(m.group(3))
+    try:
+        return date(y + 2000 if y < 100 else y, mo, d).isoformat()
+    except ValueError:
+        return None
+
+
+def _header_words(line: List[Word], columns: Dict[str, List[str]]) -> Dict[str, Word]:
+    """Mots d'en-tête isolés d'une ligne voisine (un seul mot par colonne : « VALEUR », « DEBIT »…)."""
+    out: Dict[str, Word] = {}
+    single = {p: k for k, ps in columns.items() for p in ps if " " not in p}
+    for w in line:
+        t = normalize(w.text)
+        for p, k in single.items():
+            if _fuzzy(t, p) == p and k not in out and len(t) >= 4:
+                out[k] = w
+    return out
 
 
 def _amount_column(word: Word, anchors: Dict[str, Word]) -> Optional[str]:
@@ -198,6 +290,21 @@ def extract(words: List[Word], templates: List[BankTemplate], columns: Dict[str,
     anchors: Optional[Dict[str, Word]] = None
     current: Optional[ExtractedLine] = None
     headers = {i: h for i, l in enumerate(lines) if (h := find_header(l, columns))}
+    for i, h in headers.items():                      # en-tête sur deux lignes (« VALEUR » au-dessus, libellés arabes…)
+        for k in (i - 1, i + 1):
+            if 0 <= k < len(lines) and k not in headers:
+                extra = find_header(lines[k] + [h["date"]], columns) or {}
+                lone = _header_words(lines[k], columns)
+                for key, w in {**lone, **extra}.items():
+                    h.setdefault(key, w)
+    year_hint = None
+    for d in (st.period_end, st.period_start):
+        if d:
+            year_hint = int(d[:4])
+            break
+    if year_hint is None:
+        ym = re.findall(r"(?<!\d)(20\d{2})(?!\d)", full_text)
+        year_hint = int(max(set(ym), key=ym.count)) if ym else None
     first_header_on_page = {}
     for i in headers:
         first_header_on_page.setdefault(lines[i][0].page, i)
@@ -221,6 +328,11 @@ def extract(words: List[Word], templates: List[BankTemplate], columns: Dict[str,
 
         first_date = parse_date(l[0].text)
         zone = _amount_zone_start(anchors)
+        pre_ids = set()
+        if first_date is None and not text_norm.startswith(("solde", "nous avons")):
+            first_date = _date_in_columns(l, anchors, year_hint)
+            if first_date:
+                pre_ids = {id(w) for w in _date_words(l, anchors)}
         amounts = [(w, v) for w, v in merge_amounts(l) if w.x1 > zone]
         amount_ids = {id(x) for w, _ in amounts for x in l if x.x0 >= w.x0 - 0.5 and x.x1 <= w.x1 + 0.5}
 
@@ -236,8 +348,23 @@ def extract(words: List[Word], templates: List[BankTemplate], columns: Dict[str,
         conf: Dict[str, float] = {"date": l[0].conf}
         value_date = None
         label_words, ref_words = [], []
-        for w in l[1:]:
-            if id(w) in amount_ids:
+        if pre_ids:
+            code = re.split(r"[|\]]", l[0].text)[0]
+            if code and not code.isdigit() or len(code) > 2:
+                ref_words.append(Word((re.sub(r"[|\]I]?\d{1,2}$", "", code) or code).strip("/|-"), l[0].x0, l[0].y0, l[0].x1, l[0].y1, l[0].conf, l[0].page))
+            vd = _value_date_in_columns(l, anchors, zone)
+            if vd:
+                value_date, conf["value_date"] = vd, l[0].conf
+        if pre_ids:                                   # « 07|PRELEVEMENT » : la fin du jeton de date ouvre le libellé
+            for w in l:
+                if id(w) in pre_ids:
+                    tail = re.split(r"[|\]]", w.text, maxsplit=1)
+                    if len(tail) == 2 and re.match(r"[A-Za-zÀ-ÿ]{2,}", tail[1]):
+                        label_words.append(Word(tail[1], w.x0, w.y0, w.x1, w.y1, w.conf, w.page))
+        for w in (l if pre_ids else l[1:]):
+            if id(w) in amount_ids or id(w) in pre_ids:
+                continue
+            if pre_ids and value_date and "value_date" in anchors and w.xc >= anchors["value_date"].x0 - 2 * anchors["value_date"].h and w.x1 <= zone:
                 continue
             d = parse_date(w.text)
             if d and "value_date" in anchors and abs(w.x0 - anchors["value_date"].x0) < abs(w.x0 - anchors.get("label", anchors["date"]).x0):

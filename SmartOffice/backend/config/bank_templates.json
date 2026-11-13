@@ -5,7 +5,7 @@
      "opening": ["solde precedent", "ancien solde", "solde initial", "solde au debut"],
      "closing": ["nouveau solde", "solde final", "solde a la fin"]},
     {"id": "awb", "name": "Attijariwafa bank", "detect": ["attijariwafa", "attijari"],
-     "opening": ["solde initial", "solde precedent", "ancien solde", "solde d ouverture"],
+     "opening": ["solde depart", "solde de depart", "solde initial", "solde precedent", "ancien solde", "solde d ouverture"],
      "closing": ["solde final", "nouveau solde", "solde de cloture"]},
     {"id": "boa", "name": "Bank of Africa (BMCE)", "detect": ["bank of africa", "bmce"],
      "opening": ["solde precedent", "ancien solde", "solde initial"],
@@ -20,7 +20,7 @@
      "opening": ["solde precedent", "ancien solde", "solde initial"],
      "closing": ["nouveau solde", "solde final"]},
     {"id": "generique", "name": "Banque non reconnue", "detect": [],
-     "opening": ["solde precedent", "ancien solde", "solde initial", "solde d ouverture", "report"],
+     "opening": ["solde precedent", "ancien solde", "solde initial", "solde d ouverture", "solde depart", "solde de depart", "report"],
      "closing": ["nouveau solde", "solde final", "solde de cloture"]}
   ],
   "columns": {
@@ -28,7 +28,7 @@
     "value_date": ["date valeur", "date de valeur", "valeur", "val"],
     "label": ["libelle de l operation", "libelle operation", "libelle", "designation", "operation", "nature de l operation", "description"],
     "reference": ["reference", "ref", "n piece", "numero"],
-    "debit": ["debit", "debits", "retraits"],
+    "debit": ["debit", "debits", "retraits", "capitaux debit"],
     "credit": ["credit", "credits", "versements"],
     "amount": ["montant"]
   }

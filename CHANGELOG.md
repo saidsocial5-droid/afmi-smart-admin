@@ -1,5 +1,32 @@
 # Journal des modifications
 
+## [2.3.3] — 13/11/2026 — Relevés et documents numérisés lus sans IA
+
+Mis au point sur un vrai relevé Attijariwafa numérisé au copieur (juillet 2026), que la version précédente ne lisait
+pas (« Aucune opération lue »). Le relevé n'est pas versé au dépôt : un relevé fictif de même forme sert de test.
+
+### Corrigé
+- **Relevés Attijariwafa**, désormais lus entièrement sur le poste (Tesseract), sans IA. Sont reconnus :
+  - le libellé de solde « SOLDE DEPART AU jj mm aaaa … CREDITEUR » ;
+  - le code d'opération collé au jour (« 0016PV|13 07| »), qui devient la référence ;
+  - la date d'opération écrite sans année (année du relevé) ;
+  - la date de valeur en trois groupes (« 11 07 2026 ») ;
+  - l'en-tête sur deux lignes (« VALEUR » au-dessus, libellés arabes) ;
+  - un mot d'en-tête mal lu (« Dégir » pour DEBIT) ;
+  - les milliers séparés par une large espace (« 12 943,82 »).
+
+  Résultat sur le relevé réel : 4 opérations sur 4, soldes 12 943,82 et 831,39, équilibre vérifié.
+
+### Ajouté
+- **Documents numérisés à colonnes conservées.** Les pages scannées (PDF image, JPG, PNG, TIFF) sont lues en français,
+  arabe et anglais, et leur texte est reconstruit avec la position des colonnes. Les tableaux (budgets, calendriers,
+  relevés) s'y lisent comme dans un PDF natif.
+  - Cette lecture sert à l'import des dossiers de projet, qui accepte maintenant les images, et à la GED (recherche,
+    échéances).
+  - Le réglage d'OCR adapté aux tableaux (`psm 6`) retrouve 8 montants et dates sur 8 sur le relevé réel, contre 3 sur
+    8 avec le réglage automatique.
+- **Tests** : 187 pytest.
+
 ## [2.3.2] — 13/11/2026 — Encaissement des subventions importées
 
 ### Corrigé
