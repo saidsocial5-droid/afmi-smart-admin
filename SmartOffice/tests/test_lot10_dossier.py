@@ -232,7 +232,8 @@ def test_analyze_and_apply_create_a_complete_project_without_duplicates(unified)
         assert (ag["AmountMinor"], ag["Currency"], ag["ContractualRateToMad"]) == (2_000_000, "USD", "9.3")
         assert c.execute("SELECT COUNT(*), SUM(AmountMinor) FROM FundingTranches WHERE FundingAgreementId = ?", (ag["Id"],)).fetchone()[:] == (3, 2_000_000)
         assert c.execute("SELECT ExpectedDate FROM FundingTranches WHERE Label = 'Tranche 1'").fetchone()[0] == "2026-10-01"
-        assert c.execute("SELECT COUNT(*), SUM(PlannedMinor) FROM BudgetLines WHERE ProjectId = ?", (pid,)).fetchone()[:] == (3, 38_600_000)
+        assert c.execute("SELECT COUNT(*), SUM(PlannedMinor) FROM BudgetLines WHERE ProjectId = ? AND Code <> 'REC'", (pid,)).fetchone()[:] == (3, 38_600_000)
+        assert c.execute("SELECT PlannedMinor FROM BudgetLines WHERE ProjectId = ? AND Code = 'REC'", (pid,)).fetchone()[0] == 0
         assert c.execute("SELECT COUNT(*) FROM Tasks WHERE ProjectId = ? AND Code IN ('1.1', '1.2', '2.1')", (pid,)).fetchone()[0] == 3
         assert c.execute("SELECT COUNT(*) FROM Indicators WHERE ProjectId = ? AND LogframeNodeId IS NOT NULL", (pid,)).fetchone()[0] == 2
         assert c.execute("SELECT COUNT(*) FROM ReportingObligations WHERE ProjectId = ? AND Status = 'À venir' AND IsDeleted = 0", (pid,)).fetchone()[0] == 2
@@ -249,7 +250,7 @@ def test_analyze_and_apply_create_a_complete_project_without_duplicates(unified)
     imp2 = asyncio.run(service.analyze(files, pid, use_ai=False))
     asyncio.run(service.apply(imp2["id"], {"project_id": pid, "sections": [s for s in service.SECTIONS if s != "documents"]}))
     with unified_db.connect() as c:
-        assert c.execute("SELECT COUNT(*) FROM BudgetLines WHERE ProjectId = ?", (pid,)).fetchone()[0] == 3
+        assert c.execute("SELECT COUNT(*) FROM BudgetLines WHERE ProjectId = ?", (pid,)).fetchone()[0] == 4
         assert c.execute("SELECT COUNT(*) FROM Tasks WHERE ProjectId = ?", (pid,)).fetchone()[0] == 3
         assert c.execute("SELECT COUNT(*) FROM FundingTranches").fetchone()[0] >= 3
         assert c.execute("SELECT COUNT(*) FROM FundingAgreements WHERE ProjectId = ?", (pid,)).fetchone()[0] == 1

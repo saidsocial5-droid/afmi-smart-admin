@@ -9,9 +9,12 @@ namespace AFMI_Gestion_projet.ViewModels.Treasury
     {
         private readonly Func<IReadOnlyList<BudgetLine>> _lines;
 
-        public AllocationRowViewModel(Func<IReadOnlyList<BudgetLine>> lines, Option<int?>? project)
+        private readonly Func<bool> _isIncome;
+
+        public AllocationRowViewModel(Func<IReadOnlyList<BudgetLine>> lines, Option<int?>? project, Func<bool>? isIncome = null)
         {
             _lines = lines;
+            _isIncome = isIncome ?? (() => false);
             _project = project;
             RefreshLines();
         }
@@ -26,14 +29,17 @@ namespace AFMI_Gestion_projet.ViewModels.Treasury
 
         partial void OnProjectChanged(Option<int?>? value) => RefreshLines();
 
-        public void RefreshLines(int? preferredCategoryId = null)
+        public void RefreshLines(int? preferredCategoryId = null, bool keepCurrent = true)
         {
-            int? keep = BudgetLine?.Value;
+            int? keep = keepCurrent ? BudgetLine?.Value : null;
             BudgetLineOptions.Clear();
             var lines = _lines().Where(l => l.ProjectId == Project?.Value).ToList();
             foreach (var l in lines) BudgetLineOptions.Add(new Option<int>(l.Id, $"{l.Code} — {l.Label}"));
             var byCategory = preferredCategoryId is { } c ? lines.Where(l => l.CategoryId == c).ToList() : new List<BudgetLine>();
+            // Recette : ligne « recette » du projet (code REC ou libellé « (recette) ») plutôt que la première ligne de dépense
+            var income = _isIncome() ? lines.FirstOrDefault(l => l.Code == "REC" || l.Label.Contains("(recette)", StringComparison.OrdinalIgnoreCase)) : null;
             BudgetLine = BudgetLineOptions.FirstOrDefault(o => o.Value == keep)
+                         ?? (income != null ? BudgetLineOptions.First(o => o.Value == income.Id) : null)
                          ?? (byCategory.Count == 1 ? BudgetLineOptions.First(o => o.Value == byCategory[0].Id) : BudgetLineOptions.FirstOrDefault());
         }
     }

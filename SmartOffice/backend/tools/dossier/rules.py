@@ -433,6 +433,8 @@ def _budget_from_layout(src: Source, lines: List[Line], si: int) -> Optional[Dic
     code_pending = ""
     category = ""
     header_lines: List[str] = []
+    header_vocab: set = set()
+    page_started = False
     declared = None
     for ln in mine[start:start + 260]:
         t = ln.text
@@ -463,11 +465,21 @@ def _budget_from_layout(src: Source, lines: List[Line], si: int) -> Optional[Dic
                 rows[-1] = (rows[-1][0], rows[-1][1], _clean(rows[-1][2] + " " + " ".join(pending)))
                 pending = []
             label = " ".join(pending + ([textpart] if textpart else []))
+            if not rows:
+                header_vocab = {w.lower() for h in header_lines for w in re.findall(r"[A-Za-zÀ-ÿ]{5,}", h)}
+            if rows and ln.page != rows[-1][0].page:
+                page_started = False
             rows.append((ln, amounts, _clean(label)))
             pending = []
             continue
         if not t.strip():
             continue
+        if rows and not re.match(r"^\s*\d+(?:\.\d+)*\s", t) and (
+                ln.page != rows[-1][0].page and not page_started
+                or len([w for w in re.findall(r"[A-Za-zÀ-ÿ]{5,}", t) if w.lower() in header_vocab]) >= 2):
+            continue                                   # en-tête du tableau répété en haut de page
+        if rows and ln.page != rows[-1][0].page:
+            page_started = True
         m_cat = re.match(r"^\s*(\d+)\.\s+([A-ZÉ].+)", t)
         m_line = re.match(r"^\s*(\d+\.\d+)\s+(.+)", t)
         if m_line:

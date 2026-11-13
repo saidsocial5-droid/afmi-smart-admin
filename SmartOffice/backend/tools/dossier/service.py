@@ -261,14 +261,27 @@ async def apply(import_id: int, options: Dict[str, Any]) -> Dict[str, Any]:
                 lv = {"ProjectId": project_id, "FundingAgreementId": agreement_id, "FiscalYearId": None, "Code": code, "Label": (l.get("label") or "")[:250],
                       "CategoryId": None, "PlannedMinor": max(0, _minor(l.get("total"))), "Currency": b_cur,
                       "DonorCategory": (l.get("category") or "")[:150], "ActivityCode": (l.get("activity_code") or "")[:30], "SortOrder": i + 1}
-                ex = conn.execute("SELECT Id FROM BudgetLines WHERE ProjectId = ? AND Code = ? AND Label = ? AND IsDeleted = 0",
-                                  (project_id, code, lv["Label"])).fetchone()
+                ex = (conn.execute("SELECT Id FROM BudgetLines WHERE ProjectId = ? AND Code = ? AND IsDeleted = 0", (project_id, code)).fetchone()
+                      if l.get("code") else
+                      conn.execute("SELECT Id FROM BudgetLines WHERE ProjectId = ? AND Code = ? AND Label = ? AND IsDeleted = 0",
+                                   (project_id, code, lv["Label"])).fetchone())
                 if ex:
                     unified_db.update(conn, "BudgetLines", "BudgetLine", ex["Id"], lv)
                     line_ids[i] = ex["Id"]
                 else:
                     line_ids[i] = unified_db.insert(conn, "BudgetLines", "BudgetLine", {**lv, "IsDeleted": 0})
                 count("lignes budgétaires")
+
+        # Ligne « recette » de la subvention : les encaissements des tranches y sont imputés (prévu 0, comme dans la démonstration)
+        if agreement_id and ("budget" in sections or "funding" in sections):
+            if not conn.execute("SELECT 1 FROM BudgetLines WHERE ProjectId = ? AND Code = 'REC' AND IsDeleted = 0", (project_id,)).fetchone():
+                donor = (_value(p.get("donor")) or "du bailleur")
+                unified_db.insert(conn, "BudgetLines", "BudgetLine", {
+                    "ProjectId": project_id, "FundingAgreementId": agreement_id, "FiscalYearId": None, "Code": "REC",
+                    "Label": f"Subvention {donor} — {proj['Code']} (recette)"[:250], "CategoryId": None, "PlannedMinor": 0,
+                    "Currency": b_cur, "DonorCategory": "Recettes", "ActivityCode": "",
+                    "SortOrder": 0, "IsDeleted": 0})
+                count("ligne de recette")
 
         # Cofinancement : une contribution par ligne et par cofinanceur
         if "cofinancing" in sections and budget.get("lines") and budget.get("sources"):
