@@ -30,6 +30,9 @@ WizardStyle=modern
 UninstallDisplayIcon={app}\{#AppExe}
 CloseApplications=yes
 RestartApplications=no
+#if FileExists(AddBackslash(SourcePath) + "..\branding\app.ico")
+SetupIconFile=..\branding\app.ico
+#endif
 MinVersion=10.0.17763
 
 [Languages]
