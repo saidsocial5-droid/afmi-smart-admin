@@ -9,6 +9,7 @@ namespace AFMI_Gestion_projet
         protected override void OnStartup(StartupEventArgs e)
         {
             base.OnStartup(e);
+            Services.TextAssist.Register();      // Lot 11 : assistant IA et dictée sur toutes les zones de texte
 
             AppDomain.CurrentDomain.UnhandledException += (s, args) =>
             {

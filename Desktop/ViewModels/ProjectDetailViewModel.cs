@@ -1083,11 +1083,19 @@ namespace AFMI_Gestion_projet.ViewModels
             };
 
             if (ofd.ShowDialog() != true || ofd.FileNames.Length == 0) return;
+            AddDocumentFiles(ofd.FileNames);
+        }
 
+        /// <summary>Documents choisis ou glissés-déposés (Lot 11) : stockage, extraction du texte, analyse.</summary>
+        public ICommand DropDocumentsCommand => _dropDocumentsCommand ??= new RelayCommand<string[]>(files => { if (files?.Length > 0) AddDocumentFiles(files); });
+        private ICommand? _dropDocumentsCommand;
+
+        private void AddDocumentFiles(IEnumerable<string> paths)
+        {
             int successCount = 0;
             var errors = new List<string>();
 
-            foreach (var filePath in ofd.FileNames)
+            foreach (var filePath in paths)
             {
                 try
                 {

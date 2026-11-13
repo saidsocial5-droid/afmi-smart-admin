@@ -29,6 +29,7 @@ namespace AFMI_Gestion_projet.Views
                 var env = await Services.WebViewEnvironment.GetAsync();
                 await WebView.EnsureCoreWebView2Async(env);
                 WebView.CoreWebView2.NewWindowRequested += OnNewWindowRequested;
+                Services.WebViewBridge.Attach(WebView);       // dictée demandée par une page (Lot 11)
                 _webViewReady = true;
                 ApplyState();
             }
