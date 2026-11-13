@@ -1,5 +1,20 @@
 # Journal des modifications
 
+## [2.3.2] — 13/11/2026 — Encaissement des subventions importées
+
+### Corrigé
+- **Encaissement d'une tranche.** Toute opération est imputée sur une ligne budgétaire. L'import du dossier ne créait
+  pas de ligne « recette » pour la subvention : la saisie d'un encaissement proposait donc la première ligne de dépense
+  (1.1). Désormais :
+  - l'import crée la ligne **REC — Subvention … (recette)** (prévu 0), liée à la convention, comme dans la
+    démonstration ;
+  - dans Trésorerie › Opérations, une **recette** propose automatiquement cette ligne, et passer de dépense à recette
+    met la proposition à jour.
+- **En-tête répété en haut de page.** L'en-tête d'un tableau budgétaire répété sur la page suivante ne s'ajoute plus au
+  libellé de la ligne précédente (ligne 4.1 du formulaire PNUD/PMF).
+- **Réimport d'un dossier.** Les lignes budgétaires sont reconnues par leur code : réimporter le même dossier corrige
+  leur libellé au lieu de créer une deuxième ligne.
+
 ## [2.3.1] — 13/11/2026 — Alertes de pièces manquantes
 
 ### Corrigé

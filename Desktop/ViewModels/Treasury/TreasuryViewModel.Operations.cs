@@ -50,7 +50,8 @@ namespace AFMI_Gestion_projet.ViewModels.Treasury
 
         private AllocationRowViewModel NewRow(Option<int?>? project)
         {
-            var row = new AllocationRowViewModel(() => _allBudgetLines, project ?? ProjectOptions.FirstOrDefault());
+            var row = new AllocationRowViewModel(() => _allBudgetLines, project ?? ProjectOptions.FirstOrDefault(),
+                () => OpNature?.Value == OperationNature.Income);
             row.Category = OpCategoryOptions.FirstOrDefault();
             row.PropertyChanged += (_, e) => { if (e.PropertyName == nameof(AllocationRowViewModel.Amount)) UpdateAllocationSummary(); };
             return row;
@@ -88,7 +89,12 @@ namespace AFMI_Gestion_projet.ViewModels.Treasury
             RefreshOperationChoices();
         }
 
-        partial void OnOpNatureChanged(Option<OperationNature>? value) => RefreshOperationChoices();
+        partial void OnOpNatureChanged(Option<OperationNature>? value)
+        {
+            RefreshOperationChoices();
+            // passage dépense ↔ recette : la ligne proposée suit la nature (ligne « recette » pour un encaissement)
+            foreach (var row in AllocationRows) row.RefreshLines(row.Category?.Value, keepCurrent: false);
+        }
 
         private void RefreshOperationChoices()
         {
