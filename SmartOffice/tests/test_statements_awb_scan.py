@@ -57,10 +57,17 @@ def _awb_pdf() -> bytes:
 def test_scanned_attijariwafa_statement_is_read_without_ai():
     scan = degrade_to_scan(_awb_pdf(), seed=7, dpi=300)
     st = pipeline.process(scan, "releve_juillet.jpg").statement
-    assert st.bank_id == "awb"
-    assert (st.opening, st.closing) == (1_294_382, 83_139)
-    assert st.balance_ok() is True
-    assert [(l.date, l.value_date, l.debit) for l in st.lines] == [
+    seen = "\n".join(f"{l.date} {l.value_date} {l.reference!r} {l.label!r} D={l.debit} C={l.credit}" for l in st.lines)
+    from backend.tools.statements.extract import group_lines
+    from backend.tools.statements.preprocess import load_image
+    raw_words, _, _ = pipeline._ocr_page(load_image(scan), 0, "fra")
+    raw = "\n".join(" | ".join(f"{w.text}@{int(w.x0)}" for w in l) for l in group_lines(raw_words)
+                     if any(k in " ".join(w.text for w in l) for k in ("PREL", "RETRAIT", "ARRETE", "SOLDE", "DATE", "VALEUR")))
+    diag = f"\nsoldes {st.opening} → {st.closing}\n{seen}\n{st.warnings}\nOCR :\n{raw}"
+    assert st.bank_id == "awb", diag
+    assert (st.opening, st.closing) == (1_294_382, 83_139), diag
+    assert st.balance_ok() is True, diag
+    assert [(l.date, l.value_date, l.debit) for l in st.lines] == [  # noqa: E501
         ("2026-07-13", "2026-07-11", 150_297), ("2026-07-13", "2026-07-11", 155_006),
         ("2026-07-14", "2026-07-01", 5_940), ("2026-07-23", "2026-07-22", 900_000)]
     assert st.lines[0].label == "PRELEVEMENT EN FAV. CNSS" and st.lines[0].reference == "0016PV"
