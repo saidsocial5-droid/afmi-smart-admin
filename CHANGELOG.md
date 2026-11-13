@@ -25,7 +25,7 @@ pas (« Aucune opération lue »). Le relevé n'est pas versé au dépôt : un r
     échéances).
   - Le réglage d'OCR adapté aux tableaux (`psm 6`) retrouve 8 montants et dates sur 8 sur le relevé réel, contre 3 sur
     8 avec le réglage automatique.
-- **Tests** : 187 pytest.
+- **Tests** : 188 pytest, dont la lecture du Tesseract Windows (décimales séparées « 59, » « 40 »).
 
 ## [2.3.2] — 13/11/2026 — Encaissement des subventions importées
 

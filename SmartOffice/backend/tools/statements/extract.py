@@ -73,9 +73,22 @@ def group_lines(words: List[Word]) -> List[List[Word]]:
     return [sorted(l, key=lambda w: w.x0) for l in lines]
 
 
+def _join_decimals(line: List[Word], h: float) -> List[Word]:
+    """« 59, » « 40 » (décimales séparées par l'OCR) → « 59,40 »."""
+    out: List[Word] = []
+    for w in line:
+        prev = out[-1] if out else None
+        if prev is not None and re.fullmatch(r"\d[\d ]*[,.]", prev.text) and re.fullmatch(r"\d{2}", w.text) and w.x0 - prev.x1 < 1.6 * h:
+            out[-1] = Word(prev.text + w.text, prev.x0, min(prev.y0, w.y0), w.x1, max(prev.y1, w.y1), min(prev.conf, w.conf), w.page)
+        else:
+            out.append(w)
+    return out
+
+
 def merge_amounts(line: List[Word]) -> List[Tuple[Word, int]]:
     """Recolle « 14 » « 185,73 » en un montant ; retourne (mot fusionné, centimes)."""
     out: List[Tuple[Word, int]] = []
+    line = _join_decimals(line, median(w.h for w in line) if line else 10)
     used = set()
     h = median(w.h for w in line) if line else 10
     for i in range(len(line) - 1, -1, -1):
@@ -349,9 +362,14 @@ def extract(words: List[Word], templates: List[BankTemplate], columns: Dict[str,
         value_date = None
         label_words, ref_words = [], []
         if pre_ids:
-            code = re.split(r"[|\]]", l[0].text)[0]
-            if code and not code.isdigit() or len(code) > 2:
-                ref_words.append(Word((re.sub(r"[|\]I]?\d{1,2}$", "", code) or code).strip("/|-"), l[0].x0, l[0].y0, l[0].x1, l[0].y1, l[0].conf, l[0].page))
+            first = l[0].text
+            if re.search(r"[|\]]", first):
+                code = re.split(r"[|\]]", first)[0]                 # « 062411|23 » : séparateur lu, le code est complet
+            else:
+                code = re.sub(r"[I/]?\d{1,2}$", "", first)         # « 0016PVI13 » : jour collé sans séparateur
+            code = code.strip("/|-")
+            if code and (not code.isdigit() or len(code) > 2):
+                ref_words.append(Word(code, l[0].x0, l[0].y0, l[0].x1, l[0].y1, l[0].conf, l[0].page))
             vd = _value_date_in_columns(l, anchors, zone)
             if vd:
                 value_date, conf["value_date"] = vd, l[0].conf
