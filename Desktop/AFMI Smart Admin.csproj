@@ -6,7 +6,7 @@
     <RootNamespace>AFMI_Gestion_projet</RootNamespace>
     <AssemblyName>AFMI Smart Admin</AssemblyName>
     <!-- Version de l application ; build_installer.bat la fixe aussi (-p:Version). Sert à la mise à jour automatique. -->
-    <Version>2.3.0</Version>
+    <Version>2.3.1</Version>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>

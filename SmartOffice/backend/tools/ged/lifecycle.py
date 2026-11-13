@@ -35,8 +35,24 @@ def expected_documents(conn, project) -> List[Dict[str, Any]]:
     counts = {}
     for r in conn.execute("SELECT DocType, COUNT(*) FROM Documents WHERE ProjectId = ? AND IsDeleted = 0 GROUP BY DocType", (project["Id"],)):
         counts[r[0]] = r[1]
-    return [{"phase": ph, "doc_type": t, "count": counts.get(t, 0), "reached": ph in reached}
-            for ph in cfg["phases"] for t in cfg["expected"].get(ph, [])]
+    # Document de projet unique (formulaire PNUD/PMF…) : le budget et le cadre logique y figurent. S'ils ont été repris dans
+    # l'application (import du dossier), ces pièces sont considérées comme fournies, sans exiger un fichier séparé.
+    covered = {}
+    if counts.get("Document de projet") or counts.get("Convention"):
+        pid = project["Id"]
+        if conn.execute("SELECT 1 FROM BudgetLines WHERE ProjectId = ? AND IsDeleted = 0 LIMIT 1", (pid,)).fetchone():
+            covered["Budget"] = "Document de projet (budget repris dans l'application)"
+        if conn.execute("SELECT 1 FROM LogframeNodes WHERE ProjectId = ? AND IsDeleted = 0 LIMIT 1", (pid,)).fetchone():
+            covered["Cadre logique"] = "Document de projet (cadre logique repris dans l'application)"
+    out = []
+    for ph in cfg["phases"]:
+        for t in cfg["expected"].get(ph, []):
+            n = counts.get(t, 0)
+            item = {"phase": ph, "doc_type": t, "count": n, "reached": ph in reached}
+            if n == 0 and t in covered:
+                item.update(count=1, covered_by=covered[t])
+            out.append(item)
+    return out
 
 
 def timeline(project_id: int) -> Dict[str, Any]:

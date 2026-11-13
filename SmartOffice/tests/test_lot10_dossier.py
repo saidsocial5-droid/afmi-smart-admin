@@ -241,6 +241,10 @@ def test_analyze_and_apply_create_a_complete_project_without_duplicates(unified)
         assert c.execute("SELECT COUNT(*) FROM AuditEntries WHERE EntityType = 'BudgetLine'").fetchone()[0] >= 3
     with pytest.raises(service.DossierError, match="déjà été appliqué"):
         asyncio.run(service.apply(imp["id"], {}))
+    # le budget et le cadre logique contenus dans le document de projet ne sont plus signalés comme pièces manquantes
+    from backend.tools.ged import lifecycle
+    msgs = " ".join(a["message"] for a in lifecycle.alerts(pid) if a["code"] == "MISSING_DOCUMENT")
+    assert "absent : Budget" not in msgs and "absent : Cadre logique" not in msgs
     # second import du même dossier sur le même projet : mises à jour, aucun doublon
     imp2 = asyncio.run(service.analyze(files, pid, use_ai=False))
     asyncio.run(service.apply(imp2["id"], {"project_id": pid, "sections": [s for s in service.SECTIONS if s != "documents"]}))

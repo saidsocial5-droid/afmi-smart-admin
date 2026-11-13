@@ -1,5 +1,12 @@
 # Journal des modifications
 
+## [2.3.1] — 13/11/2026 — Alertes de pièces manquantes
+
+### Corrigé
+- **Fausses alertes de pièces manquantes.** Un formulaire de projet unique contient souvent le budget et le cadre
+  logique (PNUD/PMF). Une fois ceux-ci repris par l'import du dossier, les alertes « document attendu… absent :
+  Budget » et « … : Cadre logique » ne s'affichent plus. Les autres pièces attendues restent signalées.
+
 ## [2.3.0] — 12/11/2026 — Lot 10 : import intelligent des dossiers de projet, cofinancement
 
 Demande de l'association : fournir les documents du bailleur pour que l'application remplisse le projet. Le lot a été
