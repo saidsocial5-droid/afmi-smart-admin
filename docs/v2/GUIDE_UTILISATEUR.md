@@ -180,6 +180,22 @@ Dans la fiche projet du bureau, l'onglet **Rapports** ouvre désormais le rappor
 Ensuite, dans la **Vue 360°**, la carte **Cofinancement** montre le prévu et le réalisé de chaque cofinanceur. On y
 saisit les réalisations : heures de main-d'œuvre, local mis à disposition, matériel…
 
+## 5 quater. Écrire plus vite : assistant IA, dictée, glisser-déposer
+
+- **Assistant IA dans tous les champs.**
+  - **Smart Office** : cliquez dans un champ, puis sur ✨ au-dessus de lui.
+  - **Bureau** : clic droit dans une zone de texte, puis « ✨ Assistant IA ».
+  - **Actions** : corriger, reformuler, enrichir, générer, résumer, traduire. Sélectionnez une partie du texte pour
+    n'agir que sur elle.
+  - **Annuler** : bouton « Annuler » ou Ctrl+Z.
+  - **IA utilisée** : celle de Paramètres › IA, tâche « Rédaction ».
+- **Dictée.**
+  - **Accès** : 🎤 dans Smart Office ; clic droit, puis « 🎤 Dicter au micro », ou Ctrl+Maj+D sur le bureau.
+  - **Fonctionnement** : la dictée de Windows s'ouvre ; parlez, le texte s'écrit dans le champ.
+  - **Langues** : français, arabe… selon les langues installées dans Windows (Paramètres › Heure et langue).
+- **Glisser-déposer.** Faites glisser des documents ou des photos depuis l'explorateur de Windows sur l'écran
+  d'import : documents du projet, relevés, photos, dossier du bailleur, logo d'un bailleur.
+
 ## 6. Rapports annuels
 
 Menu **Rapports annuels**.

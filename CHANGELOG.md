@@ -1,5 +1,42 @@
 # Journal des modifications
 
+## [2.4.0] — 13/11/2026 — Lot 11 : assistant de rédaction et dictée partout, glisser-déposer, logo de l'AFMI
+
+### Ajouté
+- **Assistant IA dans tous les champs de saisie.**
+  - **Smart Office** : une barre ✨ 🎤 apparaît au-dessus du champ qui a le focus, sur tous les écrans, sans réglage
+    écran par écran.
+  - **Application de bureau** : menu « ✨ Assistant IA » au clic droit de toute zone de texte modifiable ; raccourci
+    Ctrl+Maj+Espace.
+  - **Actions** : corriger, reformuler (style institutionnel), enrichir, générer le contenu du champ, résumer,
+    traduire en arabe, français ou anglais.
+  - **Portée** : l'action porte sur la sélection, sinon sur tout le champ.
+  - **Annulation** : bouton « Annuler » dans Smart Office, Ctrl+Z sur le bureau.
+  - **Moteur** : celui de la tâche « Rédaction » (Paramètres › IA), avec les règles habituelles : local d'abord, IA en
+    ligne seulement si elle est autorisée, masquage des RIB, CIN et salaires. Les consignes de chaque action se
+    modifient dans Paramètres › IA (« Champs de saisie — … »).
+  - **Sans IA disponible**, le texte n'est jamais remplacé : un message invite à en configurer une.
+  - API : `POST /api/assist/text`.
+- **Dictée vocale dans tous les champs.**
+  - **Accès** : 🎤 dans Smart Office ; « 🎤 Dicter au micro » au clic droit ou Ctrl+Maj+D sur le bureau.
+  - **Moteur** : la dictée de Windows (Windows + H) s'ouvre et écrit dans le champ. Les pages Smart Office la
+    demandent à l'application par un message WebView2.
+  - **Navigateur seul** : la reconnaissance vocale du navigateur est utilisée si elle existe.
+  - **Langues** : celles installées dans Windows (français, arabe…).
+- **Glisser-déposer de documents et de photos.**
+  - **Smart Office** : sur tout écran, les fichiers déposés sont remis au champ d'import de la zone survolée
+    (documents, relevés, photos, dossier de projet…), avec un cadre « Déposez ici ».
+  - **Bureau** : documents du projet (📁 Documents & Bailleur), photos du rapport d'activité et de l'assistant IA,
+    logo d'un bailleur, relevé CSV du rapprochement.
+- **Logo de l'AFMI.**
+  - **Icônes** : application de bureau et sa fenêtre, installateur et raccourcis, backend Smart Office, onglet et
+    en-tête Smart Office.
+  - **Source** : `branding/logo.png`, dont la version compacte `branding/icon.png` (arbre et sigle) est lisible en
+    petite taille.
+  - **Génération** : par `installer/make_icon.py`, lancé par `build_installer.bat`.
+- **Tests** : 5 pytest sur l'assistant (consignes par action, langue cible, refus sans IA, nettoyage de la réponse,
+  API). Total : 116 xUnit et 193 pytest.
+
 ## [2.3.3] — 13/11/2026 — Relevés et documents numérisés lus sans IA
 
 Mis au point sur un vrai relevé Attijariwafa numérisé au copieur (juillet 2026), que la version précédente ne lisait

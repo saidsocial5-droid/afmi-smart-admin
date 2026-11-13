@@ -11,6 +11,7 @@ from PIL import Image
 
 ROOT = Path(__file__).resolve().parents[1]
 LOGO = ROOT / "branding" / "logo.png"
+ICON = ROOT / "branding" / "icon.png"      # facultatif : version compacte du logo pour les petites tailles
 
 
 def square(img: Image.Image) -> Image.Image:
@@ -29,7 +30,7 @@ def main() -> int:
     if not LOGO.exists():
         print("Pas de branding/logo.png : icônes par défaut.")
         return 0
-    img = square(Image.open(LOGO))
+    img = square(Image.open(ICON if ICON.exists() else LOGO))
     big = img.resize((256, 256), Image.LANCZOS)
     big.save(ROOT / "branding" / "app.ico", sizes=[(16, 16), (24, 24), (32, 32), (48, 48), (64, 64), (128, 128), (256, 256)])
     public = ROOT / "SmartOffice" / "frontend" / "public"
